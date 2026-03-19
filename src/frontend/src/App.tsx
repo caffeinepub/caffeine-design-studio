@@ -44,7 +44,7 @@ interface Flavor {
   id: string;
   name: string;
   emoji: string;
-  category: "classic" | "galaxy" | "fruity" | "vegan";
+  category: "classic" | "galaxy" | "fruity" | "vegan" | "frozen" | "exotic";
   price: number;
   description: string;
   isSpecial?: boolean;
@@ -135,6 +135,24 @@ const FLAVORS: Flavor[] = [
     price: 109,
     description: "Caramelised butter toffee with a velvet finish",
   },
+  {
+    id: "pistachio",
+    name: "Pistachio Nebula",
+    emoji: "🌰",
+    category: "classic",
+    price: 119,
+    description: "Premium Iranian pistachios in a dreamy cream base",
+    isNew: true,
+  },
+  {
+    id: "rosemilk",
+    name: "Rose Milk Galaxy",
+    emoji: "🌹",
+    category: "classic",
+    price: 109,
+    description: "Fragrant rose petals infused into silky sweet cream",
+    isNew: true,
+  },
   // Galaxy Special
   {
     id: "nebula",
@@ -170,6 +188,44 @@ const FLAVORS: Flavor[] = [
     price: 139,
     description: "Alphonso mango meets cosmic condensed milk swirl",
   },
+  {
+    id: "supernova",
+    name: "Supernova Saffron",
+    emoji: "🔥",
+    category: "galaxy",
+    price: 169,
+    description: "Kesar saffron gold with edible silver leaf sparkle",
+    isSpecial: true,
+    isNew: true,
+  },
+  {
+    id: "blackhole",
+    name: "Black Hole Brownie",
+    emoji: "🕳️",
+    category: "galaxy",
+    price: 179,
+    description: "Activated charcoal base with molten brownie chunks",
+    isNew: true,
+  },
+  {
+    id: "aurora",
+    name: "Aurora Borealis Blast",
+    emoji: "🌈",
+    category: "galaxy",
+    price: 159,
+    description: "Multi-hued layered cream swirling with northern lights magic",
+    isSpecial: true,
+    isNew: true,
+  },
+  {
+    id: "quasar",
+    name: "Quasar Kulfi",
+    emoji: "🧊",
+    category: "galaxy",
+    price: 149,
+    description: "Traditional kulfi reinvented with cosmic caramel ribbons",
+    isNew: true,
+  },
   // Fruity
   {
     id: "passion",
@@ -202,6 +258,33 @@ const FLAVORS: Flavor[] = [
     category: "fruity",
     price: 129,
     description: "Blueberry, raspberry & blackberry supernova blend",
+  },
+  {
+    id: "guava",
+    name: "Guava Galaxy",
+    emoji: "🍈",
+    category: "fruity",
+    price: 119,
+    description: "Pink guava with a zingy tamarind cosmic swirl",
+    isNew: true,
+  },
+  {
+    id: "watermelon",
+    name: "Watermelon Wormhole",
+    emoji: "🍉",
+    category: "fruity",
+    price: 109,
+    description: "Refreshing watermelon sorbet with black salt stardust",
+    isNew: true,
+  },
+  {
+    id: "kiwi",
+    name: "Kiwi Comet",
+    emoji: "🥝",
+    category: "fruity",
+    price: 119,
+    description: "Bright green kiwi with tangy lime meteor showers",
+    isNew: true,
   },
   // Vegan
   {
@@ -238,6 +321,115 @@ const FLAVORS: Flavor[] = [
     description: "Tropical pineapple sorbet that's guilt-free & cosmic",
     isNew: true,
   },
+  {
+    id: "almond",
+    name: "Almond Aurora",
+    emoji: "🌿",
+    category: "vegan",
+    price: 139,
+    description: "Almond milk base with rose water & crunchy almond brittle",
+    isNew: true,
+  },
+  {
+    id: "jackfruit",
+    name: "Jackfruit Jupiter",
+    emoji: "🌍",
+    category: "vegan",
+    price: 129,
+    description: "Ripe jackfruit sorbet — India's very own planet flavour",
+    isNew: true,
+  },
+  // Frozen Specials
+  {
+    id: "mocha",
+    name: "Mocha Moon Freeze",
+    emoji: "☕",
+    category: "frozen",
+    price: 149,
+    description: "Frozen coffee mocha swirled with cosmic cream ribbons",
+    isNew: true,
+  },
+  {
+    id: "bubblegum",
+    name: "Bubblegum Black Dwarf",
+    emoji: "💜",
+    category: "frozen",
+    price: 139,
+    description: "Galaxy bubblegum with sparkling sugar crystal clusters",
+    isNew: true,
+  },
+  {
+    id: "taro",
+    name: "Taro Titan",
+    emoji: "🟣",
+    category: "frozen",
+    price: 149,
+    description: "Purple taro from the outer galaxy with coconut cream core",
+    isNew: true,
+    isSpecial: true,
+  },
+  {
+    id: "matcha",
+    name: "Matcha Milky Way",
+    emoji: "🍵",
+    category: "frozen",
+    price: 159,
+    description: "Premium Japanese matcha in a cosmic frozen dream",
+    isNew: true,
+  },
+  // Exotic Universe
+  {
+    id: "lavender",
+    name: "Lavender Lightyear",
+    emoji: "💐",
+    category: "exotic",
+    price: 169,
+    description: "French lavender honey cream — a truly alien flavour",
+    isNew: true,
+    isSpecial: true,
+  },
+  {
+    id: "chili",
+    name: "Chili Comet",
+    emoji: "🌶️",
+    category: "exotic",
+    price: 159,
+    description: "Mango base with a fiery red chili tail — dare to try!",
+    isNew: true,
+  },
+  {
+    id: "cardamom",
+    name: "Cardamom Constellation",
+    emoji: "🌟",
+    category: "exotic",
+    price: 149,
+    description: "Elaichi spiced cream with gold sugar star dust",
+    isNew: true,
+  },
+  {
+    id: "paan",
+    name: "Paan Pulsar",
+    emoji: "🍃",
+    category: "exotic",
+    price: 139,
+    description: "Classic Indian paan flavour in a cosmic creamy form",
+    isNew: true,
+  },
+];
+
+// ── Customer Favourites Data ────────────────────────────────────────────────
+const CUSTOMER_FAVOURITES: {
+  id: string;
+  orders: number;
+  rating: number;
+  badge: string;
+}[] = [
+  { id: "nebula", orders: 1842, rating: 4.9, badge: "🔥 #1 Best Seller" },
+  { id: "cosmic", orders: 1563, rating: 4.8, badge: "✨ Fan Favourite" },
+  { id: "supernova", orders: 1210, rating: 4.9, badge: "🆕 New & Trending" },
+  { id: "milkyway", orders: 987, rating: 4.7, badge: "🌌 Most Loved" },
+  { id: "choco", orders: 921, rating: 4.8, badge: "🍫 Classic Fave" },
+  { id: "rosemilk", orders: 874, rating: 4.7, badge: "💜 Rising Star" },
 ];
 
 const CATEGORY_META: Record<
@@ -264,6 +456,16 @@ const CATEGORY_META: Record<
     emoji: "🌿",
     color: "text-emerald-300 border-emerald-400/40 bg-emerald-400/10",
   },
+  frozen: {
+    label: "Frozen Specials",
+    emoji: "❄️",
+    color: "text-cyan-300 border-cyan-400/40 bg-cyan-400/10",
+  },
+  exotic: {
+    label: "Exotic Universe",
+    emoji: "🔮",
+    color: "text-fuchsia-300 border-fuchsia-400/40 bg-fuchsia-400/10",
+  },
 };
 
 const NOVA_RESPONSES: Record<string, string> = {
@@ -271,15 +473,15 @@ const NOVA_RESPONSES: Record<string, string> = {
     "Hey there, cosmic explorer! 🌟 Welcome to Galaxy Ice Cream Parlour! I'm Nova, your AI ice cream guide. Ask me about flavours, prices, or today's special!",
   hi: "Hi! 🍦 I'm Nova, the AI manager here at Galaxy Ice Cream Parlour. What cosmic flavour can I help you discover today?",
   vegan:
-    "Great choice! 🌿 We have 4 amazing vegan options: Coconut Cosmos (₹129), Avocado Asteroid (₹139), Dark Matter Date (₹129), and Pineapple Planet (₹119). All 100% plant-based and out-of-this-world delicious!",
+    "Great choice! 🌿 We have 6 amazing vegan options: Coconut Cosmos (₹129), Avocado Asteroid (₹139), Dark Matter Date (₹129), Pineapple Planet (₹119), Almond Aurora (₹139), and Jackfruit Jupiter (₹129). All 100% plant-based and out-of-this-world delicious!",
   special:
-    "Today's Special is ⭐ Nebula Swirl at ₹149! It's our most popular Galaxy Special — swirling purple-blue cosmic cream with edible glitter. Also check out Cosmic Crunch (₹159) — both are marked with a star badge!",
+    "Today's Special is ⭐ Aurora Borealis Blast at ₹159! 🌈 Multi-hued layered cream swirling with northern lights magic. Also check out Supernova Saffron (₹169) with real kesar gold, and Lavender Lightyear (₹169) — an alien delight! All marked with a star badge!",
   cheap:
     "Our most affordable scoops are ₹99 each — Vanilla Bean and Strawberry Dream! Both classic favourites that never disappoint 🍦",
   price:
     "Prices range from ₹99 (Classic scoops) to ₹159 (Galaxy Specials). Fruity flavours start at ₹119 and Vegan at ₹119. All great value for cosmic quality! 🌌",
   recommend:
-    "My top picks: 1) Nebula Swirl (₹149) for the full galaxy experience ✨ 2) Cosmic Crunch (₹159) for an explosion of flavour 3) Mango Meteor (₹129) if you love tropical blasts! 🥭",
+    "My top picks: 1) Aurora Borealis Blast (₹159) — pure magic 🌈 2) Supernova Saffron (₹169) — luxurious saffron gold ✨ 3) Lavender Lightyear (₹169) — exotic & unforgettable 💐 4) Taro Titan (₹149) — cosmic purple dream 🟣",
   mango:
     "Mango fans will LOVE Milky Way Mango (₹139) — Alphonso mango in a cosmic condensed milk swirl, and Mango Meteor (₹129) — fiery Alphonso with chili dust! 🥭🌌",
   chocolate:
@@ -513,6 +715,82 @@ function PromoBanners() {
             <div>
               <p className="text-sm font-bold text-white">{b.text}</p>
               <p className="text-xs text-white/60">{b.sub}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ── Customer Favourites Section ────────────────────────────────────────────
+function CustomerFavouritesSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
+  const items = CUSTOMER_FAVOURITES.map((fav) => ({
+    fav,
+    flavor: FLAVORS.find((fl) => fl.id === fav.id),
+  })).filter(
+    (x): x is { fav: typeof x.fav; flavor: Flavor } => x.flavor !== undefined,
+  );
+
+  return (
+    <section
+      data-ocid="favourites.section"
+      className="max-w-6xl mx-auto px-4 py-10"
+    >
+      <div className="text-center mb-8">
+        <h2 className="font-display font-bold text-3xl gradient-text mb-2">
+          ⭐ Customer Favourites
+        </h2>
+        <p className="text-violet-300/70 text-sm">
+          Most ordered &amp; highest rated by our cosmic customers
+        </p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {items.map(({ fav, flavor }, idx) => (
+          <motion.div
+            key={flavor.id}
+            data-ocid={`favourites.item.${idx + 1}`}
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.07, duration: 0.4 }}
+            className="relative bg-violet-950/70 border border-violet-400/30 rounded-2xl p-4 flex flex-col gap-3 hover:border-violet-400/60 transition-colors"
+          >
+            {/* Badge pill */}
+            <span className="absolute top-3 right-3 bg-violet-700/80 text-violet-100 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+              {fav.badge}
+            </span>
+            {/* Emoji */}
+            <div className="text-5xl text-center pt-1">{flavor.emoji}</div>
+            {/* Info */}
+            <div className="flex-1">
+              <h3 className="font-display font-bold text-violet-100 text-base leading-tight">
+                {flavor.name}
+              </h3>
+              <p className="text-violet-300/60 text-xs mt-0.5 line-clamp-1">
+                {flavor.description}
+              </p>
+            </div>
+            {/* Stats row */}
+            <div className="flex items-center gap-3 text-xs text-violet-300/70">
+              <span className="text-yellow-400">★ {fav.rating}</span>
+              <span>{fav.orders.toLocaleString()} orders</span>
+              <span className="ml-auto bg-violet-900/60 text-violet-300 px-2 py-0.5 rounded-full capitalize">
+                {flavor.category}
+              </span>
+            </div>
+            {/* Price + Add */}
+            <div className="flex items-center justify-between mt-1">
+              <span className="font-bold text-violet-100 text-base">
+                ₹{flavor.price}
+              </span>
+              <button
+                type="button"
+                data-ocid={`favourites.item.${idx + 1}`}
+                onClick={() => onAdd(flavor)}
+                className="bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold px-4 py-1.5 rounded-full transition-colors"
+              >
+                Add
+              </button>
             </div>
           </motion.div>
         ))}
@@ -1482,7 +1760,7 @@ function AboutSection() {
               {
                 icon: "🕐",
                 title: "Open 24/7",
-                desc: "Galaxy Ice Cream Parlour never closes. Browse 16 cosmic flavours and place your order any time of day or night.",
+                desc: "Galaxy Ice Cream Parlour never closes. Browse 34 cosmic flavours and place your order any time of day or night.",
               },
               {
                 icon: "🇮🇳",
@@ -1527,7 +1805,7 @@ function AboutSection() {
 function ShareSection() {
   const [copied, setCopied] = useState(false);
   const shareText =
-    "🌟 I just discovered Galaxy Ice Cream Parlour! 16 cosmic flavours from ₹99, prices in Indian Rupees, and an AI manager named Nova! Come taste the cosmos 🍦✨";
+    "🌟 I just discovered Galaxy Ice Cream Parlour! 34 cosmic flavours from ₹99, prices in Indian Rupees, and an AI manager named Nova! Come taste the cosmos 🍦✨";
 
   function handleCopy() {
     navigator.clipboard.writeText(shareText).then(() => {
@@ -2088,6 +2366,7 @@ function IceCreamParlour() {
         <main>
           <Hero />
           <PromoBanners />
+          <CustomerFavouritesSection onAdd={addToCart} />
 
           {/* Menu */}
           <section
