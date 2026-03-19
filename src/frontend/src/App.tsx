@@ -37,6 +37,12 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import {
+  CustomerReviewsSection,
+  OwnerDashboardModal,
+  ReviewPromptModal,
+  incrementOrderCount,
+} from "./GalaxyReviews";
 import { useCreateCheckoutSession } from "./hooks/useCheckoutSession";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -44,7 +50,14 @@ interface Flavor {
   id: string;
   name: string;
   emoji: string;
-  category: "classic" | "galaxy" | "fruity" | "vegan" | "frozen" | "exotic";
+  category:
+    | "classic"
+    | "galaxy"
+    | "fruity"
+    | "vegan"
+    | "frozen"
+    | "exotic"
+    | "family";
   price: number;
   description: string;
   isSpecial?: boolean;
@@ -415,6 +428,68 @@ const FLAVORS: Flavor[] = [
     description: "Classic Indian paan flavour in a cosmic creamy form",
     isNew: true,
   },
+  // Family Pack — Big Blocks
+  {
+    id: "family-choco",
+    name: "Chocolate Fudge Family Block",
+    emoji: "🍫",
+    category: "family",
+    price: 349,
+    description:
+      "Big block of rich Belgian chocolate fudge — serves 4 to 6, perfect for family nights",
+    isNew: true,
+  },
+  {
+    id: "family-vanilla",
+    name: "Vanilla Dream Family Block",
+    emoji: "🍦",
+    category: "family",
+    price: 299,
+    description:
+      "Creamy Madagascar vanilla in a generous big block — the classic family favourite",
+    isNew: true,
+  },
+  {
+    id: "family-strawberry",
+    name: "Strawberry Galaxy Family Block",
+    emoji: "🍓",
+    category: "family",
+    price: 329,
+    description:
+      "Fresh strawberry swirls in a large cosmic block, enough for the whole family",
+    isNew: true,
+  },
+  {
+    id: "family-nebula",
+    name: "Nebula Swirl Family Block",
+    emoji: "🌀",
+    category: "family",
+    price: 449,
+    description:
+      "Our #1 Galaxy Special in a big family block — cosmic purple-blue swirls with edible glitter",
+    isSpecial: true,
+    isNew: true,
+  },
+  {
+    id: "family-butterscotch",
+    name: "Butterscotch Bliss Family Block",
+    emoji: "🧈",
+    category: "family",
+    price: 319,
+    description:
+      "Caramelised butterscotch in a big block — kids absolutely love this one!",
+    isNew: true,
+  },
+  {
+    id: "family-mango",
+    name: "Mango Meteor Family Block",
+    emoji: "🥭",
+    category: "family",
+    price: 379,
+    description:
+      "Fiery Alphonso mango in a grand family block — an Indian summer classic",
+    isNew: true,
+  },
 ];
 
 // ── Customer Favourites Data ────────────────────────────────────────────────
@@ -466,6 +541,11 @@ const CATEGORY_META: Record<
     emoji: "🔮",
     color: "text-fuchsia-300 border-fuchsia-400/40 bg-fuchsia-400/10",
   },
+  family: {
+    label: "Family Pack",
+    emoji: "👨‍👩‍👧‍👦",
+    color: "text-orange-300 border-orange-400/40 bg-orange-400/10",
+  },
 };
 
 const NOVA_RESPONSES: Record<string, string> = {
@@ -500,8 +580,10 @@ const NOVA_RESPONSES: Record<string, string> = {
     "We're a 100% online parlour! 🛸 No physical store needed — Galaxy Ice Cream Parlour is open 24/7 across all of India. Just visit our app anytime and enjoy cosmic flavours from home!",
   where:
     "Galaxy Ice Cream Parlour is fully online! 🌏 We're not at a physical address — we're everywhere in India via this app. Open 24/7, no stepping out needed! 🍦",
+  family:
+    "We have 6 amazing Family Pack Big Blocks starting at ₹299! 👨‍👩‍👧‍👦 Perfect for family get-togethers — choose from Vanilla Dream (₹299), Butterscotch Bliss (₹319), Strawberry Galaxy (₹329), Chocolate Fudge (₹349), Mango Meteor (₹379), and the special Nebula Swirl Big Block (₹449). Each block serves 4-6 people!",
   default:
-    "I'd love to help! 🤖 You can ask me about: our location, vegan options, today's special, prices, recommendations, offers, referral, or any specific flavour like mango or chocolate!",
+    "I'd love to help! 🤖 You can ask me about: our location, vegan options, today's special, prices, family packs, recommendations, offers, referral, or any specific flavour like mango or chocolate!",
 };
 
 function getNovaResponse(input: string): string {
@@ -925,6 +1007,91 @@ function FlashDealSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
             </p>
           </div>
         </div>
+      </motion.div>
+    </section>
+  );
+}
+
+// ── Family Combo Deal Banner ────────────────────────────────────────────────
+function FamilyComboBanner({ onShopFamily }: { onShopFamily: () => void }) {
+  return (
+    <section className="max-w-6xl mx-auto px-4 py-6">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+        className="relative rounded-2xl border border-emerald-400/40 overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.15 0.06 170 / 0.85) 0%, oklch(0.13 0.05 200 / 0.75) 50%, oklch(0.14 0.06 215 / 0.85) 100%)",
+        }}
+      >
+        {/* Glow overlay */}
+        <div
+          className="absolute inset-0 opacity-30 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 60% at 50% 50%, oklch(0.55 0.18 170 / 0.25) 0%, transparent 70%)",
+          }}
+        />
+        {/* Shimmer line */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
+
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 p-6 md:p-8">
+          {/* Emojis */}
+          <div className="flex gap-2 text-3xl flex-shrink-0 select-none">
+            {(["🍫", "🍦", "🍓", "🧈", "🥭", "🌌"] as const).map((em, i) => (
+              <motion.span
+                key={em}
+                animate={{ y: [0, -5, 0] }}
+                transition={{
+                  duration: 2,
+                  delay: i * 0.18,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: "easeInOut",
+                }}
+              >
+                {em}
+              </motion.span>
+            ))}
+          </div>
+
+          {/* Text */}
+          <div className="flex-1 text-center md:text-left">
+            <div className="flex flex-wrap items-center gap-3 justify-center md:justify-start mb-1">
+              <h3 className="font-display font-bold text-xl md:text-2xl text-emerald-100">
+                👨‍👩‍👧‍👦 Family Combo Deal
+              </h3>
+              <span
+                data-ocid="family_combo.badge"
+                className="px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-500/25 border border-emerald-400/50 text-emerald-300 tracking-wide"
+              >
+                SAVE ₹100
+              </span>
+            </div>
+            <p className="text-emerald-200/80 font-semibold text-base md:text-lg mb-0.5">
+              Buy Any 2 Family Packs, Save ₹100!
+            </p>
+            <p className="text-emerald-400/60 text-sm">
+              Perfect for family celebrations. Mix &amp; match any 2 big blocks.
+            </p>
+          </div>
+
+          {/* CTA */}
+          <motion.button
+            type="button"
+            data-ocid="family_combo.primary_button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={onShopFamily}
+            className="flex-shrink-0 px-6 py-3 rounded-xl font-bold text-sm bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-400/50 text-emerald-200 hover:text-emerald-100 transition-all shadow-lg shadow-emerald-900/30"
+          >
+            Shop Family Packs →
+          </motion.button>
+        </div>
+
+        {/* Bottom shimmer */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
       </motion.div>
     </section>
   );
@@ -2005,6 +2172,7 @@ interface OrderSuccessProps {
   pointsEarned: number;
   totalPoints: number;
   referralUsed: boolean;
+  onLeaveReview?: () => void;
 }
 function OrderSuccess({
   isOpen,
@@ -2012,6 +2180,7 @@ function OrderSuccess({
   pointsEarned,
   totalPoints,
   referralUsed,
+  onLeaveReview,
 }: OrderSuccessProps) {
   return (
     <AnimatePresence>
@@ -2071,6 +2240,19 @@ function OrderSuccess({
                     ₹50 off this order 🎁
                   </p>
                 </div>
+              )}
+              {onLeaveReview && (
+                <Button
+                  data-ocid="order.open_modal_button"
+                  onClick={() => {
+                    onClose();
+                    setTimeout(onLeaveReview, 200);
+                  }}
+                  variant="outline"
+                  className="w-full font-semibold border-amber-400/40 text-amber-300 hover:bg-amber-400/10 mb-2"
+                >
+                  ⭐ Rate Your Experience
+                </Button>
               )}
               <Button
                 data-ocid="order.confirm_button"
@@ -2342,10 +2524,20 @@ function UpgradeModal({
 }
 
 // ── Footer ────────────────────────────────────────────────────────────────────
-function Footer() {
+function Footer({ onOwnerDashboard }: { onOwnerDashboard: () => void }) {
   const year = new Date().getFullYear();
   return (
     <footer className="border-t border-border mt-8 py-6 text-center text-xs text-muted-foreground">
+      <div className="mb-3">
+        <button
+          type="button"
+          data-ocid="dashboard.open_modal_button"
+          onClick={onOwnerDashboard}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-violet-400/30 bg-violet-400/8 text-violet-300 text-xs font-semibold hover:bg-violet-400/15 transition-colors"
+        >
+          📊 Owner Dashboard
+        </button>
+      </div>
       <p>🍦 Galaxy Ice Cream Parlour — Taste the Cosmos</p>
       <p className="mt-1">
         © {year}. Built with{" "}
@@ -2391,6 +2583,9 @@ function IceCreamParlour() {
   const [stripeSetupOpen, setStripeSetupOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
+  const [reviewPromptOpen, setReviewPromptOpen] = useState(false);
+  const [reviewFlavorName, setReviewFlavorName] = useState("");
+  const [ownerDashboardOpen, setOwnerDashboardOpen] = useState(false);
   const { mutateAsync: createCheckoutSession, isPending: isCheckingOut } =
     useCreateCheckoutSession();
 
@@ -2460,6 +2655,10 @@ function IceCreamParlour() {
     setLoyaltyPoints(newPoints);
     setLastPointsEarned(pointsEarned);
     setLastReferralUsed(referralDiscount);
+    // Track order count & flavor for review
+    incrementOrderCount();
+    const firstItemName = cartItems[0]?.flavor?.name ?? "";
+    setReviewFlavorName(firstItemName);
     setCartItems([]);
     setCartOpen(false);
     setOrderSuccess(true);
@@ -2498,7 +2697,9 @@ function IceCreamParlour() {
           <Hero />
           <PromoBanners />
           <CustomerFavouritesSection onAdd={addToCart} />
+          <CustomerReviewsSection />
           <FlashDealSection onAdd={addToCart} />
+          <FamilyComboBanner onShopFamily={() => setActiveCategory("family")} />
 
           {/* Menu */}
           <section
@@ -2555,7 +2756,7 @@ function IceCreamParlour() {
           <ShareSection />
           <AboutSection />
         </main>
-        <Footer />
+        <Footer onOwnerDashboard={() => setOwnerDashboardOpen(true)} />
       </div>
 
       {/* Overlays */}
@@ -2584,11 +2785,21 @@ function IceCreamParlour() {
         pointsEarned={lastPointsEarned}
         totalPoints={loyaltyPoints}
         referralUsed={lastReferralUsed}
+        onLeaveReview={() => setReviewPromptOpen(true)}
       />
       <NovaChat isOpen={novaOpen} onToggle={() => setNovaOpen((v) => !v)} />
       <StripeSetup
         isOpen={stripeSetupOpen}
         onClose={() => setStripeSetupOpen(false)}
+      />
+      <ReviewPromptModal
+        isOpen={reviewPromptOpen}
+        onClose={() => setReviewPromptOpen(false)}
+        flavorOrdered={reviewFlavorName}
+      />
+      <OwnerDashboardModal
+        isOpen={ownerDashboardOpen}
+        onClose={() => setOwnerDashboardOpen(false)}
       />
       <UpgradeModal
         isOpen={upgradeOpen}

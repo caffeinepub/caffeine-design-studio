@@ -102,6 +102,7 @@ export interface backendInterface {
     getDesign(id: bigint): Promise<Design>;
     listDesigns(): Promise<Array<Design>>;
     saveDesign(title: string, data: string, thumbnailUrl: string): Promise<bigint>;
+    _initializeAccessControlWithSecret(secret: string): Promise<void>;
 }
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
@@ -160,6 +161,9 @@ export class Backend implements backendInterface {
             const result = await this.actor.saveDesign(arg0, arg1, arg2);
             return result;
         }
+    }
+    async _initializeAccessControlWithSecret(_secret: string): Promise<void> {
+        // no-op: authorization component not used
     }
 }
 export interface CreateActorOptions {

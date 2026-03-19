@@ -16,6 +16,7 @@ export interface Design {
 }
 export type Time = bigint;
 export interface backendInterface {
+    _initializeAccessControlWithSecret(secret: string): Promise<void>;
     deleteDesign(id: bigint): Promise<void>;
     getDesign(id: bigint): Promise<Design>;
     listDesigns(): Promise<Array<Design>>;
