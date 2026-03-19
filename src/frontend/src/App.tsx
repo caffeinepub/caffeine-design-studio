@@ -799,6 +799,137 @@ function CustomerFavouritesSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
   );
 }
 
+// ── Flash Deal ──────────────────────────────────────────────────────────────
+const FLASH_DEAL_FLAVORS = [
+  { id: "nebula-swirl", discount: 30 },
+  { id: "aurora-borealis-blast", discount: 25 },
+  { id: "cosmic-caramel-crunch", discount: 35 },
+  { id: "stardust-strawberry", discount: 20 },
+  { id: "black-hole-brownie", discount: 40 },
+];
+
+function FlashDealSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
+  const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
+  const [dealIdx] = useState(
+    () => new Date().getDate() % FLASH_DEAL_FLAVORS.length,
+  );
+
+  useEffect(() => {
+    function calc() {
+      const now = new Date();
+      const end = new Date(now);
+      end.setHours(23, 59, 59, 999);
+      const diff = end.getTime() - now.getTime();
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft({ h, m, s });
+    }
+    calc();
+    const id = setInterval(calc, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const dealInfo = FLASH_DEAL_FLAVORS[dealIdx];
+  const flavor = FLAVORS.find((f) => f.id === dealInfo.id) ?? FLAVORS[0];
+  const discountedPrice = Math.round(
+    flavor.price * (1 - dealInfo.discount / 100),
+  );
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  return (
+    <section
+      data-ocid="flash-deal.section"
+      className="max-w-6xl mx-auto px-4 py-6"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden rounded-3xl border border-orange-400/40 bg-gradient-to-r from-orange-950/80 via-red-950/70 to-violet-950/80 p-6 md:p-8"
+      >
+        {/* Glow */}
+        <div
+          className="absolute inset-0 opacity-20 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at 30% 50%, oklch(0.65 0.22 30) 0%, transparent 60%)",
+          }}
+        />
+
+        <div className="relative flex flex-col md:flex-row items-center gap-6">
+          {/* Left: badge + info */}
+          <div className="flex-1 text-center md:text-left">
+            <motion.span
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1.5 }}
+              className="inline-block bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest mb-3"
+            >
+              ⚡ Today&apos;s Flash Deal
+            </motion.span>
+            <div className="text-6xl mb-3">{flavor.emoji}</div>
+            <h3 className="font-display font-bold text-2xl text-orange-100 mb-1">
+              {flavor.name}
+            </h3>
+            <p className="text-orange-300/70 text-sm mb-4">
+              {flavor.description}
+            </p>
+            <div className="flex items-center gap-3 justify-center md:justify-start">
+              <span className="text-orange-300/50 line-through text-lg">
+                ₹{flavor.price}
+              </span>
+              <span className="text-orange-300 font-bold text-3xl">
+                ₹{discountedPrice}
+              </span>
+              <span className="bg-orange-500/20 text-orange-300 text-sm font-semibold px-2 py-0.5 rounded-full">
+                {dealInfo.discount}% OFF
+              </span>
+            </div>
+            <button
+              type="button"
+              data-ocid="flash-deal.add-btn"
+              onClick={() => onAdd({ ...flavor, price: discountedPrice })}
+              className="mt-4 bg-orange-500 hover:bg-orange-400 text-white font-bold px-6 py-2.5 rounded-full transition-colors shadow-lg shadow-orange-900/40"
+            >
+              Grab This Deal
+            </button>
+          </div>
+
+          {/* Right: countdown */}
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-orange-300/60 text-xs uppercase tracking-widest font-semibold">
+              Deal ends in
+            </p>
+            <div className="flex gap-2">
+              {[
+                { label: "HRS", val: pad(timeLeft.h) },
+                { label: "MIN", val: pad(timeLeft.m) },
+                { label: "SEC", val: pad(timeLeft.s) },
+              ].map(({ label, val }) => (
+                <div
+                  key={label}
+                  className="flex flex-col items-center bg-black/40 border border-orange-400/30 rounded-2xl px-4 py-3 min-w-[64px]"
+                >
+                  <span className="font-display font-bold text-3xl text-orange-100 tabular-nums">
+                    {val}
+                  </span>
+                  <span className="text-orange-400/60 text-[10px] uppercase tracking-wider mt-0.5">
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="text-orange-300/40 text-xs mt-1">
+              Resets every midnight ✨
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
 // ── Hero ────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
@@ -2367,6 +2498,7 @@ function IceCreamParlour() {
           <Hero />
           <PromoBanners />
           <CustomerFavouritesSection onAdd={addToCart} />
+          <FlashDealSection onAdd={addToCart} />
 
           {/* Menu */}
           <section
