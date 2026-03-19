@@ -1,33 +1,20 @@
 # AI Galaxy Ice Cream Parlour
 
 ## Current State
-- Browser-based design studio + AI Galaxy Ice Cream Parlour app
-- 16 cosmic ice cream flavors with INR pricing (₹99–₹179)
-- Cart/order flow, special promo banners, Nova AI chatbot manager
-- Template library with 40+ templates across 12 categories
-- Freemium monetization (demo mode, no real payments)
-- Backend: design saving/loading per user principal
-- No loyalty points system implemented yet
+Full-featured Galaxy Ice Cream Parlour with 16 cosmic flavors, cart/order flow, Indian Rupee pricing, loyalty points, Nova AI manager, Grand Opening banner, viral sharing, referral system, and Stripe integration.
 
 ## Requested Changes (Diff)
 
 ### Add
-- **Loyalty Points System**: Customers earn 10 points per order; 100 points = ₹50 discount; points balance shown in parlour header; points stored per user in backend
-- **More Template Categories**: Add Food Delivery, Real Estate, Nonprofit, Healthcare, Wedding, and Gaming categories with 3–5 templates each
-- **Stripe Integration**: Wire up Stripe component for real premium tier payments (₹799/month); checkout flow for premium upgrade
+- About/Location section in the parlour that clearly states the parlour is online and open 24/7 serving India
+- Nova AI manager trained to answer location questions (e.g. "Where are you located?", "Where is this parlour?")
 
 ### Modify
-- Backend: Add loyalty points tracking (earn, redeem, getBalance) and order recording
-- Frontend App.tsx: Integrate loyalty points display and redemption in cart/checkout; add Stripe payment flow for premium upgrade
-- TemplatesPanel.tsx: Add new template categories with template entries
+- Nova's response logic to include location/about answers
 
 ### Remove
-- Demo/mock payment flow for premium upgrade (replace with real Stripe)
+- Nothing
 
 ## Implementation Plan
-1. Select `stripe` Caffeine component
-2. Generate Motoko backend with loyalty points (earnPoints, redeemPoints, getPoints, recordOrder) and Stripe payment support
-3. Update frontend:
-   - Loyalty points: show balance in parlour header, earn on checkout, offer redemption option in cart
-   - New template categories: Food Delivery, Real Estate, Nonprofit, Healthcare, Wedding, Gaming
-   - Stripe: replace demo upgrade button with real Stripe checkout session
+1. Add an "About Us" section to the parlour page with location info (online, India-wide, 24/7)
+2. Update Nova's AI response logic to handle location-related questions with a friendly answer

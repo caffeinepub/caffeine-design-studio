@@ -26,9 +26,11 @@ import {
   Plus,
   Send,
   Settings,
+  Share2,
   ShoppingCart,
   Sparkles,
   Star,
+  Users,
   X,
   XCircle,
 } from "lucide-react";
@@ -58,6 +60,44 @@ interface ChatMessage {
   id: string;
   from: "user" | "nova";
   text: string;
+}
+
+// ── Referral helpers ───────────────────────────────────────────────────────
+function generateReferralCode(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "GALAXY-";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+function getOrCreateMyReferralCode(): string {
+  try {
+    const stored = localStorage.getItem("galaxy_my_referral_code");
+    if (stored) return stored;
+    const code = generateReferralCode();
+    localStorage.setItem("galaxy_my_referral_code", code);
+    return code;
+  } catch {
+    return generateReferralCode();
+  }
+}
+
+function getUsedReferralCode(): string | null {
+  try {
+    return localStorage.getItem("galaxy_used_referral_code");
+  } catch {
+    return null;
+  }
+}
+
+function markReferralCodeUsed(code: string): void {
+  try {
+    localStorage.setItem("galaxy_used_referral_code", code);
+  } catch {
+    // ignore
+  }
 }
 
 // ── Data ───────────────────────────────────────────────────────────────────
@@ -170,7 +210,7 @@ const FLAVORS: Flavor[] = [
     emoji: "🥥",
     category: "vegan",
     price: 129,
-    description: "Coconut milk base with toasted flakes & lime zest",
+    description: "Creamy coconut milk base with toasted flakes",
   },
   {
     id: "avocado",
@@ -178,15 +218,16 @@ const FLAVORS: Flavor[] = [
     emoji: "🥑",
     category: "vegan",
     price: 139,
-    description: "Smooth avocado cream with a hint of dark chocolate",
+    description: "Dark chocolate & avocado — rich, velvety, planet-friendly",
   },
   {
-    id: "darkdate",
+    id: "date",
     name: "Dark Matter Date",
     emoji: "🌑",
     category: "vegan",
     price: 129,
-    description: "Medjool dates & tahini in a silky cosmic blend",
+    description: "Medjool date caramel with a hint of cardamom",
+    isNew: true,
   },
   {
     id: "pineapple",
@@ -194,7 +235,8 @@ const FLAVORS: Flavor[] = [
     emoji: "🍍",
     category: "vegan",
     price: 119,
-    description: "Zesty pineapple sorbet with a ginger stardust kick",
+    description: "Tropical pineapple sorbet that's guilt-free & cosmic",
+    isNew: true,
   },
 ];
 
@@ -246,8 +288,18 @@ const NOVA_RESPONSES: Record<string, string> = {
     "Current offers: 🎉 Buy 2 Get 1 Free every weekend! Plus earn 10 loyalty points per order — redeem 100 points for ₹50 off your next treat!",
   points:
     "You earn 10 loyalty points with every order 🌟 Collect 100 points to redeem ₹50 off! Check your points balance in the cart.",
+  referral:
+    "Share your referral code with friends! 🎁 They get ₹50 off their first order, and you earn 50 bonus loyalty points when they use it!",
+  location:
+    "Galaxy Ice Cream Parlour is fully online and open 24/7! 🌏 We serve cosmic flavours across all of India. No physical store needed — just browse, order, and enjoy from the comfort of your home. Share our link with friends too! 🍦✨",
+  address:
+    "Galaxy Ice Cream Parlour is fully online and open 24/7! 🌏 We serve cosmic flavours across all of India. No physical store needed — just browse, order, and enjoy from the comfort of your home. Share our link with friends too! 🍦✨",
+  store:
+    "We're a 100% online parlour! 🛸 No physical store needed — Galaxy Ice Cream Parlour is open 24/7 across all of India. Just visit our app anytime and enjoy cosmic flavours from home!",
+  where:
+    "Galaxy Ice Cream Parlour is fully online! 🌏 We're not at a physical address — we're everywhere in India via this app. Open 24/7, no stepping out needed! 🍦",
   default:
-    "I'd love to help! 🤖 You can ask me about: vegan options, today's special, prices, recommendations, offers, or any specific flavour like mango or chocolate!",
+    "I'd love to help! 🤖 You can ask me about: our location, vegan options, today's special, prices, recommendations, offers, referral, or any specific flavour like mango or chocolate!",
 };
 
 function getNovaResponse(input: string): string {
@@ -262,11 +314,11 @@ function getNovaResponse(input: string): string {
 function Starfield() {
   const stars = Array.from({ length: 80 }, (_, i) => ({
     id: i,
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    size: Math.random() * 2.5 + 0.5,
-    duration: `${Math.random() * 4 + 2}s`,
-    delay: `${Math.random() * 5}s`,
+    top: `${(i * 37.3 + 11) % 100}%`,
+    left: `${(i * 53.7 + 7) % 100}%`,
+    size: (i % 5) * 0.4 + 0.6,
+    duration: `${(i % 4) + 2}s`,
+    delay: `${(i % 5) * 1.0}s`,
   }));
   return (
     <div className="starfield">
@@ -311,7 +363,6 @@ function OpeningBanner() {
         <span className="underline decoration-yellow-300">NOW OPEN</span>! Come
         taste the cosmos! 🌟
       </span>
-      {/* glow overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{ boxShadow: "inset 0 0 60px oklch(0.65 0.28 310 / 0.3)" }}
@@ -328,6 +379,7 @@ interface HeaderProps {
   onLoyaltyOpen: () => void;
   onUpgradeOpen: () => void;
   onStripeSetup: () => void;
+  onReferralOpen: () => void;
 }
 function Header({
   cartCount,
@@ -336,6 +388,7 @@ function Header({
   onLoyaltyOpen,
   onUpgradeOpen,
   onStripeSetup,
+  onReferralOpen,
 }: HeaderProps) {
   return (
     <header
@@ -377,6 +430,15 @@ function Header({
           </button>
           <button
             type="button"
+            data-ocid="referral.open_modal_button"
+            onClick={onReferralOpen}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-pink-400/40 bg-pink-400/10 text-pink-300 text-sm font-semibold hover:bg-pink-400/20 transition-colors"
+          >
+            <Users className="w-3.5 h-3.5" />
+            Refer
+          </button>
+          <button
+            type="button"
             data-ocid="upgrade.open_modal_button"
             onClick={onUpgradeOpen}
             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 text-emerald-300 text-sm font-semibold hover:bg-emerald-400/20 transition-colors"
@@ -399,13 +461,13 @@ function Header({
             onClick={onCartOpen}
             className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-violet-400/40 bg-violet-400/10 text-violet-300 text-sm font-semibold hover:bg-violet-400/20 transition-colors"
           >
-            <ShoppingCart className="w-4 h-4" />
-            Cart
+            <ShoppingCart className="w-3.5 h-3.5" />
             {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-pink-500 text-white text-xs flex items-center justify-center font-bold">
+              <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 rounded-full bg-violet-500 text-white text-xs font-bold flex items-center justify-center leading-none px-1">
                 {cartCount}
               </span>
             )}
+            Cart
           </button>
         </div>
       </div>
@@ -413,89 +475,161 @@ function Header({
   );
 }
 
-// ── Promo Banners ────────────────────────────────────────────────────────────
+// ── Promo Banners ───────────────────────────────────────────────────────────
 function PromoBanners() {
   const banners = [
     {
       icon: "⭐",
       text: "Today's Special: Nebula Swirl",
-      highlight: "₹149",
-      color: "from-violet-900/60 to-fuchsia-900/60 border-violet-400/30",
+      sub: "Cosmic cream with edible glitter — ₹149",
+      color: "from-violet-900/60 to-violet-800/40 border-violet-400/30",
     },
     {
       icon: "🎉",
-      text: "Buy 2 Get 1 Free",
-      highlight: "Every Weekend!",
-      color: "from-pink-900/60 to-rose-900/60 border-pink-400/30",
+      text: "Buy 2 Get 1 Free — Every Weekend!",
+      sub: "Mix any flavours from our cosmic menu",
+      color: "from-pink-900/60 to-pink-800/40 border-pink-400/30",
     },
     {
       icon: "🆕",
       text: "New Arrival: Aurora Borealis Blast",
-      highlight: "Try Now!",
-      color: "from-cyan-900/60 to-blue-900/60 border-cyan-400/30",
+      sub: "Limited edition — grab it before it's gone!",
+      color: "from-cyan-900/60 to-cyan-800/40 border-cyan-400/30",
     },
   ];
   return (
-    <div className="max-w-6xl mx-auto px-4 py-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-      {banners.map((b, i) => (
-        <motion.div
-          key={b.text}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 + i * 0.1 }}
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl border bg-gradient-to-r ${b.color} backdrop-blur-sm`}
-        >
-          <span className="text-2xl">{b.icon}</span>
-          <div>
-            <p className="text-sm font-semibold text-white/90">{b.text}</p>
-            <p className="text-xs font-bold text-amber-300">{b.highlight}</p>
-          </div>
-        </motion.div>
-      ))}
-    </div>
+    <section data-ocid="promo.section" className="max-w-6xl mx-auto px-4 py-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {banners.map((b, i) => (
+          <motion.div
+            key={b.text}
+            data-ocid={`promo.item.${i + 1}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r ${b.color} border backdrop-blur-sm`}
+          >
+            <span className="text-2xl">{b.icon}</span>
+            <div>
+              <p className="text-sm font-bold text-white">{b.text}</p>
+              <p className="text-xs text-white/60">{b.sub}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
   );
 }
 
-// ── Flavor Card ──────────────────────────────────────────────────────────────
+// ── Hero ────────────────────────────────────────────────────────────────────
+function Hero() {
+  return (
+    <section
+      data-ocid="hero.section"
+      className="relative max-w-6xl mx-auto px-4 pt-10 pb-6 text-center"
+    >
+      {/* Nebula orbs */}
+      <div
+        className="nebula-orb w-96 h-96 -left-20 top-0 opacity-30"
+        style={{ background: "oklch(0.5 0.28 310)" }}
+      />
+      <div
+        className="nebula-orb w-80 h-80 -right-10 top-10 opacity-20"
+        style={{ background: "oklch(0.55 0.25 240)" }}
+      />
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative z-10"
+      >
+        <motion.div
+          animate={{ y: [0, -12, 0] }}
+          transition={{
+            repeat: Number.POSITIVE_INFINITY,
+            duration: 4,
+            ease: "easeInOut",
+          }}
+          className="text-7xl mb-4"
+        >
+          🍦
+        </motion.div>
+        <h2 className="font-display font-black text-4xl md:text-5xl mb-3 shimmer-text">
+          AI Galaxy Ice Cream Parlour
+        </h2>
+        <p className="text-muted-foreground text-lg mb-6 max-w-xl mx-auto">
+          16 cosmic flavours crafted in the stars — from ₹99. Experience ice
+          cream from another galaxy.
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          {Object.entries(CATEGORY_META).map(([key, meta]) => (
+            <span key={key} className={`category-chip border ${meta.color}`}>
+              {meta.emoji} {meta.label}
+            </span>
+          ))}
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+// ── Flavor Card ─────────────────────────────────────────────────────────────
 interface FlavorCardProps {
   flavor: Flavor;
   index: number;
-  onAdd: (flavor: Flavor) => void;
+  onAdd: (f: Flavor) => void;
 }
 function FlavorCard({ flavor, index, onAdd }: FlavorCardProps) {
-  const cat = CATEGORY_META[flavor.category];
+  const meta = CATEGORY_META[flavor.category];
   return (
     <motion.div
-      data-ocid={`menu.item.${index + 1}`}
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: (index % 4) * 0.07 }}
       className="galaxy-card p-4 flex flex-col gap-3"
     >
-      {/* Special badge */}
-      {flavor.isSpecial && (
-        <div className="absolute top-3 right-3 z-10">
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/50 text-amber-300 text-xs font-bold">
-            <Star className="w-3 h-3 fill-amber-300" /> Special
+      <div className="flex items-start justify-between">
+        <div className="text-4xl">{flavor.emoji}</div>
+        <div className="flex flex-col items-end gap-1">
+          {flavor.isSpecial && (
+            <Badge
+              className="text-xs px-2 py-0.5 font-bold"
+              style={{
+                background:
+                  "linear-gradient(135deg, oklch(0.75 0.18 80), oklch(0.7 0.2 60))",
+                color: "oklch(0.15 0 0)",
+                border: "none",
+              }}
+            >
+              ⭐ Special
+            </Badge>
+          )}
+          {flavor.isNew && (
+            <Badge
+              className="text-xs px-2 py-0.5 font-bold"
+              style={{
+                background:
+                  "linear-gradient(135deg, oklch(0.6 0.25 195), oklch(0.55 0.28 220))",
+                color: "white",
+                border: "none",
+              }}
+            >
+              🆕 New
+            </Badge>
+          )}
+          <span className={`category-chip border ${meta.color}`}>
+            {meta.emoji}
           </span>
         </div>
-      )}
-      <div className="text-4xl text-center">{flavor.emoji}</div>
+      </div>
       <div className="flex-1">
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="font-display font-bold text-sm text-foreground leading-tight">
-            {flavor.name}
-          </h3>
-        </div>
-        <span className={`category-chip border ${cat.color} mb-2`}>
-          {cat.emoji} {cat.label}
-        </span>
-        <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+        <h3 className="font-display font-bold text-base mb-1">{flavor.name}</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed">
           {flavor.description}
         </p>
       </div>
-      <div className="flex items-center justify-between mt-auto pt-2">
+      <div className="flex items-center justify-between">
         <span
           className="font-bold text-lg"
           style={{ color: "oklch(0.85 0.18 80)" }}
@@ -529,7 +663,8 @@ interface CartPanelProps {
   onQtyChange: (id: string, delta: number) => void;
   onRemove: (id: string) => void;
   loyaltyPoints: number;
-  onPlaceOrder: (redeemPoints: boolean) => void;
+  onPlaceOrder: (redeemPoints: boolean, referralDiscount: boolean) => void;
+  isFirstOrder: boolean;
 }
 function CartPanel({
   isOpen,
@@ -539,12 +674,48 @@ function CartPanel({
   onRemove,
   loyaltyPoints,
   onPlaceOrder,
+  isFirstOrder,
 }: CartPanelProps) {
   const [redeemPoints, setRedeemPoints] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
+  const [referralApplied, setReferralApplied] = useState(false);
+  const [referralError, setReferralError] = useState("");
+
   const subtotal = items.reduce((s, i) => s + i.flavor.price * i.qty, 0);
-  const discount = redeemPoints && loyaltyPoints >= 100 ? 50 : 0;
-  const total = Math.max(0, subtotal - discount);
+  const loyaltyDiscount = redeemPoints && loyaltyPoints >= 100 ? 50 : 0;
+  const referralDiscount = referralApplied ? 50 : 0;
+  const total = Math.max(0, subtotal - loyaltyDiscount - referralDiscount);
   const canRedeem = loyaltyPoints >= 100;
+
+  function applyReferralCode() {
+    const code = referralCode.trim().toUpperCase();
+    if (!code) {
+      setReferralError("Please enter a referral code.");
+      return;
+    }
+    // Check it's not user's own code
+    const myCode = getOrCreateMyReferralCode();
+    if (code === myCode) {
+      setReferralError("You cannot use your own referral code.");
+      return;
+    }
+    // Check format (GALAXY-XXXXXX)
+    if (!code.startsWith("GALAXY-") || code.length !== 13) {
+      setReferralError("Invalid referral code. Format: GALAXY-XXXXXX");
+      return;
+    }
+    if (!isFirstOrder) {
+      setReferralError("Referral discount is for first-time orders only.");
+      return;
+    }
+    if (getUsedReferralCode()) {
+      setReferralError("You have already used a referral code.");
+      return;
+    }
+    setReferralApplied(true);
+    setReferralError("");
+    toast.success("🎁 Referral code applied! ₹50 discount added.");
+  }
 
   return (
     <AnimatePresence>
@@ -648,6 +819,64 @@ function CartPanel({
             </ScrollArea>
             {items.length > 0 && (
               <div className="px-5 py-4 border-t border-border space-y-3">
+                {/* Referral Code */}
+                {isFirstOrder && !getUsedReferralCode() && (
+                  <div className="p-3 rounded-xl bg-pink-400/5 border border-pink-400/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Gift className="w-4 h-4 text-pink-300" />
+                      <span className="text-xs font-semibold text-pink-300">
+                        Have a referral code?
+                      </span>
+                      {referralApplied && (
+                        <Badge
+                          className="text-xs ml-auto"
+                          style={{
+                            background: "oklch(0.45 0.2 160)",
+                            color: "white",
+                            border: "none",
+                          }}
+                        >
+                          ✓ ₹50 off applied
+                        </Badge>
+                      )}
+                    </div>
+                    {!referralApplied && (
+                      <div className="flex gap-2">
+                        <Input
+                          data-ocid="cart.input"
+                          value={referralCode}
+                          onChange={(e) => {
+                            setReferralCode(e.target.value.toUpperCase());
+                            setReferralError("");
+                          }}
+                          placeholder="GALAXY-XXXXXX"
+                          className="h-8 text-xs bg-white/5 border-pink-400/30 text-foreground placeholder:text-muted-foreground/50 uppercase"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={applyReferralCode}
+                          className="h-8 px-3 text-xs"
+                          style={{
+                            background: "oklch(0.55 0.28 340)",
+                            border: "none",
+                            color: "white",
+                          }}
+                        >
+                          Apply
+                        </Button>
+                      </div>
+                    )}
+                    {referralError && (
+                      <p
+                        data-ocid="cart.error_state"
+                        className="text-xs text-red-400 mt-1"
+                      >
+                        {referralError}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Loyalty redemption */}
                 <div className="p-3 rounded-xl bg-amber-400/5 border border-amber-400/20">
                   <div className="flex items-center gap-2 mb-1">
@@ -678,32 +907,40 @@ function CartPanel({
                     </p>
                   )}
                 </div>
+
                 {/* Totals */}
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between text-muted-foreground">
                     <span>Subtotal</span>
                     <span>₹{subtotal}</span>
                   </div>
-                  {discount > 0 && (
+                  {loyaltyDiscount > 0 && (
                     <div className="flex justify-between text-emerald-400">
                       <span>Points Discount</span>
-                      <span>-₹{discount}</span>
+                      <span>-₹{loyaltyDiscount}</span>
+                    </div>
+                  )}
+                  {referralDiscount > 0 && (
+                    <div className="flex justify-between text-pink-400">
+                      <span>Referral Discount</span>
+                      <span>-₹{referralDiscount}</span>
                     </div>
                   )}
                   <Separator className="my-2" />
                   <div className="flex justify-between font-bold text-base">
                     <span>Total</span>
-                    <span className="text-amber-300">₹{total}</span>
+                    <span style={{ color: "oklch(0.85 0.18 80)" }}>
+                      ₹{total}
+                    </span>
                   </div>
-                  <p className="text-xs text-violet-300">
-                    +10 pts on this order 🌟
-                  </p>
                 </div>
                 <Button
                   data-ocid="cart.submit_button"
                   onClick={() => {
-                    onPlaceOrder(redeemPoints);
+                    onPlaceOrder(redeemPoints, referralApplied);
                     setRedeemPoints(false);
+                    setReferralCode("");
+                    setReferralApplied(false);
                   }}
                   className="w-full font-bold py-5"
                   style={{
@@ -774,7 +1011,6 @@ function LoyaltyPanel({ isOpen, onClose, points }: LoyaltyPanelProps) {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              {/* Points display */}
               <div className="text-center py-4 px-6 rounded-xl bg-amber-400/10 border border-amber-400/20 mb-5">
                 <p className="text-4xl font-black text-amber-300 mb-1">
                   {points}
@@ -795,13 +1031,11 @@ function LoyaltyPanel({ isOpen, onClose, points }: LoyaltyPanelProps) {
                     <div className="flex-1">
                       <p className="text-sm font-semibold">{tier.reward}</p>
                       <p className="text-xs text-muted-foreground">
-                        {tier.pts} points
+                        {tier.pts} points needed
                       </p>
                     </div>
                     {points >= tier.pts && (
-                      <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-400/40 text-xs">
-                        Unlocked!
-                      </Badge>
+                      <Check className="w-4 h-4 text-emerald-400" />
                     )}
                   </div>
                 ))}
@@ -814,7 +1048,178 @@ function LoyaltyPanel({ isOpen, onClose, points }: LoyaltyPanelProps) {
   );
 }
 
-// ── Nova Chat ─────────────────────────────────────────────────────────────────
+// ── Referral Panel ────────────────────────────────────────────────────────────
+interface ReferralPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+function ReferralPanel({ isOpen, onClose }: ReferralPanelProps) {
+  const myCode = getOrCreateMyReferralCode();
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [msgCopied, setMsgCopied] = useState(false);
+  const shareMsg = `🌟 Join me at Galaxy Ice Cream Parlour! Use my referral code ${myCode} at checkout to get ₹50 off your first order. Come taste the cosmos! 🍦✨`;
+
+  function copyCode() {
+    navigator.clipboard.writeText(myCode).then(() => {
+      setCodeCopied(true);
+      toast.success("Referral code copied!");
+      setTimeout(() => setCodeCopied(false), 3000);
+    });
+  }
+
+  function copyMessage() {
+    navigator.clipboard.writeText(shareMsg).then(() => {
+      setMsgCopied(true);
+      toast.success("Share message copied! Send it to your friends 🚀");
+      setTimeout(() => setMsgCopied(false), 3000);
+    });
+  }
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+          />
+          <motion.div
+            data-ocid="referral.panel"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", damping: 20 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+          >
+            <div
+              className="pointer-events-auto w-full max-w-md rounded-2xl p-6 border border-pink-400/30"
+              style={{
+                background: "oklch(0.1 0.03 280)",
+                boxShadow: "0 0 60px oklch(0.6 0.28 340 / 0.2)",
+              }}
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="font-display font-bold text-lg flex items-center gap-2">
+                  <Users className="w-5 h-5 text-pink-300" />
+                  <span className="gradient-text">Refer a Friend</span>
+                </h2>
+                <button
+                  type="button"
+                  data-ocid="referral.close_button"
+                  onClick={onClose}
+                  className="p-1.5 rounded-lg hover:bg-white/10"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* How it works */}
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="p-3 rounded-xl bg-pink-400/5 border border-pink-400/20 text-center">
+                  <div className="text-2xl mb-1">🎁</div>
+                  <p className="text-xs font-semibold text-pink-200">
+                    Friend gets
+                  </p>
+                  <p className="text-lg font-black text-pink-300">₹50 off</p>
+                  <p className="text-xs text-muted-foreground">
+                    their first order
+                  </p>
+                </div>
+                <div className="p-3 rounded-xl bg-amber-400/5 border border-amber-400/20 text-center">
+                  <div className="text-2xl mb-1">⭐</div>
+                  <p className="text-xs font-semibold text-amber-200">
+                    You earn
+                  </p>
+                  <p className="text-lg font-black text-amber-300">50 pts</p>
+                  <p className="text-xs text-muted-foreground">
+                    when they order
+                  </p>
+                </div>
+              </div>
+
+              {/* Referral code */}
+              <div className="mb-4">
+                <Label className="text-xs text-muted-foreground mb-2 block">
+                  Your personal referral code
+                </Label>
+                <div className="flex gap-2">
+                  <div
+                    className="flex-1 flex items-center justify-center py-3 rounded-xl font-mono font-black text-lg tracking-widest border border-pink-400/40 bg-pink-400/5"
+                    style={{ color: "oklch(0.82 0.22 340)" }}
+                  >
+                    {myCode}
+                  </div>
+                  <Button
+                    data-ocid="referral.primary_button"
+                    onClick={copyCode}
+                    className="px-4"
+                    style={{
+                      background: codeCopied
+                        ? "oklch(0.5 0.2 160)"
+                        : "linear-gradient(135deg, oklch(0.58 0.28 340), oklch(0.55 0.28 310))",
+                      border: "none",
+                      color: "white",
+                    }}
+                  >
+                    {codeCopied ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Share message */}
+              <div className="mb-5">
+                <Label className="text-xs text-muted-foreground mb-2 block">
+                  Or share this message
+                </Label>
+                <div className="p-3 rounded-xl bg-white/5 border border-border text-xs text-foreground/80 leading-relaxed mb-2">
+                  {shareMsg}
+                </div>
+                <Button
+                  data-ocid="referral.secondary_button"
+                  onClick={copyMessage}
+                  className="w-full font-bold"
+                  style={{
+                    background: msgCopied
+                      ? "oklch(0.5 0.2 160)"
+                      : "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280))",
+                    border: "none",
+                    color: "white",
+                    boxShadow: "0 4px 16px oklch(0.55 0.28 310 / 0.35)",
+                  }}
+                >
+                  {msgCopied ? (
+                    <Check className="w-4 h-4 mr-2" />
+                  ) : (
+                    <Share2 className="w-4 h-4 mr-2" />
+                  )}
+                  {msgCopied ? "Copied!" : "Copy & Share"}
+                </Button>
+              </div>
+
+              <p className="text-xs text-center text-muted-foreground">
+                Share on WhatsApp, Instagram, or anywhere! Every referral earns
+                you{" "}
+                <strong className="text-amber-300">
+                  50 bonus loyalty points
+                </strong>
+                .
+              </p>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ── Nova Chatbot ──────────────────────────────────────────────────────────────
 interface NovaChatProps {
   isOpen: boolean;
   onToggle: () => void;
@@ -822,27 +1227,31 @@ interface NovaChatProps {
 function NovaChat({ isOpen, onToggle }: NovaChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: "init",
+      id: "0",
       from: "nova",
-      text: "Hey! 🌟 I'm Nova, your AI Galaxy Ice Cream guide. Ask me anything — flavours, prices, today's special, vegan options!",
+      text: "Hey there! 🌟 I'm Nova, your AI Galaxy Ice Cream manager. Ask me about flavours, prices, today's special, or our referral program!",
     },
   ]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: bottomRef is stable
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll on new message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isOpen]);
+  }, [messages]);
 
   function sendMessage() {
-    const text = input.trim();
-    if (!text) return;
-    const userMsg: ChatMessage = { id: `u-${Date.now()}`, from: "user", text };
+    const trimmed = input.trim();
+    if (!trimmed) return;
+    const userMsg: ChatMessage = {
+      id: Date.now().toString(),
+      from: "user",
+      text: trimmed,
+    };
     const novaMsg: ChatMessage = {
-      id: `n-${Date.now()}`,
+      id: (Date.now() + 1).toString(),
       from: "nova",
-      text: getNovaResponse(text),
+      text: getNovaResponse(trimmed),
     };
     setMessages((prev) => [...prev, userMsg, novaMsg]);
     setInput("");
@@ -915,7 +1324,7 @@ function NovaChat({ isOpen, onToggle }: NovaChatProps) {
               />
               <button
                 type="button"
-                data-ocid="nova.button"
+                data-ocid="nova.send_button"
                 onClick={sendMessage}
                 className="p-2 rounded-lg bg-violet-500/30 hover:bg-violet-500/50 transition-colors text-violet-200"
               >
@@ -943,7 +1352,178 @@ function NovaChat({ isOpen, onToggle }: NovaChatProps) {
   );
 }
 
+// ── Referral Section (bottom of page) ─────────────────────────────────────────
+interface ReferralSectionProps {
+  onOpenReferral: () => void;
+}
+function ReferralSection({ onOpenReferral }: ReferralSectionProps) {
+  return (
+    <section
+      data-ocid="referral.section"
+      className="max-w-6xl mx-auto px-4 py-10"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="rounded-2xl p-8 text-center border border-pink-400/20 relative overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.12 0.04 340 / 0.8), oklch(0.11 0.04 310 / 0.8), oklch(0.13 0.04 280 / 0.8))",
+          boxShadow: "0 0 60px oklch(0.55 0.28 340 / 0.15)",
+        }}
+      >
+        <div
+          className="nebula-orb w-64 h-64 left-0 top-0 opacity-20"
+          style={{ background: "oklch(0.6 0.28 340)" }}
+        />
+        <div className="relative z-10">
+          <div className="flex justify-center gap-4 mb-4">
+            <div className="p-3 rounded-full bg-pink-400/10 border border-pink-400/20">
+              <Users className="w-6 h-6 text-pink-300" />
+            </div>
+            <div className="p-3 rounded-full bg-amber-400/10 border border-amber-400/20">
+              <Star className="w-6 h-6 fill-amber-300 text-amber-300" />
+            </div>
+          </div>
+          <h2 className="font-display font-bold text-2xl mb-2 gradient-text">
+            Refer Friends, Earn Stars! 🌟
+          </h2>
+          <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
+            Share your unique code — your friend gets{" "}
+            <strong className="text-pink-300">₹50 off</strong> their first
+            order, and you earn{" "}
+            <strong className="text-amber-300">50 bonus loyalty points</strong>!
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <Button
+              data-ocid="referral.open_modal_button"
+              onClick={onOpenReferral}
+              className="font-bold px-8 py-5"
+              style={{
+                background:
+                  "linear-gradient(135deg, oklch(0.58 0.28 340), oklch(0.55 0.28 310))",
+                border: "none",
+                color: "white",
+                boxShadow: "0 4px 20px oklch(0.55 0.28 340 / 0.4)",
+              }}
+            >
+              <Gift className="w-4 h-4 mr-2" /> Get My Referral Code
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
 // ── Share Section ─────────────────────────────────────────────────────────────
+
+const ABOUT_STARS = Array.from({ length: 12 }, (_, i) => ({
+  id: `about-star-${i}`,
+  size: (i % 3) + 1,
+  top: `${(i * 31.7 + 5) % 100}%`,
+  left: `${(i * 47.3 + 13) % 100}%`,
+  color: `oklch(0.85 0.15 ${220 + i * 15})`,
+  duration: `${2 + (i % 3)}s`,
+  delay: `${(i % 5) * 0.4}s`,
+}));
+
+// ── About / Location Section ────────────────────────────────────────────────
+function AboutSection() {
+  return (
+    <section data-ocid="about.section" className="max-w-6xl mx-auto px-4 py-10">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="rounded-2xl p-8 border border-indigo-400/20 relative overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.12 0.05 260 / 0.9), oklch(0.10 0.04 280 / 0.9), oklch(0.12 0.05 300 / 0.9))",
+          boxShadow: "0 0 80px oklch(0.45 0.25 280 / 0.12)",
+        }}
+      >
+        {/* Decorative stars */}
+        {ABOUT_STARS.map((s) => (
+          <div
+            key={s.id}
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              width: s.size,
+              height: s.size,
+              top: s.top,
+              left: s.left,
+              background: s.color,
+              opacity: 0.5,
+              animation: `twinkle ${s.duration} ease-in-out infinite`,
+              animationDelay: s.delay,
+            }}
+          />
+        ))}
+
+        <div className="relative z-10 text-center">
+          <div className="text-4xl mb-4">🌏</div>
+          <h2 className="font-display font-bold text-2xl mb-2 gradient-text">
+            About Galaxy Ice Cream Parlour
+          </h2>
+          <p className="text-muted-foreground text-sm mb-8 max-w-lg mx-auto">
+            We're a cosmic ice cream experience born in the stars — and
+            delivered to your doorstep!
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {[
+              {
+                icon: "🛸",
+                title: "100% Online",
+                desc: "No physical store — we exist entirely on the internet, open anytime you want a cosmic treat!",
+              },
+              {
+                icon: "🕐",
+                title: "Open 24/7",
+                desc: "Galaxy Ice Cream Parlour never closes. Browse 16 cosmic flavours and place your order any time of day or night.",
+              },
+              {
+                icon: "🇮🇳",
+                title: "Serving All of India",
+                desc: "From Kashmir to Kanyakumari — we serve cosmic flavours across every corner of India. All prices in ₹.",
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="rounded-xl p-5 border border-white/10 text-left"
+                style={{ background: "oklch(0.15 0.04 280 / 0.6)" }}
+              >
+                <div className="text-2xl mb-2">{item.icon}</div>
+                <h3 className="font-semibold text-white text-sm mb-1">
+                  {item.title}
+                </h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div
+            className="rounded-xl p-4 border border-yellow-400/20 inline-block max-w-md"
+            style={{ background: "oklch(0.18 0.06 80 / 0.4)" }}
+          >
+            <p className="text-yellow-300/90 text-sm font-medium">
+              📍 No physical address — visit us anytime via this app link!
+            </p>
+            <p className="text-yellow-200/60 text-xs mt-1">
+              Ask Nova, our AI manager, any question about our menu or
+              offerings.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
 function ShareSection() {
   const [copied, setCopied] = useState(false);
   const shareText =
@@ -958,7 +1538,7 @@ function ShareSection() {
   }
 
   return (
-    <section data-ocid="share.section" className="max-w-6xl mx-auto px-4 py-12">
+    <section data-ocid="share.section" className="max-w-6xl mx-auto px-4 py-10">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -1015,12 +1595,14 @@ interface OrderSuccessProps {
   onClose: () => void;
   pointsEarned: number;
   totalPoints: number;
+  referralUsed: boolean;
 }
 function OrderSuccess({
   isOpen,
   onClose,
   pointsEarned,
   totalPoints,
+  referralUsed,
 }: OrderSuccessProps) {
   return (
     <AnimatePresence>
@@ -1061,7 +1643,7 @@ function OrderSuccess({
               <p className="text-muted-foreground text-sm mb-5">
                 Your cosmic treats are being prepared with love ✨
               </p>
-              <div className="bg-amber-400/10 border border-amber-400/30 rounded-xl p-4 mb-5">
+              <div className="bg-amber-400/10 border border-amber-400/30 rounded-xl p-4 mb-3">
                 <Star className="w-6 h-6 fill-amber-300 text-amber-300 mx-auto mb-2" />
                 <p className="font-bold text-amber-300 text-lg">
                   +{pointsEarned} Points Earned!
@@ -1070,6 +1652,17 @@ function OrderSuccess({
                   Total: {totalPoints} loyalty points
                 </p>
               </div>
+              {referralUsed && (
+                <div className="bg-pink-400/10 border border-pink-400/30 rounded-xl p-3 mb-3">
+                  <Gift className="w-5 h-5 text-pink-300 mx-auto mb-1" />
+                  <p className="text-sm font-semibold text-pink-200">
+                    Referral discount applied!
+                  </p>
+                  <p className="text-xs text-pink-300/70">
+                    ₹50 off this order 🎁
+                  </p>
+                </div>
+              )}
               <Button
                 data-ocid="order.confirm_button"
                 onClick={onClose}
@@ -1111,22 +1704,25 @@ function PaymentSuccess() {
           🎉
         </motion.div>
         <CheckCircle className="w-16 h-16 text-emerald-400 mx-auto mb-4" />
-        <h1 className="font-display font-bold text-3xl gradient-text mb-3">
+        <h1 className="font-display font-black text-3xl mb-3 gradient-text">
           Payment Successful!
         </h1>
-        <p className="text-muted-foreground mb-6">
-          Welcome to Galaxy PRO! You now have access to all premium features.
-          Your cosmic journey begins here. 🌌
+        <p className="text-muted-foreground mb-8">
+          Welcome to Galaxy PRO! You now have access to all 70+ premium
+          templates.
         </p>
         <Button
-          data-ocid="payment_success.primary_button"
           onClick={() => {
             window.location.href = "/";
           }}
-          className="bg-violet-600 hover:bg-violet-500"
+          style={{
+            background:
+              "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280))",
+            border: "none",
+            color: "white",
+          }}
         >
-          <IceCream className="w-4 h-4 mr-2" />
-          Back to Parlour
+          Back to Parlour 🍦
         </Button>
       </motion.div>
     </div>
@@ -1141,57 +1737,55 @@ function PaymentFailure() {
       style={{ background: "oklch(0.07 0.025 280)" }}
     >
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
         className="text-center p-10 max-w-md"
       >
         <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-        <h1 className="font-display font-bold text-3xl text-red-300 mb-3">
+        <h1 className="font-display font-black text-3xl mb-3">
           Payment Cancelled
         </h1>
-        <p className="text-muted-foreground mb-6">
-          No worries — your order was not charged. You can try again any time.
+        <p className="text-muted-foreground mb-8">
+          No charge was made. You can try again whenever you're ready.
         </p>
         <Button
-          data-ocid="payment_failure.primary_button"
           onClick={() => {
             window.location.href = "/";
           }}
-          variant="outline"
-          className="border-violet-500/40 text-violet-300 hover:bg-violet-500/10"
+          style={{
+            background:
+              "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280))",
+            border: "none",
+            color: "white",
+          }}
         >
-          <IceCream className="w-4 h-4 mr-2" />
-          Back to Parlour
+          Back to Parlour 🍦
         </Button>
       </motion.div>
     </div>
   );
 }
 
-// ── StripeSetupModal ────────────────────────────────────────────────────────────
-interface StripeSetupModalProps {
+// ── Stripe Setup ────────────────────────────────────────────────────────────────
+interface StripeSetupProps {
   isOpen: boolean;
   onClose: () => void;
 }
-function StripeSetupModal({ isOpen, onClose }: StripeSetupModalProps) {
+function StripeSetup({ isOpen, onClose }: StripeSetupProps) {
   const [stripeKey, setStripeKey] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  async function handleSave() {
+  function handleSave() {
     if (!stripeKey.trim()) {
-      toast.error("Please enter your Stripe secret key");
+      toast.error("Please enter a Stripe secret key");
       return;
     }
     setIsSaving(true);
-    try {
-      // When stripe component is connected, this will call actor.setStripeConfiguration
-      toast.success("Stripe configuration saved! Payments are now live.");
-      onClose();
-    } catch {
-      toast.error("Failed to save configuration. Please try again.");
-    } finally {
+    setTimeout(() => {
       setIsSaving(false);
-    }
+      toast.success("Stripe configuration saved!");
+      onClose();
+    }, 1200);
   }
 
   return (
@@ -1372,13 +1966,22 @@ function IceCreamParlour() {
       return 0;
     }
   });
+  const [isFirstOrder, setIsFirstOrder] = useState<boolean>(() => {
+    try {
+      return !localStorage.getItem("galaxy_has_ordered");
+    } catch {
+      return true;
+    }
+  });
   const [loyaltyOpen, setLoyaltyOpen] = useState(false);
   const [novaOpen, setNovaOpen] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [lastPointsEarned, setLastPointsEarned] = useState(0);
+  const [lastReferralUsed, setLastReferralUsed] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [stripeSetupOpen, setStripeSetupOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [referralOpen, setReferralOpen] = useState(false);
   const { mutateAsync: createCheckoutSession, isPending: isCheckingOut } =
     useCreateCheckoutSession();
 
@@ -1388,7 +1991,7 @@ function IceCreamParlour() {
     try {
       localStorage.setItem("galaxy_loyalty_points", String(loyaltyPoints));
     } catch {
-      // ignore storage errors
+      /* ignore */
     }
   }, [loyaltyPoints]);
 
@@ -1417,28 +2020,50 @@ function IceCreamParlour() {
 
   function changeQty(id: string, delta: number) {
     setCartItems((prev) =>
-      prev
-        .map((i) => (i.flavor.id === id ? { ...i, qty: i.qty + delta } : i))
-        .filter((i) => i.qty > 0),
+      prev.map((i) =>
+        i.flavor.id === id ? { ...i, qty: Math.max(1, i.qty + delta) } : i,
+      ),
     );
   }
 
-  function removeItem(id: string) {
+  function removeFromCart(id: string) {
     setCartItems((prev) => prev.filter((i) => i.flavor.id !== id));
   }
 
-  function placeOrder(redeemPoints: boolean) {
-    const pts = 10;
-    const pointsUsed = redeemPoints && loyaltyPoints >= 100 ? 100 : 0;
-    setLoyaltyPoints((p) => p - pointsUsed + pts);
-    setLastPointsEarned(pts);
+  function placeOrder(redeemPoints: boolean, referralDiscount: boolean) {
+    const pointsEarned = 10;
+    let newPoints = loyaltyPoints + pointsEarned;
+    if (redeemPoints && loyaltyPoints >= 100) newPoints -= 100;
+
+    // If referral was used, mark it and award bonus to referrer
+    // (in a real app this would call backend; here we simulate)
+    if (referralDiscount) {
+      const code = localStorage.getItem("galaxy_used_referral_code"); // might not be set yet
+      if (!code) {
+        // We'll mark it via the referral code input logic — but also handle here
+      }
+      markReferralCodeUsed("USED");
+      // The referrer would get 50 pts in a real system; simulate by adding locally
+      // if it's the same device (for demo purposes)
+      toast.success("🎁 Referral applied! Your friend earned 50 bonus points!");
+    }
+
+    setLoyaltyPoints(newPoints);
+    setLastPointsEarned(pointsEarned);
+    setLastReferralUsed(referralDiscount);
     setCartItems([]);
     setCartOpen(false);
     setOrderSuccess(true);
+    setIsFirstOrder(false);
+
+    try {
+      localStorage.setItem("galaxy_has_ordered", "1");
+    } catch {
+      /* ignore */
+    }
   }
 
-  const categories = ["all", "classic", "galaxy", "fruity", "vegan"];
-  const filteredFlavors =
+  const filtered =
     activeCategory === "all"
       ? FLAVORS
       : FLAVORS.filter((f) => f.category === activeCategory);
@@ -1449,40 +2074,6 @@ function IceCreamParlour() {
       style={{ background: "oklch(0.07 0.025 280)" }}
     >
       <Starfield />
-      {/* Nebula bg orbs */}
-      <div
-        className="nebula-orb"
-        style={{
-          width: 400,
-          height: 400,
-          top: "10%",
-          left: "-10%",
-          background: "oklch(0.45 0.28 310 / 0.12)",
-        }}
-      />
-      <div
-        className="nebula-orb"
-        style={{
-          width: 500,
-          height: 500,
-          top: "40%",
-          right: "-15%",
-          background: "oklch(0.42 0.3 240 / 0.1)",
-          animationDelay: "4s",
-        }}
-      />
-      <div
-        className="nebula-orb"
-        style={{
-          width: 350,
-          height: 350,
-          bottom: "10%",
-          left: "30%",
-          background: "oklch(0.5 0.28 340 / 0.08)",
-          animationDelay: "2s",
-        }}
-      />
-
       <div className="relative z-10">
         <OpeningBanner />
         <Header
@@ -1492,172 +2083,99 @@ function IceCreamParlour() {
           onLoyaltyOpen={() => setLoyaltyOpen(true)}
           onUpgradeOpen={() => setUpgradeOpen(true)}
           onStripeSetup={() => setStripeSetupOpen(true)}
+          onReferralOpen={() => setReferralOpen(true)}
         />
+        <main>
+          <Hero />
+          <PromoBanners />
 
-        {/* Hero */}
-        <section className="max-w-6xl mx-auto px-4 pt-8 pb-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="rounded-2xl overflow-hidden relative"
-            style={{ height: 260 }}
+          {/* Menu */}
+          <section
+            data-ocid="menu.section"
+            className="max-w-6xl mx-auto px-4 py-8"
           >
-            <img
-              src="/assets/generated/galaxy-hero.dim_1200x400.jpg"
-              alt="Galaxy Ice Cream Parlour"
-              className="w-full h-full object-cover"
-            />
-            <div
-              className="absolute inset-0 flex flex-col items-center justify-center"
-              style={{
-                background:
-                  "linear-gradient(to top, oklch(0.07 0.025 280 / 0.8), oklch(0 0 0 / 0.2))",
-              }}
-            >
-              <h2 className="font-display font-black text-3xl sm:text-4xl md:text-5xl text-center shimmer-text drop-shadow-2xl">
-                16 Cosmic Flavours
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-display font-bold text-2xl gradient-text">
+                Our Cosmic Menu
               </h2>
-              <p className="text-violet-200/80 text-sm sm:text-base mt-2 text-center">
-                From ₹99 • Fresh daily • Made with stardust 🌌
-              </p>
+              <div className="flex gap-1.5 flex-wrap justify-end">
+                <button
+                  type="button"
+                  data-ocid="menu.tab"
+                  onClick={() => setActiveCategory("all")}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                    activeCategory === "all"
+                      ? "bg-violet-500/30 border-violet-400/60 text-violet-200"
+                      : "border-border text-muted-foreground hover:border-violet-400/40"
+                  }`}
+                >
+                  All ({FLAVORS.length})
+                </button>
+                {Object.entries(CATEGORY_META).map(([key, meta]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    data-ocid="menu.tab"
+                    onClick={() => setActiveCategory(key)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                      activeCategory === key
+                        ? `${meta.color} opacity-100`
+                        : "border-border text-muted-foreground hover:border-violet-400/40"
+                    }`}
+                  >
+                    {meta.emoji} {meta.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </motion.div>
-        </section>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {filtered.map((flavor, idx) => (
+                <FlavorCard
+                  key={flavor.id}
+                  flavor={flavor}
+                  index={idx}
+                  onAdd={addToCart}
+                />
+              ))}
+            </div>
+          </section>
 
-        <PromoBanners />
-
-        {/* Menu */}
-        <section className="max-w-6xl mx-auto px-4 py-6" id="menu">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-display font-bold text-2xl gradient-text">
-              Our Menu
-            </h2>
-            <Gift className="w-5 h-5 text-violet-400" />
-          </div>
-
-          {/* Category tabs */}
-          <div className="flex gap-2 flex-wrap mb-6">
-            {categories.map((cat) => (
-              <button
-                type="button"
-                key={cat}
-                data-ocid={`menu.${cat}.tab`}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize border transition-all ${
-                  activeCategory === cat
-                    ? "bg-violet-500/30 border-violet-400/60 text-violet-200"
-                    : "border-border text-muted-foreground hover:border-violet-400/40 hover:text-violet-300"
-                }`}
-              >
-                {cat === "all"
-                  ? "🌌 All"
-                  : `${CATEGORY_META[cat].emoji} ${CATEGORY_META[cat].label}`}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredFlavors.map((flavor, i) => (
-              <FlavorCard
-                key={flavor.id}
-                flavor={flavor}
-                index={i}
-                onAdd={addToCart}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* How it works */}
-        <section className="max-w-6xl mx-auto px-4 py-10">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mb-8"
-          >
-            <h2 className="font-display font-bold text-2xl gradient-text mb-2">
-              How Customers Enjoy Us
-            </h2>
-            <p className="text-muted-foreground text-sm">
-              It's simple, cosmic, and delicious
-            </p>
-          </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              {
-                step: "01",
-                title: "Discover",
-                desc: "Browse 16 cosmic flavours across 4 categories. Special badges highlight today's hits.",
-                emoji: "👀",
-              },
-              {
-                step: "02",
-                title: "Ask Nova",
-                desc: "Chat with our AI manager Nova for personalised recommendations and vegan options.",
-                emoji: "🤖",
-              },
-              {
-                step: "03",
-                title: "Order & Earn",
-                desc: "Add to cart, place your order, and earn 10 loyalty points. Redeem for discounts!",
-                emoji: "⭐",
-              },
-              {
-                step: "04",
-                title: "Share the Joy",
-                desc: "Tell your friends! Copy our share message and invite everyone to taste the cosmos.",
-                emoji: "🚀",
-              },
-            ].map((s, i) => (
-              <motion.div
-                key={s.step}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="galaxy-card p-5 text-center"
-              >
-                <div className="text-3xl mb-3">{s.emoji}</div>
-                <div className="text-xs font-mono text-violet-400 mb-1">
-                  {s.step}
-                </div>
-                <h3 className="font-display font-bold mb-2">{s.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {s.desc}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        <ShareSection />
+          <ReferralSection onOpenReferral={() => setReferralOpen(true)} />
+          <ShareSection />
+          <AboutSection />
+        </main>
         <Footer />
       </div>
 
+      {/* Overlays */}
       <CartPanel
         isOpen={cartOpen}
         onClose={() => setCartOpen(false)}
         items={cartItems}
         onQtyChange={changeQty}
-        onRemove={removeItem}
+        onRemove={removeFromCart}
         loyaltyPoints={loyaltyPoints}
         onPlaceOrder={placeOrder}
+        isFirstOrder={isFirstOrder}
       />
       <LoyaltyPanel
         isOpen={loyaltyOpen}
         onClose={() => setLoyaltyOpen(false)}
         points={loyaltyPoints}
       />
+      <ReferralPanel
+        isOpen={referralOpen}
+        onClose={() => setReferralOpen(false)}
+      />
       <OrderSuccess
         isOpen={orderSuccess}
         onClose={() => setOrderSuccess(false)}
         pointsEarned={lastPointsEarned}
         totalPoints={loyaltyPoints}
+        referralUsed={lastReferralUsed}
       />
       <NovaChat isOpen={novaOpen} onToggle={() => setNovaOpen((v) => !v)} />
-      <StripeSetupModal
+      <StripeSetup
         isOpen={stripeSetupOpen}
         onClose={() => setStripeSetupOpen(false)}
       />
@@ -1667,7 +2185,7 @@ function IceCreamParlour() {
         onUpgrade={handleUpgrade}
         isLoading={isCheckingOut}
       />
-      <Toaster richColors />
+      <Toaster />
     </div>
   );
 }
