@@ -13,7 +13,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -26,7 +28,7 @@ import {
   useListDesigns,
   useSaveDesign,
 } from "../hooks/useQueries";
-import { CANVAS_PRESETS } from "../types/canvas";
+import { CANVAS_PRESETS, PRESET_CATEGORIES } from "../types/canvas";
 
 interface TopBarProps {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -109,16 +111,29 @@ export default function TopBar({ canvasRef }: TopBarProps) {
         <Select value={selectedPreset} onValueChange={handlePresetChange}>
           <SelectTrigger
             data-ocid="topbar.preset_select"
-            className="h-7 text-xs w-52 bg-secondary border-border"
+            className="h-7 text-xs w-56 bg-secondary border-border"
           >
             <SelectValue />
             <ChevronDown size={12} className="ml-1 opacity-50" />
           </SelectTrigger>
-          <SelectContent>
-            {CANVAS_PRESETS.map((p) => (
-              <SelectItem key={p.name} value={p.name} className="text-xs">
-                {p.name}
-              </SelectItem>
+          <SelectContent className="max-h-80">
+            {PRESET_CATEGORIES.map((cat) => (
+              <SelectGroup key={cat}>
+                <SelectLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  {cat}
+                </SelectLabel>
+                {CANVAS_PRESETS.filter(
+                  (p) => (p.category ?? "Other") === cat,
+                ).map((p) => (
+                  <SelectItem
+                    key={p.name}
+                    value={p.name}
+                    className="text-xs pl-4"
+                  >
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             ))}
           </SelectContent>
         </Select>

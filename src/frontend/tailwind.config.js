@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Sora', 'sans-serif'],
+        sans: ['Figtree', 'sans-serif'],
         display: ['Bricolage Grotesque', 'sans-serif'],
         mono: ['Geist Mono', 'monospace'],
       },
@@ -75,9 +75,6 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      boxShadow: {
-        xs: "0 1px 2px 0 rgba(0,0,0,0.05)",
-      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -87,10 +84,20 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        twinkle: {
+          "0%, 100%": { opacity: "0.1", transform: "scale(1)" },
+          "50%": { opacity: "0.9", transform: "scale(1.5)" },
+        },
+        "float-up": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-12px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        twinkle: "twinkle 3s ease-in-out infinite",
+        "float-up": "float-up 4s ease-in-out infinite",
       },
     },
   },
