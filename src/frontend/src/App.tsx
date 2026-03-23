@@ -67,6 +67,7 @@ interface Flavor {
 interface CartItem {
   flavor: Flavor;
   qty: number;
+  toppings?: { name: string; emoji: string; price: number }[];
 }
 
 interface ChatMessage {
@@ -507,6 +508,15 @@ const CUSTOMER_FAVOURITES: {
   { id: "rosemilk", orders: 874, rating: 4.7, badge: "💜 Rising Star" },
 ];
 
+// ── Toppings ───────────────────────────────────────────────────────────────
+const TOPPINGS: { id: string; name: string; emoji: string; price: number }[] = [
+  { id: "choco-drizzle", name: "Chocolate Drizzle", emoji: "🍫", price: 20 },
+  { id: "sprinkles", name: "Rainbow Sprinkles", emoji: "🌈", price: 15 },
+  { id: "crushed-nuts", name: "Crushed Nuts", emoji: "🥜", price: 25 },
+  { id: "cherry", name: "Cherry on Top", emoji: "🍒", price: 15 },
+  { id: "waffle-upgrade", name: "Waffle Cone Upgrade", emoji: "🧇", price: 30 },
+];
+
 const CATEGORY_META: Record<
   string,
   { label: string; emoji: string; color: string }
@@ -582,12 +592,46 @@ const NOVA_RESPONSES: Record<string, string> = {
     "Galaxy Ice Cream Parlour is fully online! 🌏 We're not at a physical address — we're everywhere in India via this app. Open 24/7, no stepping out needed! 🍦",
   family:
     "We have 6 amazing Family Pack Big Blocks starting at ₹299! 👨‍👩‍👧‍👦 Perfect for family get-togethers — choose from Vanilla Dream (₹299), Butterscotch Bliss (₹319), Strawberry Galaxy (₹329), Chocolate Fudge (₹349), Mango Meteor (₹379), and the special Nebula Swirl Big Block (₹449). Each block serves 4-6 people!",
+  factory:
+    "Galaxy Ice Cream Parlour operates as a 100% online virtual business! 🏭✨ We don't have a physical factory or kitchen — instead, we partner with local cloud kitchens across India to prepare your cosmic flavours fresh and deliver them right to your door!",
+  state:
+    "Galaxy Ice Cream Parlour serves ALL states of India! 🗺️🇮🇳 From Maharashtra, Delhi, Karnataka, Tamil Nadu, West Bengal, Gujarat — we're everywhere! You can order from any state, any city, any time. We're open 24/7 for all of India!",
+  open: "Galaxy Ice Cream Parlour is open 24/7, every single day! 🌟 There are no closing hours because we're fully online. Whether you're in Mumbai at midnight or Chennai at dawn — we're always here for you! 🍦",
+  kitchen:
+    "We operate through virtual cloud kitchens across India! 🍦 No single physical location — your order is prepared fresh by a local partner kitchen near you, then delivered to your doorstep with our beautiful Galaxy Cosmic Packaging!",
   default:
-    "I'd love to help! 🤖 You can ask me about: our location, vegan options, today's special, prices, family packs, recommendations, offers, referral, or any specific flavour like mango or chocolate!",
+    "I'd love to help! 🤖 You can ask me about: our location, which state we serve, factory details, opening hours, vegan options, today's special, prices, family packs, recommendations, offers, or any specific flavour!",
 };
 
 function getNovaResponse(input: string): string {
   const lower = input.toLowerCase();
+  // Multi-word pattern checks first
+  if (
+    lower.includes("which state") ||
+    lower.includes("kon sa state") ||
+    lower.includes("kaunse state") ||
+    lower.includes("kahan open") ||
+    lower.includes("which city") ||
+    lower.includes("in which")
+  )
+    return NOVA_RESPONSES.state;
+  if (
+    lower.includes("factory") ||
+    lower.includes("kitchen") ||
+    lower.includes("kahan bana") ||
+    lower.includes("where made") ||
+    lower.includes("manufacturing")
+  )
+    return NOVA_RESPONSES.factory;
+  if (
+    lower.includes("when open") ||
+    lower.includes("opening time") ||
+    lower.includes("kab open") ||
+    lower.includes("timing") ||
+    lower.includes("closed") ||
+    lower.includes("hours")
+  )
+    return NOVA_RESPONSES.open;
   for (const key of Object.keys(NOVA_RESPONSES)) {
     if (key !== "default" && lower.includes(key)) return NOVA_RESPONSES[key];
   }
@@ -759,6 +803,567 @@ function Header({
   );
 }
 
+// ── Galaxy Ad Banner ────────────────────────────────────────────────────────
+function GalaxyAdBanner() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [offerIdx, setOfferIdx] = useState(0);
+  const [typed, setTyped] = useState("");
+  const tagline = "India's Most Cosmic Ice Cream Experience";
+
+  const offers = [
+    {
+      emoji: "🌌",
+      text: "Today's Special: Nebula Swirl",
+      price: "₹99",
+      color: "#a855f7",
+    },
+    {
+      emoji: "🎉",
+      text: "Buy 2 Get 1 FREE Every Weekend!",
+      price: "",
+      color: "#ec4899",
+    },
+    {
+      emoji: "👨‍👩‍👧‍👦",
+      text: "Family Pack Starting at",
+      price: "₹299",
+      color: "#fbbf24",
+    },
+    {
+      emoji: "🎡",
+      text: "Spin to Win Discounts & Free Toppings!",
+      price: "",
+      color: "#34d399",
+    },
+  ];
+
+  // Typewriter effect
+  useEffect(() => {
+    let i = 0;
+    setTyped("");
+    const interval = setInterval(() => {
+      i++;
+      setTyped(tagline.slice(0, i));
+      if (i >= tagline.length) clearInterval(interval);
+    }, 55);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Rotating offers
+  useEffect(() => {
+    const id = setInterval(
+      () => setOfferIdx((p) => (p + 1) % offers.length),
+      3000,
+    );
+    return () => clearInterval(id);
+  }, []);
+
+  // Canvas starfield
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let raf: number;
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const stars = Array.from({ length: 300 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.8 + 0.2,
+      speed: Math.random() * 0.3 + 0.05,
+      opacity: Math.random(),
+      delta: (Math.random() - 0.5) * 0.02,
+    }));
+
+    const draw = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const s of stars) {
+        s.opacity += s.delta;
+        if (s.opacity <= 0 || s.opacity >= 1) s.delta = -s.delta;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${Math.max(0, Math.min(1, s.opacity))})`;
+        ctx.fill();
+        s.y += s.speed;
+        if (s.y > canvas.height) {
+          s.y = 0;
+          s.x = Math.random() * canvas.width;
+        }
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  const scrollToMenu = () => {
+    const el = document.querySelector('[data-ocid="menu.section"]');
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const floaters = [
+    {
+      emoji: "🍦",
+      style: { top: "15%", left: "8%", fontSize: "3rem", animationDelay: "0s" },
+    },
+    {
+      emoji: "🍧",
+      style: {
+        top: "25%",
+        right: "10%",
+        fontSize: "2.5rem",
+        animationDelay: "1.5s",
+      },
+    },
+    {
+      emoji: "🍨",
+      style: {
+        bottom: "20%",
+        left: "12%",
+        fontSize: "2rem",
+        animationDelay: "0.8s",
+      },
+    },
+    {
+      emoji: "🍡",
+      style: {
+        bottom: "30%",
+        right: "8%",
+        fontSize: "2.8rem",
+        animationDelay: "2s",
+      },
+    },
+    {
+      emoji: "🌟",
+      style: {
+        top: "40%",
+        left: "3%",
+        fontSize: "1.5rem",
+        animationDelay: "0.4s",
+      },
+    },
+    {
+      emoji: "✨",
+      style: {
+        top: "60%",
+        right: "4%",
+        fontSize: "1.8rem",
+        animationDelay: "1.2s",
+      },
+    },
+    {
+      emoji: "🍦",
+      style: {
+        top: "70%",
+        left: "25%",
+        fontSize: "1.6rem",
+        animationDelay: "2.5s",
+      },
+    },
+    {
+      emoji: "🍫",
+      style: {
+        top: "10%",
+        right: "30%",
+        fontSize: "1.4rem",
+        animationDelay: "1.8s",
+      },
+    },
+  ];
+
+  return (
+    <>
+      <style>{`
+        @keyframes galaxyFloat {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          33% { transform: translateY(-20px) rotate(5deg); }
+          66% { transform: translateY(-10px) rotate(-5deg); }
+        }
+        @keyframes cosmicPulse {
+          0%, 100% { box-shadow: 0 0 20px #a855f7, 0 0 40px #a855f7, 0 0 80px #ec4899; transform: scale(1); }
+          50% { box-shadow: 0 0 30px #ec4899, 0 0 60px #a855f7, 0 0 120px #fbbf24; transform: scale(1.05); }
+        }
+        @keyframes shimmerTitle {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        @keyframes sparkle {
+          0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+          50% { opacity: 1; transform: scale(1) rotate(180deg); }
+        }
+        @keyframes orbitSpin {
+          from { transform: rotate(0deg) translateX(120px) rotate(0deg); }
+          to { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
+        }
+        .galaxy-ad-title {
+          background: linear-gradient(90deg, #fbbf24, #f472b6, #a855f7, #60a5fa, #34d399, #fbbf24);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: shimmerTitle 3s linear infinite;
+        }
+        .ad-floater {
+          position: absolute;
+          animation: galaxyFloat 4s ease-in-out infinite;
+          pointer-events: none;
+          z-index: 2;
+        }
+        .ad-cta-btn {
+          animation: cosmicPulse 2s ease-in-out infinite;
+        }
+        .sparkle-dot {
+          position: absolute;
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          animation: sparkle 2s ease-in-out infinite;
+        }
+      `}</style>
+
+      <section
+        data-ocid="ad.section"
+        style={{
+          position: "relative",
+          minHeight: "100vh",
+          overflow: "hidden",
+          background:
+            "radial-gradient(ellipse at 20% 50%, #1a0040 0%, #0a0015 40%, #050010 100%)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {/* Canvas starfield */}
+        <canvas
+          ref={canvasRef}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 0,
+          }}
+        />
+
+        {/* Nebula gradients */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 1,
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: "-10%",
+              left: "-15%",
+              width: "50%",
+              height: "50%",
+              background:
+                "radial-gradient(circle, rgba(168,85,247,0.25) 0%, transparent 70%)",
+              borderRadius: "50%",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "-10%",
+              right: "-10%",
+              width: "45%",
+              height: "45%",
+              background:
+                "radial-gradient(circle, rgba(236,72,153,0.2) 0%, transparent 70%)",
+              borderRadius: "50%",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: "30%",
+              right: "10%",
+              width: "30%",
+              height: "30%",
+              background:
+                "radial-gradient(circle, rgba(96,165,250,0.15) 0%, transparent 70%)",
+              borderRadius: "50%",
+            }}
+          />
+        </div>
+
+        {/* Floating emojis */}
+        {floaters.map((f, i) => (
+          <div
+            key={`floater-${f.emoji}-${i}`}
+            className="ad-floater"
+            style={f.style}
+          >
+            {f.emoji}
+          </div>
+        ))}
+
+        {/* Sparkle dots */}
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => (
+          <div
+            key={`spark-${i}`}
+            className="sparkle-dot"
+            style={{
+              top: `${((i * 37.3 + 5) % 90) + 5}%`,
+              left: `${((i * 53.7 + 3) % 90) + 5}%`,
+              background: ["#fbbf24", "#a855f7", "#ec4899", "#60a5fa"][i % 4],
+              animationDelay: `${(i * 0.4) % 2}s`,
+              zIndex: 2,
+            }}
+          />
+        ))}
+
+        {/* Main content */}
+        <div
+          style={{
+            position: "relative",
+            zIndex: 10,
+            textAlign: "center",
+            padding: "2rem 1rem",
+            maxWidth: "900px",
+            width: "100%",
+          }}
+        >
+          {/* Animated stars subtitle */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{
+              color: "#fbbf24",
+              fontSize: "1rem",
+              fontWeight: 700,
+              letterSpacing: "0.3em",
+              marginBottom: "1rem",
+              textTransform: "uppercase",
+            }}
+          >
+            ✦ Now Open 24/7 Across All India ✦
+          </motion.div>
+
+          {/* Main headline */}
+          <motion.h1
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="galaxy-ad-title"
+            style={{
+              fontSize: "clamp(2rem, 7vw, 5rem)",
+              fontWeight: 900,
+              lineHeight: 1.1,
+              marginBottom: "1.5rem",
+              textShadow: "0 0 40px rgba(168,85,247,0.8)",
+            }}
+          >
+            🌌 GALAXY ICE CREAM PARLOUR
+          </motion.h1>
+
+          {/* Typewriter tagline */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            style={{
+              fontSize: "clamp(1rem, 3vw, 1.5rem)",
+              color: "#e2d9f3",
+              minHeight: "2rem",
+              marginBottom: "0.75rem",
+              fontWeight: 600,
+            }}
+          >
+            {typed}
+            <span
+              style={{
+                opacity: typed.length < tagline.length ? 1 : 0,
+                color: "#a855f7",
+              }}
+            >
+              |
+            </span>
+          </motion.p>
+
+          {/* Subtitle badges */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: "0.5rem",
+              marginBottom: "1rem",
+            }}
+          >
+            {[
+              "34+ Flavors",
+              "Family Packs",
+              "Loyalty Rewards",
+              "Spin to Win",
+            ].map((tag) => (
+              <span
+                key={tag}
+                style={{
+                  background: "rgba(168,85,247,0.25)",
+                  border: "1px solid rgba(168,85,247,0.5)",
+                  borderRadius: "9999px",
+                  padding: "0.25rem 0.75rem",
+                  color: "#d8b4fe",
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                }}
+              >
+                ✦ {tag}
+              </span>
+            ))}
+          </motion.div>
+
+          {/* Star rating */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+            style={{
+              color: "#fbbf24",
+              fontSize: "1.1rem",
+              marginBottom: "2rem",
+              fontWeight: 700,
+            }}
+          >
+            ⭐⭐⭐⭐⭐ &nbsp;
+            <span style={{ color: "#f8fafc" }}>10,000+ Happy Customers</span>
+          </motion.div>
+
+          {/* Rotating offer card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0 }}
+            style={{
+              marginBottom: "2.5rem",
+              minHeight: "80px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={offerIdx}
+                initial={{ opacity: 0, scale: 0.85, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.85, y: -20 }}
+                transition={{ duration: 0.5 }}
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(10,0,21,0.9), rgba(30,0,60,0.8))",
+                  border: `2px solid ${offers[offerIdx].color}`,
+                  borderRadius: "1rem",
+                  padding: "1rem 2rem",
+                  boxShadow: `0 0 30px ${offers[offerIdx].color}60`,
+                  display: "inline-block",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: "2rem", marginBottom: "0.25rem" }}>
+                  {offers[offerIdx].emoji}
+                </div>
+                <div
+                  style={{
+                    color: "#f8fafc",
+                    fontSize: "1.1rem",
+                    fontWeight: 700,
+                  }}
+                >
+                  {offers[offerIdx].text}
+                  {offers[offerIdx].price && (
+                    <span
+                      style={{
+                        color: offers[offerIdx].color,
+                        marginLeft: "0.4rem",
+                        fontSize: "1.3rem",
+                      }}
+                    >
+                      {offers[offerIdx].price}
+                    </span>
+                  )}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
+
+          {/* CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.2, type: "spring", stiffness: 200 }}
+          >
+            <button
+              type="button"
+              data-ocid="ad.primary_button"
+              className="ad-cta-btn"
+              onClick={scrollToMenu}
+              style={{
+                background: "linear-gradient(135deg, #a855f7, #ec4899)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "9999px",
+                padding: "1rem 3rem",
+                fontSize: "1.3rem",
+                fontWeight: 900,
+                cursor: "pointer",
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+              }}
+            >
+              🍦 ORDER NOW
+            </button>
+          </motion.div>
+
+          {/* Skip link */}
+          <div style={{ marginTop: "2rem" }}>
+            <button
+              type="button"
+              data-ocid="ad.link"
+              onClick={scrollToMenu}
+              style={{
+                background: "none",
+                border: "none",
+                color: "rgba(255,255,255,0.4)",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              Skip to Menu ↓
+            </button>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
 // ── Promo Banners ───────────────────────────────────────────────────────────
 function PromoBanners() {
   const banners = [
@@ -877,6 +1482,332 @@ function CustomerFavouritesSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
           </motion.div>
         ))}
       </div>
+    </section>
+  );
+}
+
+// ── Spin to Win ──────────────────────────────────────────────────────────────
+const SPIN_SEGMENTS = [
+  {
+    label: "10% OFF",
+    color: "#f59e0b",
+    textColor: "#1a1a1a",
+    discount: 0.1,
+    type: "percent",
+  },
+  {
+    label: "20% OFF",
+    color: "#8b5cf6",
+    textColor: "#ffffff",
+    discount: 0.2,
+    type: "percent",
+  },
+  {
+    label: "Free Topping!",
+    color: "#10b981",
+    textColor: "#ffffff",
+    discount: 30,
+    type: "flat",
+  },
+  {
+    label: "₹50 OFF",
+    color: "#ec4899",
+    textColor: "#ffffff",
+    discount: 50,
+    type: "flat",
+  },
+  {
+    label: "30% OFF",
+    color: "#3b82f6",
+    textColor: "#ffffff",
+    discount: 0.3,
+    type: "percent",
+  },
+  {
+    label: "Try Again",
+    color: "#6b7280",
+    textColor: "#ffffff",
+    discount: 0,
+    type: "none",
+  },
+];
+
+interface SpinToWinProps {
+  onWin: (discount: number) => void;
+}
+
+function SpinToWinSection({ onWin }: SpinToWinProps) {
+  const [hasSpun, setHasSpun] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [rotation, setRotation] = useState(0);
+  const [result, setResult] = useState<(typeof SPIN_SEGMENTS)[0] | null>(null);
+  const [showResult, setShowResult] = useState(false);
+
+  const numSegments = SPIN_SEGMENTS.length;
+  const segmentAngle = 360 / numSegments;
+
+  function handleSpin() {
+    if (hasSpun || isSpinning) return;
+    setIsSpinning(true);
+    setShowResult(false);
+
+    const winIdx = Math.floor(Math.random() * numSegments);
+    // Spin 5 full rotations + land on segment
+    // The wheel stops with the winning segment pointing UP (270deg from right = 12 o'clock)
+    // Segment center at: winIdx * segmentAngle + segmentAngle/2
+    // We want that at 270deg (top) when stopped
+    const segCenter = winIdx * segmentAngle + segmentAngle / 2;
+    const targetAngle = 270 - segCenter;
+    const totalRotation =
+      rotation + 5 * 360 + ((targetAngle - (rotation % 360) + 360) % 360);
+
+    setRotation(totalRotation);
+
+    setTimeout(() => {
+      const won = SPIN_SEGMENTS[winIdx];
+      setResult(won);
+      setHasSpun(true);
+      setIsSpinning(false);
+      setShowResult(true);
+      if (won.type !== "none") {
+        // We'll notify parent
+        // For percent: we pass a special marker; for flat: direct value
+        // Store in parent as spinDiscount object
+        onWin(
+          won.type === "percent"
+            ? -(won.discount as number)
+            : (won.discount as number),
+        );
+      }
+    }, 3200);
+  }
+
+  // Build SVG wheel
+  const size = 260;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = size / 2 - 4;
+
+  function polarToCart(deg: number, radius: number) {
+    const rad = ((deg - 90) * Math.PI) / 180;
+    return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
+  }
+
+  const paths = SPIN_SEGMENTS.map((seg, i) => {
+    const startAngle = i * segmentAngle;
+    const endAngle = (i + 1) * segmentAngle;
+    const start = polarToCart(startAngle, r);
+    const end = polarToCart(endAngle, r);
+    const mid = polarToCart(startAngle + segmentAngle / 2, r * 0.62);
+    const largeArc = segmentAngle > 180 ? 1 : 0;
+    const d = `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y} Z`;
+    return { d, seg, mid };
+  });
+
+  return (
+    <section data-ocid="spin.section" className="max-w-6xl mx-auto px-4 py-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden rounded-3xl border border-violet-400/40 bg-gradient-to-br from-violet-950/80 via-fuchsia-950/70 to-indigo-950/80 p-6 md:p-10"
+      >
+        {/* Glow bg */}
+        <div
+          className="absolute inset-0 opacity-20 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at 60% 40%, oklch(0.6 0.3 310) 0%, transparent 60%)",
+          }}
+        />
+        <div className="relative flex flex-col items-center gap-6">
+          <div className="text-center">
+            <motion.h2
+              className="font-display font-bold text-3xl md:text-4xl mb-2"
+              style={{ color: "oklch(0.9 0.15 310)" }}
+              animate={{ scale: [1, 1.03, 1] }}
+              transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2 }}
+            >
+              🎡 Spin to Win a Reward!
+            </motion.h2>
+            <p className="text-violet-300/70 text-sm">
+              Spin the wheel once per order for a surprise discount!
+            </p>
+          </div>
+
+          {/* Wheel container */}
+          <div
+            className="relative flex flex-col items-center"
+            data-ocid="spin.canvas_target"
+          >
+            {/* Pointer arrow at top */}
+            <div
+              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 z-10 text-2xl drop-shadow-lg"
+              style={{ filter: "drop-shadow(0 0 6px oklch(0.9 0.2 60))" }}
+            >
+              ▼
+            </div>
+            <div
+              style={{
+                transform: `rotate(${rotation}deg)`,
+                transition: isSpinning
+                  ? "transform 3.2s cubic-bezier(0.17, 0.67, 0.12, 1.0)"
+                  : "none",
+                borderRadius: "50%",
+                boxShadow:
+                  "0 0 32px oklch(0.6 0.3 310 / 0.5), 0 0 8px oklch(0.7 0.2 60 / 0.3)",
+                border: "3px solid oklch(0.7 0.15 310 / 0.5)",
+              }}
+            >
+              <svg
+                width={size}
+                height={size}
+                viewBox={`0 0 ${size} ${size}`}
+                role="img"
+                aria-label="Spin to Win prize wheel"
+              >
+                {paths.map(({ d, seg, mid }, i) => (
+                  <g key={seg.label}>
+                    <path
+                      d={d}
+                      fill={seg.color}
+                      stroke="oklch(0.15 0.02 280)"
+                      strokeWidth="1.5"
+                    />
+                    <text
+                      x={mid.x}
+                      y={mid.y}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fill={seg.textColor}
+                      fontSize={seg.label.length > 7 ? "9" : "11"}
+                      fontWeight="700"
+                      transform={`rotate(${i * segmentAngle + segmentAngle / 2}, ${mid.x}, ${mid.y})`}
+                    >
+                      {seg.label}
+                    </text>
+                  </g>
+                ))}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={18}
+                  fill="oklch(0.15 0.02 280)"
+                  stroke="oklch(0.7 0.15 310)"
+                  strokeWidth="2"
+                />
+                <text
+                  x={cx}
+                  y={cy}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="white"
+                  fontSize="10"
+                  fontWeight="800"
+                >
+                  ✨
+                </text>
+              </svg>
+            </div>
+          </div>
+
+          {/* Spin Button */}
+          {!hasSpun && (
+            <motion.button
+              type="button"
+              data-ocid="spin.primary_button"
+              onClick={handleSpin}
+              disabled={isSpinning}
+              whileHover={!isSpinning ? { scale: 1.06 } : {}}
+              whileTap={!isSpinning ? { scale: 0.96 } : {}}
+              className="font-bold text-white text-lg px-10 py-3.5 rounded-full disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+              style={{
+                background:
+                  "linear-gradient(135deg, oklch(0.55 0.3 310), oklch(0.5 0.3 280), oklch(0.55 0.28 240))",
+                boxShadow: "0 4px 24px oklch(0.55 0.3 310 / 0.5)",
+              }}
+            >
+              {isSpinning ? "Spinning..." : "🎡 SPIN!"}
+            </motion.button>
+          )}
+
+          {/* Result Banner */}
+          {showResult && result && (
+            <motion.div
+              data-ocid="spin.success_state"
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              className="rounded-2xl border px-8 py-5 text-center max-w-sm w-full"
+              style={{
+                background:
+                  result.type === "none"
+                    ? "oklch(0.2 0.02 280)"
+                    : "linear-gradient(135deg, oklch(0.18 0.04 310), oklch(0.2 0.06 280))",
+                borderColor:
+                  result.type === "none"
+                    ? "oklch(0.4 0.02 280)"
+                    : "oklch(0.7 0.2 310 / 0.5)",
+                boxShadow:
+                  result.type === "none"
+                    ? "none"
+                    : "0 0 24px oklch(0.6 0.2 310 / 0.3)",
+              }}
+            >
+              {result.type === "none" ? (
+                <>
+                  <div className="text-4xl mb-2">😅</div>
+                  <p className="font-bold text-lg text-gray-300">
+                    Better luck next time!
+                  </p>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Spin again with your next order.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="text-4xl mb-2">🎉</div>
+                  <p
+                    className="font-bold text-2xl"
+                    style={{ color: "oklch(0.9 0.2 310)" }}
+                  >
+                    You won:{" "}
+                    <span style={{ color: "oklch(0.85 0.18 80)" }}>
+                      {result.label}
+                    </span>
+                  </p>
+                  <p className="text-violet-300/70 text-sm mt-1">
+                    {result.type === "flat" && result.label !== "Free Topping!"
+                      ? `₹${result.discount} discount applied to your cart!`
+                      : result.type === "percent"
+                        ? `${Math.round((result.discount as number) * 100)}% off applied to your cart!`
+                        : "A free topping will be added to your next order!"}
+                  </p>
+                  <div
+                    className="mt-3 inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest"
+                    style={{
+                      background: "oklch(0.55 0.3 310 / 0.3)",
+                      color: "oklch(0.9 0.2 310)",
+                      border: "1px dashed oklch(0.7 0.2 310 / 0.5)",
+                    }}
+                  >
+                    🎟 Coupon Applied
+                  </div>
+                </>
+              )}
+            </motion.div>
+          )}
+
+          {hasSpun && !showResult && (
+            <p
+              data-ocid="spin.loading_state"
+              className="text-violet-400/60 text-sm animate-pulse"
+            >
+              Spinning…
+            </p>
+          )}
+        </div>
+      </motion.div>
     </section>
   );
 }
@@ -1153,10 +2084,36 @@ function Hero() {
 interface FlavorCardProps {
   flavor: Flavor;
   index: number;
-  onAdd: (f: Flavor) => void;
+  onAdd: (
+    flavor: Flavor,
+    toppings?: { name: string; emoji: string; price: number }[],
+  ) => void;
 }
 function FlavorCard({ flavor, index, onAdd }: FlavorCardProps) {
   const meta = CATEGORY_META[flavor.category];
+  const [expanded, setExpanded] = useState(false);
+  const [selectedToppings, setSelectedToppings] = useState<typeof TOPPINGS>([]);
+
+  function toggleTopping(t: (typeof TOPPINGS)[0]) {
+    setSelectedToppings((prev) =>
+      prev.find((x) => x.id === t.id)
+        ? prev.filter((x) => x.id !== t.id)
+        : [...prev, t],
+    );
+  }
+
+  function handleAdd() {
+    onAdd(flavor, selectedToppings.length > 0 ? selectedToppings : undefined);
+    setExpanded(false);
+    setSelectedToppings([]);
+  }
+
+  function handleSkip() {
+    onAdd(flavor);
+    setExpanded(false);
+    setSelectedToppings([]);
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -1215,11 +2172,12 @@ function FlavorCard({ flavor, index, onAdd }: FlavorCardProps) {
         <Button
           data-ocid={`menu.item.${index + 1}`}
           size="sm"
-          onClick={() => onAdd(flavor)}
+          onClick={() => setExpanded((v) => !v)}
           className="text-xs px-3 py-1 h-7 font-semibold"
           style={{
-            background:
-              "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280))",
+            background: expanded
+              ? "linear-gradient(135deg, oklch(0.45 0.28 310), oklch(0.4 0.3 280))"
+              : "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280))",
             border: "none",
             color: "white",
           }}
@@ -1227,6 +2185,90 @@ function FlavorCard({ flavor, index, onAdd }: FlavorCardProps) {
           <Plus className="w-3 h-3 mr-1" /> Add
         </Button>
       </div>
+
+      {/* Inline Topping Picker */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div
+              className="rounded-xl p-3 mt-1 border border-violet-500/30"
+              style={{
+                background:
+                  "linear-gradient(135deg, oklch(0.12 0.05 310 / 0.8), oklch(0.10 0.04 280 / 0.8))",
+              }}
+            >
+              <p className="text-xs font-bold text-violet-300 mb-2">
+                🍨 Add Toppings
+              </p>
+              <div className="space-y-1.5">
+                {TOPPINGS.map((t) => {
+                  const checked = !!selectedToppings.find((x) => x.id === t.id);
+                  return (
+                    <div
+                      key={t.id}
+                      className="flex items-center gap-2 cursor-pointer group"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleTopping(t)}
+                        aria-label={t.name}
+                        className={`w-4 h-4 rounded border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                          checked
+                            ? "border-violet-400 bg-violet-500"
+                            : "border-violet-500/40 bg-violet-900/40 group-hover:border-violet-400/70"
+                        }`}
+                      >
+                        {checked && (
+                          <Check className="w-2.5 h-2.5 text-white" />
+                        )}
+                      </button>
+                      <span className="text-xs text-violet-100 flex-1">
+                        {t.emoji} {t.name}
+                      </span>
+                      <span className="text-xs text-violet-400 font-semibold">
+                        +₹{t.price}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex gap-2 mt-3">
+                <button
+                  type="button"
+                  data-ocid={`menu.item.${index + 1}`}
+                  onClick={handleSkip}
+                  className="flex-1 text-xs py-1.5 rounded-lg border border-violet-500/30 text-violet-300 hover:bg-violet-500/10 transition-colors"
+                >
+                  Skip & Add
+                </button>
+                <button
+                  type="button"
+                  data-ocid={`menu.item.${index + 1}`}
+                  onClick={handleAdd}
+                  className="flex-1 text-xs py-1.5 rounded-lg font-semibold text-white transition-all"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280))",
+                  }}
+                >
+                  🛒 Add to Cart
+                  {selectedToppings.length > 0 && (
+                    <span className="ml-1 opacity-80">
+                      +₹{selectedToppings.reduce((s, t) => s + t.price, 0)}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -1241,6 +2283,9 @@ interface CartPanelProps {
   loyaltyPoints: number;
   onPlaceOrder: (redeemPoints: boolean, referralDiscount: boolean) => void;
   isFirstOrder: boolean;
+  spinDiscount: number;
+  spinDiscountType: "percent" | "flat" | "none";
+  birthdayDiscount?: boolean;
 }
 function CartPanel({
   isOpen,
@@ -1251,16 +2296,38 @@ function CartPanel({
   loyaltyPoints,
   onPlaceOrder,
   isFirstOrder,
+  spinDiscount,
+  spinDiscountType,
+  birthdayDiscount,
 }: CartPanelProps) {
   const [redeemPoints, setRedeemPoints] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   const [referralApplied, setReferralApplied] = useState(false);
   const [referralError, setReferralError] = useState("");
 
-  const subtotal = items.reduce((s, i) => s + i.flavor.price * i.qty, 0);
+  const subtotal = items.reduce((s, i) => {
+    const toppingTotal = (i.toppings ?? []).reduce((ts, t) => ts + t.price, 0);
+    return s + (i.flavor.price + toppingTotal) * i.qty;
+  }, 0);
   const loyaltyDiscount = redeemPoints && loyaltyPoints >= 100 ? 50 : 0;
   const referralDiscount = referralApplied ? 50 : 0;
-  const total = Math.max(0, subtotal - loyaltyDiscount - referralDiscount);
+  const spinDiscountAmount =
+    spinDiscountType === "percent"
+      ? Math.round(subtotal * spinDiscount)
+      : spinDiscountType === "flat"
+        ? spinDiscount
+        : 0;
+  const birthdayDiscountAmount = birthdayDiscount
+    ? Math.round(subtotal * 0.15)
+    : 0;
+  const total = Math.max(
+    0,
+    subtotal -
+      loyaltyDiscount -
+      referralDiscount -
+      spinDiscountAmount -
+      birthdayDiscountAmount,
+  );
   const canRedeem = loyaltyPoints >= 100;
 
   function applyReferralCode() {
@@ -1355,6 +2422,21 @@ function CartPanel({
                         <p className="text-xs text-muted-foreground">
                           ₹{item.flavor.price} each
                         </p>
+                        {item.toppings && item.toppings.length > 0 && (
+                          <div className="mt-1 space-y-0.5">
+                            {item.toppings.map((t) => (
+                              <p
+                                key={t.name}
+                                className="text-xs text-violet-400/70"
+                              >
+                                + {t.emoji} {t.name}{" "}
+                                <span className="text-violet-500/60">
+                                  +₹{t.price}
+                                </span>
+                              </p>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-1">
                         <button
@@ -1377,7 +2459,13 @@ function CartPanel({
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-amber-300">
-                          ₹{item.flavor.price * item.qty}
+                          ₹
+                          {(item.flavor.price +
+                            (item.toppings ?? []).reduce(
+                              (s, t) => s + t.price,
+                              0,
+                            )) *
+                            item.qty}
                         </p>
                         <button
                           type="button"
@@ -1500,6 +2588,18 @@ function CartPanel({
                     <div className="flex justify-between text-pink-400">
                       <span>Referral Discount</span>
                       <span>-₹{referralDiscount}</span>
+                    </div>
+                  )}
+                  {spinDiscountAmount > 0 && (
+                    <div className="flex justify-between text-violet-400">
+                      <span>🎡 Spin Reward</span>
+                      <span>-₹{spinDiscountAmount}</span>
+                    </div>
+                  )}
+                  {birthdayDiscountAmount > 0 && (
+                    <div className="flex justify-between text-pink-400">
+                      <span>🎂 Birthday 15% Off</span>
+                      <span>-₹{birthdayDiscountAmount}</span>
                     </div>
                   )}
                   <Separator className="my-2" />
@@ -2100,6 +3200,145 @@ function AboutSection() {
   );
 }
 
+// ── Delivery & Packaging Section ─────────────────────────────────────────────
+function DeliverySection() {
+  const steps = [
+    {
+      icon: "🧊",
+      title: "Thermocol Box",
+      desc: "Your ice cream is packed in a premium thermocol (styrofoam) box that keeps it cold for up to 3 hours.",
+    },
+    {
+      icon: "❄️",
+      title: "Ice Pack Inside",
+      desc: "Dry ice packs are placed inside to ensure your flavours stay perfectly frozen during transit.",
+    },
+    {
+      icon: "✨",
+      title: "Cosmic Branding",
+      desc: "Beautiful Galaxy-branded box with stars and cosmic design — it's an unboxing experience in itself!",
+    },
+    {
+      icon: "🎀",
+      title: "Sealed with Love",
+      desc: "Each box is sealed with a Galaxy sticker and ribbon — perfect as a gift too!",
+    },
+    {
+      icon: "🛵",
+      title: "Swiggy / Zomato Delivery",
+      desc: "We partner with Swiggy and Zomato delivery partners who carry insulated bags to keep your order cold.",
+    },
+    {
+      icon: "⏱️",
+      title: "30–45 Min Delivery",
+      desc: "Fast delivery to your doorstep. Track your order live through the delivery app.",
+    },
+  ];
+
+  return (
+    <section
+      data-ocid="delivery.section"
+      className="max-w-6xl mx-auto px-4 py-10"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="rounded-2xl p-8 border border-cyan-400/20 relative overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.10 0.06 200 / 0.9), oklch(0.12 0.05 240 / 0.9), oklch(0.10 0.06 260 / 0.9))",
+          boxShadow: "0 0 80px oklch(0.45 0.25 200 / 0.12)",
+        }}
+      >
+        {/* Decorative snowflakes */}
+        {[...Array(8)].map((_, i) => (
+          <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: decorative only
+            key={i}
+            className="absolute text-white/10 pointer-events-none select-none text-2xl"
+            style={{
+              top: `${Math.random() * 90}%`,
+              left: `${(i / 8) * 100}%`,
+              animation: `twinkle ${2 + (i % 3)}s ease-in-out infinite`,
+              animationDelay: `${i * 0.3}s`,
+            }}
+          >
+            ❄️
+          </div>
+        ))}
+
+        <div className="relative z-10">
+          <div className="text-center mb-8">
+            <div className="text-4xl mb-3">🚀</div>
+            <h2 className="font-display font-bold text-2xl mb-2 gradient-text">
+              Delivery & Packaging
+            </h2>
+            <p className="text-muted-foreground text-sm max-w-lg mx-auto">
+              We make sure your cosmic ice cream arrives at your doorstep
+              perfectly frozen, beautifully packaged, and ready to enjoy!
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {steps.map((step) => (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="rounded-xl p-5 border border-white/10 text-left"
+                style={{ background: "oklch(0.14 0.05 220 / 0.7)" }}
+              >
+                <div className="text-3xl mb-3">{step.icon}</div>
+                <h3 className="font-semibold text-white text-sm mb-1">
+                  {step.title}
+                </h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  {step.desc}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Packaging visual */}
+          <div
+            className="rounded-xl p-6 border border-cyan-400/20 text-center"
+            style={{ background: "oklch(0.14 0.05 220 / 0.5)" }}
+          >
+            <div className="text-5xl mb-3">📦</div>
+            <h3 className="font-semibold text-white mb-2">Our Galaxy Box</h3>
+            <p className="text-muted-foreground text-xs max-w-md mx-auto mb-4">
+              Every order comes in our signature{" "}
+              <span className="text-cyan-300 font-medium">
+                Galaxy Cosmic Box
+              </span>{" "}
+              — deep space blue with gold stars, sealed with a Galaxy sticker.
+              Your ice cream deserves a royal delivery!
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {[
+                "🌌 Cosmic Design",
+                "🧊 Stays Frozen",
+                "♻️ Eco-Friendly Box",
+                "🎁 Gift Ready",
+              ].map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs px-3 py-1 rounded-full border border-cyan-400/30 text-cyan-200"
+                  style={{ background: "oklch(0.18 0.06 200 / 0.5)" }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
 function ShareSection() {
   const [copied, setCopied] = useState(false);
   const shareText =
@@ -2555,6 +3794,509 @@ function Footer({ onOwnerDashboard }: { onOwnerDashboard: () => void }) {
   );
 }
 
+// ── Trending Ticker ───────────────────────────────────────────────────────────
+function TrendingTicker() {
+  const messages = [
+    "⚡ 3 people just ordered Nebula Swirl!",
+    "🔥 Aurora Borealis Blast is selling fast!",
+    "💫 Taro Titan trending in Mumbai!",
+    "🌟 New: Lavender Lightyear just restocked!",
+    "🛒 5 orders placed in the last hour!",
+    "⭐ Cosmic Crunch: Top Rated this week!",
+    "🎉 Someone in Delhi just won 30% off Spin!",
+    "💜 Chili Comet: Try it if you dare!",
+  ];
+  const doubled = [...messages, ...messages];
+  return (
+    <>
+      <style>{`
+        @keyframes tickerScroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .ticker-track {
+          animation: tickerScroll 28s linear infinite;
+          display: flex;
+          width: max-content;
+        }
+        .ticker-track:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+      <div
+        data-ocid="ticker.section"
+        className="overflow-hidden py-2.5 px-0 relative"
+        style={{
+          background:
+            "linear-gradient(90deg, oklch(0.08 0.04 280), oklch(0.12 0.06 310), oklch(0.08 0.04 280))",
+          borderTop: "1px solid oklch(0.3 0.08 280 / 0.4)",
+          borderBottom: "1px solid oklch(0.3 0.08 280 / 0.4)",
+        }}
+      >
+        {/* Left gradient fade */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(90deg, oklch(0.08 0.04 280), transparent)",
+          }}
+        />
+        {/* Lightning icon */}
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 text-violet-400 text-sm">
+          ⚡
+        </div>
+        {/* Right gradient fade */}
+        <div
+          className="absolute right-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(270deg, oklch(0.08 0.04 280), transparent)",
+          }}
+        />
+        <div className="ticker-track">
+          {doubled.map((msg, i) => (
+            <span
+              // biome-ignore lint/suspicious/noArrayIndexKey: ticker display
+              key={i}
+              className="inline-flex items-center gap-1 px-6 text-sm font-semibold whitespace-nowrap"
+              style={{
+                background:
+                  "linear-gradient(90deg, oklch(0.82 0.18 310), oklch(0.78 0.2 220), oklch(0.85 0.15 180))",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              {msg}
+              <span className="text-violet-500/40 mx-2">•</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Build Your Own Combo ──────────────────────────────────────────────────────
+function ComboBuildSection({
+  onAddCombo,
+}: {
+  onAddCombo: (f1: Flavor, f2: Flavor, cone: string, coneExtra: number) => void;
+}) {
+  const nonFamilyFlavors = FLAVORS.filter((f) => f.category !== "family");
+  const [scoop1Id, setScoop1Id] = useState(nonFamilyFlavors[0].id);
+  const [scoop2Id, setScoop2Id] = useState(nonFamilyFlavors[1].id);
+  const [coneType, setConeType] = useState<"cup" | "waffle" | "sugar">("cup");
+
+  const scoop1 =
+    nonFamilyFlavors.find((f) => f.id === scoop1Id) ?? nonFamilyFlavors[0];
+  const scoop2 =
+    nonFamilyFlavors.find((f) => f.id === scoop2Id) ?? nonFamilyFlavors[1];
+  const coneExtra = coneType === "waffle" ? 30 : coneType === "sugar" ? 20 : 0;
+  const savings = 30;
+  const comboPrice = scoop1.price + scoop2.price + coneExtra - savings;
+
+  const coneOptions = [
+    { id: "cup" as const, label: "Cup", emoji: "🥤", extra: 0 },
+    { id: "waffle" as const, label: "Waffle Cone", emoji: "🧇", extra: 30 },
+    { id: "sugar" as const, label: "Sugar Cone", emoji: "🍦", extra: 20 },
+  ];
+
+  return (
+    <section data-ocid="combo.section" className="max-w-6xl mx-auto px-4 py-6">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="relative overflow-hidden rounded-3xl border border-indigo-400/30 p-6 md:p-8"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.11 0.06 280 / 0.9), oklch(0.13 0.08 310 / 0.9), oklch(0.11 0.06 260 / 0.9))",
+          boxShadow: "0 0 60px oklch(0.5 0.28 280 / 0.15)",
+        }}
+      >
+        {/* Glow orb */}
+        <div
+          className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(circle, oklch(0.65 0.3 280), transparent)",
+            transform: "translate(30%, -30%)",
+          }}
+        />
+        <div className="relative z-10">
+          <div className="text-center mb-6">
+            <motion.h2
+              className="font-display font-bold text-2xl md:text-3xl mb-2"
+              style={{ color: "oklch(0.9 0.15 280)" }}
+              animate={{ scale: [1, 1.02, 1] }}
+              transition={{ repeat: Number.POSITIVE_INFINITY, duration: 3 }}
+            >
+              🌌 Build Your Cosmic Combo
+            </motion.h2>
+            <p className="text-indigo-300/70 text-sm">
+              Pick 2 scoops + cone and save ₹{savings}!
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+            {/* Scoop 1 */}
+            <div>
+              <label
+                htmlFor="combo-scoop1"
+                className="block text-xs font-semibold text-indigo-300 mb-2"
+              >
+                🍦 Scoop 1
+              </label>
+              <select
+                id="combo-scoop1"
+                data-ocid="combo.select"
+                value={scoop1Id}
+                onChange={(e) => setScoop1Id(e.target.value)}
+                className="w-full rounded-xl px-3 py-2.5 text-sm font-medium border border-indigo-400/30 outline-none focus:border-indigo-400/70 transition-colors"
+                style={{
+                  background: "oklch(0.14 0.05 280 / 0.8)",
+                  color: "oklch(0.9 0.05 280)",
+                }}
+              >
+                {nonFamilyFlavors.map((f) => (
+                  <option
+                    key={f.id}
+                    value={f.id}
+                    style={{ background: "oklch(0.12 0.04 280)" }}
+                  >
+                    {f.emoji} {f.name} — ₹{f.price}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Scoop 2 */}
+            <div>
+              <label
+                htmlFor="combo-scoop2"
+                className="block text-xs font-semibold text-indigo-300 mb-2"
+              >
+                🍨 Scoop 2
+              </label>
+              <select
+                id="combo-scoop2"
+                data-ocid="combo.select"
+                value={scoop2Id}
+                onChange={(e) => setScoop2Id(e.target.value)}
+                className="w-full rounded-xl px-3 py-2.5 text-sm font-medium border border-indigo-400/30 outline-none focus:border-indigo-400/70 transition-colors"
+                style={{
+                  background: "oklch(0.14 0.05 280 / 0.8)",
+                  color: "oklch(0.9 0.05 280)",
+                }}
+              >
+                {nonFamilyFlavors.map((f) => (
+                  <option
+                    key={f.id}
+                    value={f.id}
+                    style={{ background: "oklch(0.12 0.04 280)" }}
+                  >
+                    {f.emoji} {f.name} — ₹{f.price}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Animated preview */}
+            <div className="flex flex-col items-center justify-center">
+              <motion.div
+                key={`${scoop1Id}-${scoop2Id}-${coneType}`}
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="text-5xl text-center leading-tight"
+              >
+                {scoop1.emoji}
+                {scoop2.emoji}
+                <div className="text-4xl">
+                  {coneType === "waffle"
+                    ? "🧇"
+                    : coneType === "sugar"
+                      ? "🍦"
+                      : "🥤"}
+                </div>
+              </motion.div>
+              <p className="text-xs text-indigo-300/60 mt-1">
+                Your combo preview
+              </p>
+            </div>
+          </div>
+
+          {/* Cone selector */}
+          <div className="mb-5">
+            <p className="text-xs font-semibold text-indigo-300 mb-2">
+              🍦 Choose Your Cone
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              {coneOptions.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  data-ocid="combo.toggle"
+                  onClick={() => setConeType(c.id)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border transition-all ${
+                    coneType === c.id
+                      ? "border-indigo-400/70 bg-indigo-500/25 text-indigo-200"
+                      : "border-indigo-400/20 text-indigo-300/60 hover:border-indigo-400/40"
+                  }`}
+                >
+                  {c.emoji} {c.label}
+                  {c.extra > 0 && (
+                    <span className="text-xs opacity-70">+₹{c.extra}</span>
+                  )}
+                  {c.extra === 0 && (
+                    <span className="text-xs opacity-70">Free</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Price + CTA */}
+          <div
+            className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl border border-indigo-400/20"
+            style={{ background: "oklch(0.10 0.04 280 / 0.6)" }}
+          >
+            <div>
+              <div className="flex items-center gap-3">
+                <span
+                  className="text-2xl font-black"
+                  style={{ color: "oklch(0.85 0.18 80)" }}
+                >
+                  ₹{comboPrice}
+                </span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
+                  Save ₹{savings}
+                </span>
+              </div>
+              <p className="text-xs text-indigo-300/60 mt-0.5">
+                {scoop1.emoji} {scoop1.name} + {scoop2.emoji} {scoop2.name}
+              </p>
+            </div>
+            <motion.button
+              type="button"
+              data-ocid="combo.primary_button"
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => onAddCombo(scoop1, scoop2, coneType, coneExtra)}
+              className="font-bold text-white px-6 py-3 rounded-xl whitespace-nowrap"
+              style={{
+                background:
+                  "linear-gradient(135deg, oklch(0.55 0.3 280), oklch(0.5 0.28 310))",
+                boxShadow: "0 4px 20px oklch(0.5 0.28 280 / 0.4)",
+              }}
+            >
+              🛒 Add Combo to Cart
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+// ── Birthday Banner ───────────────────────────────────────────────────────────
+function BirthdayBanner({
+  onDiscountClaimed,
+}: { onDiscountClaimed: () => void }) {
+  const [claimed] = useState<boolean>(() => {
+    try {
+      return !!localStorage.getItem("galaxy_birthday_discount");
+    } catch {
+      return false;
+    }
+  });
+  const [isActive, setIsActive] = useState(claimed);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  function handleClaim() {
+    if (!name.trim()) return;
+    try {
+      localStorage.setItem("galaxy_birthday_discount", "true");
+    } catch {
+      /* ignore */
+    }
+    setIsActive(true);
+    setModalOpen(false);
+    setShowConfetti(true);
+    onDiscountClaimed();
+    toast.success(`🎂 Happy Birthday, ${name}! 15% off applied!`);
+    setTimeout(() => setShowConfetti(false), 2000);
+  }
+
+  return (
+    <>
+      <style>{`
+        @keyframes confettiBurst {
+          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+          100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+        .confetti-dot {
+          position: fixed;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          pointer-events: none;
+          z-index: 9999;
+          animation: confettiBurst 1.2s ease-out forwards;
+        }
+        @keyframes bdayPulse {
+          0%, 100% { box-shadow: 0 0 10px #f472b6, 0 0 20px #ec4899; transform: scale(1); }
+          50% { box-shadow: 0 0 18px #ec4899, 0 0 36px #f472b6; transform: scale(1.04); }
+        }
+        .bday-btn { animation: bdayPulse 2s ease-in-out infinite; }
+      `}</style>
+
+      {/* Confetti burst */}
+      {showConfetti &&
+        Array.from({ length: 20 }, (_, i) => (
+          <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: confetti display
+            key={i}
+            className="confetti-dot"
+            style={
+              {
+                right: `${16 + (i % 5) * 8}px`,
+                bottom: `${96 + Math.floor(i / 5) * 8}px`,
+                background: [
+                  "#f472b6",
+                  "#a855f7",
+                  "#60a5fa",
+                  "#34d399",
+                  "#fbbf24",
+                ][i % 5],
+                "--tx": `${(Math.random() - 0.5) * 200}px`,
+                "--ty": `${-Math.random() * 200 - 50}px`,
+                animationDelay: `${i * 0.04}s`,
+              } as React.CSSProperties
+            }
+          />
+        ))}
+
+      {/* Floating button */}
+      <div className="fixed bottom-24 right-4 z-50">
+        {!isActive ? (
+          <motion.button
+            type="button"
+            data-ocid="birthday.open_modal_button"
+            whileHover={{ scale: 1.07 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setModalOpen(true)}
+            className="bday-btn flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-white text-sm"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.58 0.28 0), oklch(0.55 0.3 340))",
+            }}
+          >
+            🎂 Birthday? Get 15% Off!
+          </motion.button>
+        ) : (
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-sm"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.45 0.2 160), oklch(0.5 0.22 160))",
+              color: "white",
+            }}
+          >
+            🎂 Birthday Discount Active! ✓
+          </motion.div>
+        )}
+      </div>
+
+      {/* Birthday Modal */}
+      <AnimatePresence>
+        {modalOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setModalOpen(false)}
+              className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              data-ocid="birthday.modal"
+              initial={{ opacity: 0, scale: 0.85, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: 30 }}
+              transition={{ type: "spring", damping: 22 }}
+              className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none"
+            >
+              <div
+                className="pointer-events-auto w-full max-w-xs rounded-2xl p-6 border border-pink-400/30 text-center"
+                style={{
+                  background: "oklch(0.1 0.03 340)",
+                  boxShadow: "0 0 60px oklch(0.55 0.28 340 / 0.3)",
+                }}
+              >
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{
+                    repeat: Number.POSITIVE_INFINITY,
+                    duration: 1.5,
+                  }}
+                  className="text-5xl mb-3"
+                >
+                  🎂
+                </motion.div>
+                <h3 className="font-display font-bold text-xl mb-1 text-pink-200">
+                  Birthday Surprise!
+                </h3>
+                <p className="text-xs text-pink-300/70 mb-4">
+                  It's your special day! Tell us your name and claim 15% off
+                  your order 🎉
+                </p>
+                <input
+                  data-ocid="birthday.input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleClaim()}
+                  placeholder="Your first name..."
+                  className="w-full mb-3 px-3 py-2.5 rounded-xl text-sm border border-pink-400/30 outline-none focus:border-pink-400/60 transition-colors text-center"
+                  style={{
+                    background: "oklch(0.14 0.04 340 / 0.8)",
+                    color: "oklch(0.9 0.05 340)",
+                  }}
+                />
+                <button
+                  type="button"
+                  data-ocid="birthday.primary_button"
+                  onClick={handleClaim}
+                  className="w-full py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:opacity-90"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, oklch(0.58 0.28 0), oklch(0.55 0.3 340))",
+                  }}
+                >
+                  Claim My 15% Off 🎉
+                </button>
+                <button
+                  type="button"
+                  data-ocid="birthday.close_button"
+                  onClick={() => setModalOpen(false)}
+                  className="mt-2 text-xs text-pink-400/50 hover:text-pink-400/80 transition-colors"
+                >
+                  Maybe later
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 function IceCreamParlour() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -2583,6 +4325,17 @@ function IceCreamParlour() {
   const [stripeSetupOpen, setStripeSetupOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
+  const [spinDiscount, setSpinDiscount] = useState(0);
+  const [spinDiscountType, setSpinDiscountType] = useState<
+    "percent" | "flat" | "none"
+  >("none");
+  const [birthdayDiscount, setBirthdayDiscount] = useState<boolean>(() => {
+    try {
+      return !!localStorage.getItem("galaxy_birthday_discount");
+    } catch {
+      return false;
+    }
+  });
   const [reviewPromptOpen, setReviewPromptOpen] = useState(false);
   const [reviewFlavorName, setReviewFlavorName] = useState("");
   const [ownerDashboardOpen, setOwnerDashboardOpen] = useState(false);
@@ -2610,16 +4363,46 @@ function IceCreamParlour() {
     }
   }
 
-  function addToCart(flavor: Flavor) {
+  function addToCart(
+    flavor: Flavor,
+    toppings?: { name: string; emoji: string; price: number }[],
+  ) {
     setCartItems((prev) => {
-      const existing = prev.find((i) => i.flavor.id === flavor.id);
+      // If toppings are provided, always add as new item (different topping combos)
+      if (toppings && toppings.length > 0) {
+        return [...prev, { flavor, qty: 1, toppings }];
+      }
+      const existing = prev.find(
+        (i) =>
+          i.flavor.id === flavor.id && (!i.toppings || i.toppings.length === 0),
+      );
       if (existing)
         return prev.map((i) =>
-          i.flavor.id === flavor.id ? { ...i, qty: i.qty + 1 } : i,
+          i.flavor.id === flavor.id && (!i.toppings || i.toppings.length === 0)
+            ? { ...i, qty: i.qty + 1 }
+            : i,
         );
       return [...prev, { flavor, qty: 1 }];
     });
     toast.success(`${flavor.emoji} ${flavor.name} added to cart!`);
+  }
+
+  function addComboToCart(
+    f1: Flavor,
+    f2: Flavor,
+    cone: string,
+    coneExtra: number,
+  ) {
+    const comboFlavor: Flavor = {
+      id: `combo-${f1.id}-${f2.id}`,
+      name: `Cosmic Combo: ${f1.name} + ${f2.name}`,
+      emoji: `${f1.emoji}${f2.emoji}`,
+      category: "galaxy",
+      price: f1.price + f2.price + coneExtra - 30,
+      description: `Combo with ${cone} cone — saves ₹30!`,
+    };
+    setCartItems((prev) => [...prev, { flavor: comboFlavor, qty: 1 }]);
+    toast.success("🌌 Cosmic Combo added to cart! Save ₹30");
   }
 
   function changeQty(id: string, delta: number) {
@@ -2694,11 +4477,28 @@ function IceCreamParlour() {
           onReferralOpen={() => setReferralOpen(true)}
         />
         <main>
+          <GalaxyAdBanner />
           <Hero />
           <PromoBanners />
           <CustomerFavouritesSection onAdd={addToCart} />
           <CustomerReviewsSection />
           <FlashDealSection onAdd={addToCart} />
+          <SpinToWinSection
+            onWin={(val) => {
+              if (val < 0) {
+                // negative = percent
+                setSpinDiscountType("percent");
+                setSpinDiscount(-val);
+              } else if (val > 0) {
+                setSpinDiscountType("flat");
+                setSpinDiscount(val);
+              } else {
+                setSpinDiscountType("none");
+                setSpinDiscount(0);
+              }
+            }}
+          />
+          <ComboBuildSection onAddCombo={addComboToCart} />
           <FamilyComboBanner onShopFamily={() => setActiveCategory("family")} />
 
           {/* Menu */}
@@ -2706,7 +4506,8 @@ function IceCreamParlour() {
             data-ocid="menu.section"
             className="max-w-6xl mx-auto px-4 py-8"
           >
-            <div className="flex items-center justify-between mb-6">
+            <TrendingTicker />
+            <div className="flex items-center justify-between mb-6 mt-4">
               <h2 className="font-display font-bold text-2xl gradient-text">
                 Our Cosmic Menu
               </h2>
@@ -2755,6 +4556,7 @@ function IceCreamParlour() {
           <ReferralSection onOpenReferral={() => setReferralOpen(true)} />
           <ShareSection />
           <AboutSection />
+          <DeliverySection />
         </main>
         <Footer onOwnerDashboard={() => setOwnerDashboardOpen(true)} />
       </div>
@@ -2769,6 +4571,9 @@ function IceCreamParlour() {
         loyaltyPoints={loyaltyPoints}
         onPlaceOrder={placeOrder}
         isFirstOrder={isFirstOrder}
+        spinDiscount={spinDiscount}
+        spinDiscountType={spinDiscountType}
+        birthdayDiscount={birthdayDiscount}
       />
       <LoyaltyPanel
         isOpen={loyaltyOpen}
@@ -2807,6 +4612,7 @@ function IceCreamParlour() {
         onUpgrade={handleUpgrade}
         isLoading={isCheckingOut}
       />
+      <BirthdayBanner onDiscountClaimed={() => setBirthdayDiscount(true)} />
       <Toaster />
     </div>
   );
