@@ -35,7 +35,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   CustomerReviewsSection,
@@ -74,6 +74,101 @@ interface ChatMessage {
   id: string;
   from: "user" | "nova";
   text: string;
+}
+// ── Language Context ─────────────────────────────────────────────────────────
+type Lang = "en" | "hi";
+interface LanguageContextValue {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+}
+const LanguageContext = createContext<LanguageContextValue>({
+  lang: "en",
+  setLang: () => {},
+});
+function useLanguage() {
+  return useContext(LanguageContext);
+}
+
+const TRANSLATIONS: Record<string, Record<Lang, string>> = {
+  menu: { en: "🌌 Our Menu", hi: "🌌 हमारा मेन्यू" },
+  orderNow: { en: "Order Now", hi: "अभी ऑर्डर करें" },
+  addToCart: { en: "Add to Cart", hi: "कार्ट में डालें" },
+  placeOrder: { en: "Place Order", hi: "ऑर्डर दें" },
+  customerFavourites: { en: "⭐ Customer Favourites", hi: "⭐ ग्राहकों की पसंद" },
+  flashDeal: { en: "⚡ Today's Flash Deal", hi: "⚡ आज की फ्लैश डील" },
+  grabThisDeal: { en: "Grab This Deal", hi: "डील लें" },
+  familyPack: { en: "Family Pack", hi: "फैमिली पैक" },
+  familyComboDeal: { en: "🎉 Family Combo Deal!", hi: "🎉 फैमिली कॉम्बो डील!" },
+  familyComboDesc: {
+    en: "Buy Any 2 Family Packs & Save ₹100!",
+    hi: "कोई भी 2 फैमिली पैक खरीदें और ₹100 बचाएं!",
+  },
+  shopFamilyPacks: { en: "Shop Family Packs →", hi: "फैमिली पैक देखें →" },
+  spinToWin: { en: "🎡 Spin to Win a Reward!", hi: "🎡 स्पिन करें और जीतें!" },
+  spinBtn: { en: "SPIN!", hi: "स्पिन करें!" },
+  spinning: { en: "Spinning...", hi: "स्पिन हो रहा है..." },
+  reviews: { en: "⭐ What Our Customers Say", hi: "⭐ ग्राहकों की समीक्षाएं" },
+  delivery: { en: "Delivery & Packaging", hi: "डिलीवरी और पैकेजिंग" },
+  buildCombo: {
+    en: "🌌 Build Your Cosmic Combo",
+    hi: "🌌 अपना कॉस्मिक कॉम्बो बनाएं",
+  },
+  toppings: { en: "🍨 Add Toppings", hi: "🍨 टॉपिंग्स जोड़ें" },
+  birthdaySurprise: { en: "Birthday Surprise!", hi: "जन्मदिन सरप्राइज!" },
+  birthdayBtn: {
+    en: "🎂 Birthday? Get 15% Off!",
+    hi: "🎂 जन्मदिन? 15% छूट पाएं!",
+  },
+  birthdayActive: {
+    en: "🎂 Birthday Discount Active! ✓",
+    hi: "🎂 जन्मदिन छूट लागू! ✓",
+  },
+  loyaltyPoints: { en: "Loyalty Stars", hi: "लॉयल्टी पॉइंट्स" },
+  share: { en: "Share", hi: "शेयर करें" },
+  shareThisAd: { en: "📱 Share This Ad", hi: "📱 यह विज्ञापन शेयर करें" },
+  refer: { en: "Refer", hi: "रेफर करें" },
+  cart: { en: "Cart", hi: "कार्ट" },
+  aboutTitle: {
+    en: "About Galaxy Ice Cream Parlour",
+    hi: "Galaxy Ice Cream Parlour के बारे में",
+  },
+  trendingNow: { en: "🔥 TRENDING NOW", hi: "🔥 अभी ट्रेंडिंग" },
+  novaGreeting: {
+    en: "Hey there! 🌟 I'm Nova, your AI Galaxy Ice Cream manager. Ask me about flavours, prices, today's special, or our referral program!",
+    hi: "नमस्ते! 🌟 मैं Nova हूं, आपकी AI Galaxy Ice Cream मैनेजर। मुझसे फ्लेवर, कीमत, आज की स्पेशल डील, या रेफरल प्रोग्राम के बारे में पूछें!",
+  },
+  novaPlaceholder: { en: "Ask Nova anything...", hi: "Nova से कुछ भी पूछें..." },
+  novaTitle: { en: "AI Parlour Manager", hi: "AI पार्लर मैनेजर" },
+  tasteTheCosmos: { en: "Taste the cosmos ✨", hi: "कॉस्मिक स्वाद लें ✨" },
+  grandOpening: { en: "🎉 Grand Opening Special!", hi: "🎉 ग्रैंड ओपनिंग स्पेशल!" },
+  grandOpeningDesc: {
+    en: "Free delivery on all orders today!",
+    hi: "आज सभी ऑर्डर पर फ्री डिलीवरी!",
+  },
+  promoSpecial: {
+    en: "⭐ Today's Special: Nebula Swirl — ₹99!",
+    hi: "⭐ आज की स्पेशल: Nebula Swirl — ₹99!",
+  },
+  promoBuy2: {
+    en: "🎉 Buy 2 Get 1 Free every weekend!",
+    hi: "🎉 हर वीकेंड 2 खरीदें, 1 मुफ्त पाएं!",
+  },
+  promoNew: {
+    en: "🆕 New Arrival: Aurora Borealis Blast!",
+    hi: "🆕 नया: Aurora Borealis Blast!",
+  },
+  viewCart: { en: "View Cart", hi: "कार्ट देखें" },
+  redeemPoints: {
+    en: "Redeem 100 pts for ₹50 off",
+    hi: "100 पॉइंट्स रिडीम करें, ₹50 की छूट",
+  },
+  yourOrder: { en: "Your Order", hi: "आपका ऑर्डर" },
+  orderTotal: { en: "Order Total", hi: "कुल राशि" },
+  comingSoon: { en: "Coming Soon", hi: "जल्द आ रहा है" },
+};
+
+function t(key: string, lang: Lang): string {
+  return TRANSLATIONS[key]?.[lang] ?? TRANSLATIONS[key]?.en ?? key;
 }
 
 // ── Referral helpers ───────────────────────────────────────────────────────
@@ -603,8 +698,54 @@ const NOVA_RESPONSES: Record<string, string> = {
     "I'd love to help! 🤖 You can ask me about: our location, which state we serve, factory details, opening hours, vegan options, today's special, prices, family packs, recommendations, offers, or any specific flavour!",
 };
 
-function getNovaResponse(input: string): string {
+function getNovaResponse(input: string, lang: Lang = "en"): string {
   const lower = input.toLowerCase();
+  // Hindi language responses
+  if (lang === "hi") {
+    if (
+      lower.includes("location") ||
+      lower.includes("kahan") ||
+      lower.includes("where") ||
+      lower.includes("address") ||
+      lower.includes("store")
+    )
+      return "Galaxy Ice Cream Parlour पूरे भारत में ऑनलाइन उपलब्ध है! 🌏 हम 24/7 खुले हैं। घर बैठे ऑर्डर करें और कॉस्मिक फ्लेवर का आनंद लें! 🍦✨";
+    if (
+      lower.includes("price") ||
+      lower.includes("cost") ||
+      lower.includes("kitna") ||
+      lower.includes("rate")
+    )
+      return "हमारी कीमतें ₹99 से शुरू होती हैं! 🌟 क्लासिक स्कूप ₹99, गैलेक्सी स्पेशल ₹149-₹169, और फैमिली पैक ₹299 से। सभी कीमतें बहुत किफायती हैं! 🍦";
+    if (
+      lower.includes("family") ||
+      lower.includes("pack") ||
+      lower.includes("block")
+    )
+      return "हमारे 6 शानदार फैमिली पैक हैं जो ₹299 से शुरू होते हैं! 👨‍👩‍👧‍👦 4-6 लोगों के लिए परफेक्ट — Vanilla Dream, Butterscotch Bliss, Strawberry Galaxy, Chocolate Fudge, Mango Meteor, और Nebula Swirl Big Block!";
+    if (lower.includes("vegan") || lower.includes("plant"))
+      return "हमारे 6 शानदार वेगन ऑप्शन हैं! 🌿 Coconut Cosmos (₹129), Avocado Asteroid (₹139), Dark Matter Date (₹129), Pineapple Planet (₹119), Almond Aurora (₹139), और Jackfruit Jupiter (₹129)। सभी 100% प्लांट-बेस्ड!";
+    if (
+      lower.includes("offer") ||
+      lower.includes("discount") ||
+      lower.includes("deal")
+    )
+      return "मौजूदा ऑफर: 🎉 हर वीकेंड 2 खरीदें, 1 मुफ्त! लॉयल्टी पॉइंट्स भी कमाएं — हर ऑर्डर पर 10 पॉइंट्स, 100 पॉइंट्स = ₹50 की छूट!";
+    if (
+      lower.includes("hello") ||
+      lower.includes("hi") ||
+      lower.includes("namaste") ||
+      lower.includes("नमस्ते")
+    )
+      return "नमस्ते! 🌟 मैं Nova हूं, आपकी AI Galaxy Ice Cream मैनेजर। आपकी कैसे मदद कर सकती हूं? फ्लेवर, कीमत, या स्पेशल डील के बारे में पूछें!";
+    if (
+      lower.includes("recommend") ||
+      lower.includes("suggest") ||
+      lower.includes("best")
+    )
+      return "मेरी टॉप पिक्स: 1) Aurora Borealis Blast (₹159) — जादुई 🌈 2) Supernova Saffron (₹169) — शाही केसर ✨ 3) Lavender Lightyear (₹169) — अनोखा और अविस्मरणीय 💐 4) Taro Titan (₹149) — कॉस्मिक बैंगनी सपना 🟣";
+    return "मैं मदद करना चाहूंगी! 🤖 आप मुझसे पूछ सकते हैं: लोकेशन, वेगन ऑप्शन, आज की स्पेशल, कीमतें, फैमिली पैक, ऑफर, या किसी खास फ्लेवर के बारे में!";
+  }
   // Multi-word pattern checks first
   if (
     lower.includes("which state") ||
@@ -708,6 +849,8 @@ interface HeaderProps {
   onUpgradeOpen: () => void;
   onStripeSetup: () => void;
   onReferralOpen: () => void;
+  lang: Lang;
+  setLang: (l: Lang) => void;
 }
 function Header({
   cartCount,
@@ -717,6 +860,8 @@ function Header({
   onUpgradeOpen,
   onStripeSetup,
   onReferralOpen,
+  lang,
+  setLang,
 }: HeaderProps) {
   return (
     <header
@@ -742,7 +887,7 @@ function Header({
               Galaxy Ice Cream Parlour
             </h1>
             <p className="text-xs text-violet-300/70 leading-none">
-              Taste the cosmos ✨
+              {t("tasteTheCosmos", lang)}
             </p>
           </div>
         </div>
@@ -763,7 +908,7 @@ function Header({
             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-pink-400/40 bg-pink-400/10 text-pink-300 text-sm font-semibold hover:bg-pink-400/20 transition-colors"
           >
             <Users className="w-3.5 h-3.5" />
-            Refer
+            {t("refer", lang)}
           </button>
           <button
             type="button"
@@ -785,6 +930,15 @@ function Header({
           </button>
           <button
             type="button"
+            data-ocid="lang.toggle"
+            onClick={() => setLang(lang === "en" ? "hi" : "en")}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-cyan-400/40 bg-cyan-400/10 text-cyan-300 text-sm font-semibold hover:bg-cyan-400/20 transition-colors"
+            title="Switch Language / भाषा बदलें"
+          >
+            {lang === "en" ? "🇮🇳 हिंदी" : "🇺🇸 EN"}
+          </button>
+          <button
+            type="button"
             data-ocid="cart.open_modal_button"
             onClick={onCartOpen}
             className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-violet-400/40 bg-violet-400/10 text-violet-300 text-sm font-semibold hover:bg-violet-400/20 transition-colors"
@@ -795,7 +949,7 @@ function Header({
                 {cartCount}
               </span>
             )}
-            Cart
+            {t("cart", lang)}
           </button>
         </div>
       </div>
@@ -1412,6 +1566,7 @@ function PromoBanners() {
 
 // ── Customer Favourites Section ────────────────────────────────────────────
 function CustomerFavouritesSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
+  const { lang } = useLanguage();
   const items = CUSTOMER_FAVOURITES.map((fav) => ({
     fav,
     flavor: FLAVORS.find((fl) => fl.id === fav.id),
@@ -1426,7 +1581,7 @@ function CustomerFavouritesSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
     >
       <div className="text-center mb-8">
         <h2 className="font-display font-bold text-3xl gradient-text mb-2">
-          ⭐ Customer Favourites
+          {t("customerFavourites", lang)}
         </h2>
         <p className="text-violet-300/70 text-sm">
           Most ordered &amp; highest rated by our cosmic customers
@@ -1537,6 +1692,7 @@ interface SpinToWinProps {
 }
 
 function SpinToWinSection({ onWin }: SpinToWinProps) {
+  const { lang } = useLanguage();
   const [hasSpun, setHasSpun] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
@@ -1628,7 +1784,7 @@ function SpinToWinSection({ onWin }: SpinToWinProps) {
               animate={{ scale: [1, 1.03, 1] }}
               transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2 }}
             >
-              🎡 Spin to Win a Reward!
+              {t("spinToWin", lang)}
             </motion.h2>
             <p className="text-violet-300/70 text-sm">
               Spin the wheel once per order for a surprise discount!
@@ -1727,7 +1883,13 @@ function SpinToWinSection({ onWin }: SpinToWinProps) {
                 boxShadow: "0 4px 24px oklch(0.55 0.3 310 / 0.5)",
               }}
             >
-              {isSpinning ? "Spinning..." : "🎡 SPIN!"}
+              {isSpinning
+                ? lang === "hi"
+                  ? "स्पिन हो रहा है..."
+                  : "Spinning..."
+                : lang === "hi"
+                  ? "🎡 स्पिन करें!"
+                  : "🎡 SPIN!"}
             </motion.button>
           )}
 
@@ -1822,6 +1984,7 @@ const FLASH_DEAL_FLAVORS = [
 ];
 
 function FlashDealSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
+  const { lang } = useLanguage();
   const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
   const [dealIdx] = useState(
     () => new Date().getDate() % FLASH_DEAL_FLAVORS.length,
@@ -1879,7 +2042,7 @@ function FlashDealSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
               transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1.5 }}
               className="inline-block bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest mb-3"
             >
-              ⚡ Today&apos;s Flash Deal
+              {t("flashDeal", lang)}
             </motion.span>
             <div className="text-6xl mb-3">{flavor.emoji}</div>
             <h3 className="font-display font-bold text-2xl text-orange-100 mb-1">
@@ -1905,7 +2068,7 @@ function FlashDealSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
               onClick={() => onAdd({ ...flavor, price: discountedPrice })}
               className="mt-4 bg-orange-500 hover:bg-orange-400 text-white font-bold px-6 py-2.5 rounded-full transition-colors shadow-lg shadow-orange-900/40"
             >
-              Grab This Deal
+              {t("grabThisDeal", lang)}
             </button>
           </div>
 
@@ -1945,6 +2108,7 @@ function FlashDealSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
 
 // ── Family Combo Deal Banner ────────────────────────────────────────────────
 function FamilyComboBanner({ onShopFamily }: { onShopFamily: () => void }) {
+  const { lang } = useLanguage();
   return (
     <section className="max-w-6xl mx-auto px-4 py-6">
       <motion.div
@@ -1991,7 +2155,9 @@ function FamilyComboBanner({ onShopFamily }: { onShopFamily: () => void }) {
           <div className="flex-1 text-center md:text-left">
             <div className="flex flex-wrap items-center gap-3 justify-center md:justify-start mb-1">
               <h3 className="font-display font-bold text-xl md:text-2xl text-emerald-100">
-                👨‍👩‍👧‍👦 Family Combo Deal
+                {lang === "hi"
+                  ? "👨‍👩‍👧‍👦 फैमिली कॉम्बो डील"
+                  : "👨‍👩‍👧‍👦 Family Combo Deal"}
               </h3>
               <span
                 data-ocid="family_combo.badge"
@@ -2001,7 +2167,9 @@ function FamilyComboBanner({ onShopFamily }: { onShopFamily: () => void }) {
               </span>
             </div>
             <p className="text-emerald-200/80 font-semibold text-base md:text-lg mb-0.5">
-              Buy Any 2 Family Packs, Save ₹100!
+              {lang === "hi"
+                ? "कोई भी 2 फैमिली पैक खरीदें और ₹100 बचाएं!"
+                : "Buy Any 2 Family Packs, Save ₹100!"}
             </p>
             <p className="text-emerald-400/60 text-sm">
               Perfect for family celebrations. Mix &amp; match any 2 big blocks.
@@ -2017,7 +2185,7 @@ function FamilyComboBanner({ onShopFamily }: { onShopFamily: () => void }) {
             onClick={onShopFamily}
             className="flex-shrink-0 px-6 py-3 rounded-xl font-bold text-sm bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-400/50 text-emerald-200 hover:text-emerald-100 transition-all shadow-lg shadow-emerald-900/30"
           >
-            Shop Family Packs →
+            {lang === "hi" ? "फैमिली पैक देखें →" : "Shop Family Packs →"}
           </motion.button>
         </div>
 
@@ -2090,6 +2258,7 @@ interface FlavorCardProps {
   ) => void;
 }
 function FlavorCard({ flavor, index, onAdd }: FlavorCardProps) {
+  const { lang } = useLanguage();
   const meta = CATEGORY_META[flavor.category];
   const [expanded, setExpanded] = useState(false);
   const [selectedToppings, setSelectedToppings] = useState<typeof TOPPINGS>([]);
@@ -2204,7 +2373,7 @@ function FlavorCard({ flavor, index, onAdd }: FlavorCardProps) {
               }}
             >
               <p className="text-xs font-bold text-violet-300 mb-2">
-                🍨 Add Toppings
+                {lang === "hi" ? "🍨 टॉपिंग्स जोड़ें" : "🍨 Add Toppings"}
               </p>
               <div className="space-y-1.5">
                 {TOPPINGS.map((t) => {
@@ -2257,7 +2426,7 @@ function FlavorCard({ flavor, index, onAdd }: FlavorCardProps) {
                       "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280))",
                   }}
                 >
-                  🛒 Add to Cart
+                  {lang === "hi" ? "🛒 कार्ट में डालें" : "🛒 Add to Cart"}
                   {selectedToppings.length > 0 && (
                     <span className="ml-1 opacity-80">
                       +₹{selectedToppings.reduce((s, t) => s + t.price, 0)}
@@ -2300,6 +2469,7 @@ function CartPanel({
   spinDiscountType,
   birthdayDiscount,
 }: CartPanelProps) {
+  const { lang } = useLanguage();
   const [redeemPoints, setRedeemPoints] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   const [referralApplied, setReferralApplied] = useState(false);
@@ -2627,7 +2797,8 @@ function CartPanel({
                     boxShadow: "0 4px 24px oklch(0.55 0.28 310 / 0.4)",
                   }}
                 >
-                  <Sparkles className="w-4 h-4 mr-2" /> Place Order
+                  <Sparkles className="w-4 h-4 mr-2" />{" "}
+                  {lang === "hi" ? "ऑर्डर दें" : "Place Order"}
                 </Button>
               </div>
             )}
@@ -2645,6 +2816,7 @@ interface LoyaltyPanelProps {
   points: number;
 }
 function LoyaltyPanel({ isOpen, onClose, points }: LoyaltyPanelProps) {
+  const { lang } = useLanguage();
   const tiers = [
     { pts: 100, reward: "₹50 off your next order", icon: "🎁" },
     { pts: 200, reward: "Free Classic scoop", icon: "🍦" },
@@ -2676,7 +2848,7 @@ function LoyaltyPanel({ isOpen, onClose, points }: LoyaltyPanelProps) {
               <div className="flex items-center justify-between mb-5">
                 <h2 className="font-display font-bold text-lg flex items-center gap-2">
                   <Star className="w-5 h-5 fill-amber-300 text-amber-300" />{" "}
-                  Loyalty Stars
+                  {lang === "hi" ? "लॉयल्टी पॉइंट्स" : "Loyalty Stars"}
                 </h2>
                 <button
                   type="button"
@@ -2901,6 +3073,7 @@ interface NovaChatProps {
   onToggle: () => void;
 }
 function NovaChat({ isOpen, onToggle }: NovaChatProps) {
+  const { lang } = useLanguage();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "0",
@@ -2927,7 +3100,7 @@ function NovaChat({ isOpen, onToggle }: NovaChatProps) {
     const novaMsg: ChatMessage = {
       id: (Date.now() + 1).toString(),
       from: "nova",
-      text: getNovaResponse(trimmed),
+      text: getNovaResponse(trimmed, lang),
     };
     setMessages((prev) => [...prev, userMsg, novaMsg]);
     setInput("");
@@ -2959,7 +3132,9 @@ function NovaChat({ isOpen, onToggle }: NovaChatProps) {
               <Bot className="w-5 h-5 text-violet-300" />
               <div>
                 <p className="text-sm font-bold">Nova</p>
-                <p className="text-xs text-violet-300/70">AI Parlour Manager</p>
+                <p className="text-xs text-violet-300/70">
+                  {lang === "hi" ? "AI पार्लर मैनेजर" : "AI Parlour Manager"}
+                </p>
               </div>
               <button
                 type="button"
@@ -2995,7 +3170,9 @@ function NovaChat({ isOpen, onToggle }: NovaChatProps) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                placeholder="Ask Nova anything..."
+                placeholder={
+                  lang === "hi" ? "Nova से कुछ भी पूछें..." : "Ask Nova anything..."
+                }
                 className="flex-1 bg-white/8 rounded-lg px-3 py-2 text-xs outline-none border border-border focus:border-violet-400/60 placeholder:text-muted-foreground"
               />
               <button
@@ -3107,6 +3284,7 @@ const ABOUT_STARS = Array.from({ length: 12 }, (_, i) => ({
 
 // ── About / Location Section ────────────────────────────────────────────────
 function AboutSection() {
+  const { lang } = useLanguage();
   return (
     <section data-ocid="about.section" className="max-w-6xl mx-auto px-4 py-10">
       <motion.div
@@ -3141,7 +3319,9 @@ function AboutSection() {
         <div className="relative z-10 text-center">
           <div className="text-4xl mb-4">🌏</div>
           <h2 className="font-display font-bold text-2xl mb-2 gradient-text">
-            About Galaxy Ice Cream Parlour
+            {lang === "hi"
+              ? "Galaxy Ice Cream Parlour के बारे में"
+              : "About Galaxy Ice Cream Parlour"}
           </h2>
           <p className="text-muted-foreground text-sm mb-8 max-w-lg mx-auto">
             We're a cosmic ice cream experience born in the stars — and
@@ -3202,6 +3382,7 @@ function AboutSection() {
 
 // ── Delivery & Packaging Section ─────────────────────────────────────────────
 function DeliverySection() {
+  const { lang } = useLanguage();
   const steps = [
     {
       icon: "🧊",
@@ -3272,7 +3453,7 @@ function DeliverySection() {
           <div className="text-center mb-8">
             <div className="text-4xl mb-3">🚀</div>
             <h2 className="font-display font-bold text-2xl mb-2 gradient-text">
-              Delivery & Packaging
+              {lang === "hi" ? "डिलीवरी और पैकेजिंग" : "Delivery & Packaging"}
             </h2>
             <p className="text-muted-foreground text-sm max-w-lg mx-auto">
               We make sure your cosmic ice cream arrives at your doorstep
@@ -3340,6 +3521,7 @@ function DeliverySection() {
 }
 
 function ShareSection() {
+  const { lang } = useLanguage();
   const [copied, setCopied] = useState(false);
   const shareText =
     "🌟 I just discovered Galaxy Ice Cream Parlour! 34 cosmic flavours from ₹99, prices in Indian Rupees, and an AI manager named Nova! Come taste the cosmos 🍦✨";
@@ -3397,7 +3579,13 @@ function ShareSection() {
           ) : (
             <Copy className="w-4 h-4 mr-2" />
           )}
-          {copied ? "Copied!" : "Copy & Share"}
+          {copied
+            ? lang === "hi"
+              ? "कॉपी हो गया!"
+              : "Copied!"
+            : lang === "hi"
+              ? "कॉपी और शेयर करें"
+              : "Copy & Share"}
         </Button>
       </motion.div>
     </section>
@@ -3796,16 +3984,29 @@ function Footer({ onOwnerDashboard }: { onOwnerDashboard: () => void }) {
 
 // ── Trending Ticker ───────────────────────────────────────────────────────────
 function TrendingTicker() {
-  const messages = [
-    "⚡ 3 people just ordered Nebula Swirl!",
-    "🔥 Aurora Borealis Blast is selling fast!",
-    "💫 Taro Titan trending in Mumbai!",
-    "🌟 New: Lavender Lightyear just restocked!",
-    "🛒 5 orders placed in the last hour!",
-    "⭐ Cosmic Crunch: Top Rated this week!",
-    "🎉 Someone in Delhi just won 30% off Spin!",
-    "💜 Chili Comet: Try it if you dare!",
-  ];
+  const { lang } = useLanguage();
+  const messages =
+    lang === "hi"
+      ? [
+          "⚡ 3 लोगों ने अभी Nebula Swirl ऑर्डर किया!",
+          "🔥 Aurora Borealis Blast तेजी से बिक रहा है!",
+          "💫 Taro Titan मुंबई में ट्रेंड कर रहा है!",
+          "🌟 नया: Lavender Lightyear फिर से उपलब्ध!",
+          "🛒 पिछले एक घंटे में 5 ऑर्डर!",
+          "⭐ Cosmic Crunch: इस हफ्ते टॉप रेटेड!",
+          "🎉 दिल्ली में किसी ने Spin पर 30% जीता!",
+          "💜 Chili Comet: हिम्मत है तो ट्राई करो!",
+        ]
+      : [
+          "⚡ 3 people just ordered Nebula Swirl!",
+          "🔥 Aurora Borealis Blast is selling fast!",
+          "💫 Taro Titan trending in Mumbai!",
+          "🌟 New: Lavender Lightyear just restocked!",
+          "🛒 5 orders placed in the last hour!",
+          "⭐ Cosmic Crunch: Top Rated this week!",
+          "🎉 Someone in Delhi just won 30% off Spin!",
+          "💜 Chili Comet: Try it if you dare!",
+        ];
   const doubled = [...messages, ...messages];
   return (
     <>
@@ -3883,6 +4084,7 @@ function ComboBuildSection({
 }: {
   onAddCombo: (f1: Flavor, f2: Flavor, cone: string, coneExtra: number) => void;
 }) {
+  const { lang } = useLanguage();
   const nonFamilyFlavors = FLAVORS.filter((f) => f.category !== "family");
   const [scoop1Id, setScoop1Id] = useState(nonFamilyFlavors[0].id);
   const [scoop2Id, setScoop2Id] = useState(nonFamilyFlavors[1].id);
@@ -3932,7 +4134,9 @@ function ComboBuildSection({
               animate={{ scale: [1, 1.02, 1] }}
               transition={{ repeat: Number.POSITIVE_INFINITY, duration: 3 }}
             >
-              🌌 Build Your Cosmic Combo
+              {lang === "hi"
+                ? "🌌 अपना कॉस्मिक कॉम्बो बनाएं"
+                : "🌌 Build Your Cosmic Combo"}
             </motion.h2>
             <p className="text-indigo-300/70 text-sm">
               Pick 2 scoops + cone and save ₹{savings}!
@@ -4104,6 +4308,7 @@ function ComboBuildSection({
 function BirthdayBanner({
   onDiscountClaimed,
 }: { onDiscountClaimed: () => void }) {
+  const { lang } = useLanguage();
   const [claimed] = useState<boolean>(() => {
     try {
       return !!localStorage.getItem("galaxy_birthday_discount");
@@ -4195,7 +4400,9 @@ function BirthdayBanner({
                 "linear-gradient(135deg, oklch(0.58 0.28 0), oklch(0.55 0.3 340))",
             }}
           >
-            🎂 Birthday? Get 15% Off!
+            {lang === "hi"
+              ? "🎂 जन्मदिन? 15% छूट पाएं!"
+              : "🎂 Birthday? Get 15% Off!"}
           </motion.button>
         ) : (
           <motion.div
@@ -4208,7 +4415,9 @@ function BirthdayBanner({
               color: "white",
             }}
           >
-            🎂 Birthday Discount Active! ✓
+            {lang === "hi"
+              ? "🎂 जन्मदिन छूट लागू! ✓"
+              : "🎂 Birthday Discount Active! ✓"}
           </motion.div>
         )}
       </div>
@@ -4250,7 +4459,7 @@ function BirthdayBanner({
                   🎂
                 </motion.div>
                 <h3 className="font-display font-bold text-xl mb-1 text-pink-200">
-                  Birthday Surprise!
+                  {lang === "hi" ? "जन्मदिन सरप्राइज!" : "Birthday Surprise!"}
                 </h3>
                 <p className="text-xs text-pink-300/70 mb-4">
                   It's your special day! Tell us your name and claim 15% off
@@ -4299,6 +4508,7 @@ function BirthdayBanner({
 
 // ── App ───────────────────────────────────────────────────────────────────────
 function IceCreamParlour() {
+  const [lang, setLang] = useState<Lang>("en");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [loyaltyPoints, setLoyaltyPoints] = useState<number>(() => {
@@ -4460,161 +4670,167 @@ function IceCreamParlour() {
       : FLAVORS.filter((f) => f.category === activeCategory);
 
   return (
-    <div
-      className="min-h-screen relative"
-      style={{ background: "oklch(0.07 0.025 280)" }}
-    >
-      <Starfield />
-      <div className="relative z-10">
-        <OpeningBanner />
-        <Header
-          cartCount={cartCount}
-          loyaltyPoints={loyaltyPoints}
-          onCartOpen={() => setCartOpen(true)}
-          onLoyaltyOpen={() => setLoyaltyOpen(true)}
-          onUpgradeOpen={() => setUpgradeOpen(true)}
-          onStripeSetup={() => setStripeSetupOpen(true)}
-          onReferralOpen={() => setReferralOpen(true)}
-        />
-        <main>
-          <GalaxyAdBanner />
-          <Hero />
-          <PromoBanners />
-          <CustomerFavouritesSection onAdd={addToCart} />
-          <CustomerReviewsSection />
-          <FlashDealSection onAdd={addToCart} />
-          <SpinToWinSection
-            onWin={(val) => {
-              if (val < 0) {
-                // negative = percent
-                setSpinDiscountType("percent");
-                setSpinDiscount(-val);
-              } else if (val > 0) {
-                setSpinDiscountType("flat");
-                setSpinDiscount(val);
-              } else {
-                setSpinDiscountType("none");
-                setSpinDiscount(0);
-              }
-            }}
+    <LanguageContext.Provider value={{ lang, setLang }}>
+      <div
+        className="min-h-screen relative"
+        style={{ background: "oklch(0.07 0.025 280)" }}
+      >
+        <Starfield />
+        <div className="relative z-10">
+          <OpeningBanner />
+          <Header
+            cartCount={cartCount}
+            loyaltyPoints={loyaltyPoints}
+            onCartOpen={() => setCartOpen(true)}
+            onLoyaltyOpen={() => setLoyaltyOpen(true)}
+            onUpgradeOpen={() => setUpgradeOpen(true)}
+            onStripeSetup={() => setStripeSetupOpen(true)}
+            onReferralOpen={() => setReferralOpen(true)}
+            lang={lang}
+            setLang={setLang}
           />
-          <ComboBuildSection onAddCombo={addComboToCart} />
-          <FamilyComboBanner onShopFamily={() => setActiveCategory("family")} />
+          <main>
+            <GalaxyAdBanner />
+            <Hero />
+            <PromoBanners />
+            <CustomerFavouritesSection onAdd={addToCart} />
+            <CustomerReviewsSection />
+            <FlashDealSection onAdd={addToCart} />
+            <SpinToWinSection
+              onWin={(val) => {
+                if (val < 0) {
+                  // negative = percent
+                  setSpinDiscountType("percent");
+                  setSpinDiscount(-val);
+                } else if (val > 0) {
+                  setSpinDiscountType("flat");
+                  setSpinDiscount(val);
+                } else {
+                  setSpinDiscountType("none");
+                  setSpinDiscount(0);
+                }
+              }}
+            />
+            <ComboBuildSection onAddCombo={addComboToCart} />
+            <FamilyComboBanner
+              onShopFamily={() => setActiveCategory("family")}
+            />
 
-          {/* Menu */}
-          <section
-            data-ocid="menu.section"
-            className="max-w-6xl mx-auto px-4 py-8"
-          >
-            <TrendingTicker />
-            <div className="flex items-center justify-between mb-6 mt-4">
-              <h2 className="font-display font-bold text-2xl gradient-text">
-                Our Cosmic Menu
-              </h2>
-              <div className="flex gap-1.5 flex-wrap justify-end">
-                <button
-                  type="button"
-                  data-ocid="menu.tab"
-                  onClick={() => setActiveCategory("all")}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                    activeCategory === "all"
-                      ? "bg-violet-500/30 border-violet-400/60 text-violet-200"
-                      : "border-border text-muted-foreground hover:border-violet-400/40"
-                  }`}
-                >
-                  All ({FLAVORS.length})
-                </button>
-                {Object.entries(CATEGORY_META).map(([key, meta]) => (
+            {/* Menu */}
+            <section
+              data-ocid="menu.section"
+              className="max-w-6xl mx-auto px-4 py-8"
+            >
+              <TrendingTicker />
+              <div className="flex items-center justify-between mb-6 mt-4">
+                <h2 className="font-display font-bold text-2xl gradient-text">
+                  Our Cosmic Menu
+                </h2>
+                <div className="flex gap-1.5 flex-wrap justify-end">
                   <button
-                    key={key}
                     type="button"
                     data-ocid="menu.tab"
-                    onClick={() => setActiveCategory(key)}
+                    onClick={() => setActiveCategory("all")}
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                      activeCategory === key
-                        ? `${meta.color} opacity-100`
+                      activeCategory === "all"
+                        ? "bg-violet-500/30 border-violet-400/60 text-violet-200"
                         : "border-border text-muted-foreground hover:border-violet-400/40"
                     }`}
                   >
-                    {meta.emoji} {meta.label}
+                    All ({FLAVORS.length})
                   </button>
+                  {Object.entries(CATEGORY_META).map(([key, meta]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      data-ocid="menu.tab"
+                      onClick={() => setActiveCategory(key)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                        activeCategory === key
+                          ? `${meta.color} opacity-100`
+                          : "border-border text-muted-foreground hover:border-violet-400/40"
+                      }`}
+                    >
+                      {meta.emoji} {meta.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {filtered.map((flavor, idx) => (
+                  <FlavorCard
+                    key={flavor.id}
+                    flavor={flavor}
+                    index={idx}
+                    onAdd={addToCart}
+                  />
                 ))}
               </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {filtered.map((flavor, idx) => (
-                <FlavorCard
-                  key={flavor.id}
-                  flavor={flavor}
-                  index={idx}
-                  onAdd={addToCart}
-                />
-              ))}
-            </div>
-          </section>
+            </section>
 
-          <ReferralSection onOpenReferral={() => setReferralOpen(true)} />
-          <ShareSection />
-          <AboutSection />
-          <DeliverySection />
-        </main>
-        <Footer onOwnerDashboard={() => setOwnerDashboardOpen(true)} />
+            <ReferralSection onOpenReferral={() => setReferralOpen(true)} />
+            <ShareSection />
+            <AboutSection />
+            <DeliverySection />
+          </main>
+          <Footer onOwnerDashboard={() => setOwnerDashboardOpen(true)} />
+        </div>
+
+        {/* Overlays */}
+        <CartPanel
+          isOpen={cartOpen}
+          onClose={() => setCartOpen(false)}
+          items={cartItems}
+          onQtyChange={changeQty}
+          onRemove={removeFromCart}
+          loyaltyPoints={loyaltyPoints}
+          onPlaceOrder={placeOrder}
+          isFirstOrder={isFirstOrder}
+          spinDiscount={spinDiscount}
+          spinDiscountType={spinDiscountType}
+          birthdayDiscount={birthdayDiscount}
+        />
+        <LoyaltyPanel
+          isOpen={loyaltyOpen}
+          onClose={() => setLoyaltyOpen(false)}
+          points={loyaltyPoints}
+        />
+        <ReferralPanel
+          isOpen={referralOpen}
+          onClose={() => setReferralOpen(false)}
+        />
+        <OrderSuccess
+          isOpen={orderSuccess}
+          onClose={() => setOrderSuccess(false)}
+          pointsEarned={lastPointsEarned}
+          totalPoints={loyaltyPoints}
+          referralUsed={lastReferralUsed}
+          onLeaveReview={() => setReviewPromptOpen(true)}
+        />
+        <NovaChat isOpen={novaOpen} onToggle={() => setNovaOpen((v) => !v)} />
+        <StripeSetup
+          isOpen={stripeSetupOpen}
+          onClose={() => setStripeSetupOpen(false)}
+        />
+        <ReviewPromptModal
+          isOpen={reviewPromptOpen}
+          onClose={() => setReviewPromptOpen(false)}
+          flavorOrdered={reviewFlavorName}
+        />
+        <OwnerDashboardModal
+          isOpen={ownerDashboardOpen}
+          onClose={() => setOwnerDashboardOpen(false)}
+        />
+        <UpgradeModal
+          isOpen={upgradeOpen}
+          onClose={() => setUpgradeOpen(false)}
+          onUpgrade={handleUpgrade}
+          isLoading={isCheckingOut}
+        />
+        <BirthdayBanner onDiscountClaimed={() => setBirthdayDiscount(true)} />
+        <Toaster />
       </div>
-
-      {/* Overlays */}
-      <CartPanel
-        isOpen={cartOpen}
-        onClose={() => setCartOpen(false)}
-        items={cartItems}
-        onQtyChange={changeQty}
-        onRemove={removeFromCart}
-        loyaltyPoints={loyaltyPoints}
-        onPlaceOrder={placeOrder}
-        isFirstOrder={isFirstOrder}
-        spinDiscount={spinDiscount}
-        spinDiscountType={spinDiscountType}
-        birthdayDiscount={birthdayDiscount}
-      />
-      <LoyaltyPanel
-        isOpen={loyaltyOpen}
-        onClose={() => setLoyaltyOpen(false)}
-        points={loyaltyPoints}
-      />
-      <ReferralPanel
-        isOpen={referralOpen}
-        onClose={() => setReferralOpen(false)}
-      />
-      <OrderSuccess
-        isOpen={orderSuccess}
-        onClose={() => setOrderSuccess(false)}
-        pointsEarned={lastPointsEarned}
-        totalPoints={loyaltyPoints}
-        referralUsed={lastReferralUsed}
-        onLeaveReview={() => setReviewPromptOpen(true)}
-      />
-      <NovaChat isOpen={novaOpen} onToggle={() => setNovaOpen((v) => !v)} />
-      <StripeSetup
-        isOpen={stripeSetupOpen}
-        onClose={() => setStripeSetupOpen(false)}
-      />
-      <ReviewPromptModal
-        isOpen={reviewPromptOpen}
-        onClose={() => setReviewPromptOpen(false)}
-        flavorOrdered={reviewFlavorName}
-      />
-      <OwnerDashboardModal
-        isOpen={ownerDashboardOpen}
-        onClose={() => setOwnerDashboardOpen(false)}
-      />
-      <UpgradeModal
-        isOpen={upgradeOpen}
-        onClose={() => setUpgradeOpen(false)}
-        onUpgrade={handleUpgrade}
-        isLoading={isCheckingOut}
-      />
-      <BirthdayBanner onDiscountClaimed={() => setBirthdayDiscount(true)} />
-      <Toaster />
-    </div>
+    </LanguageContext.Provider>
   );
 }
 

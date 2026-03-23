@@ -1,27 +1,27 @@
 # AI Galaxy Ice Cream Parlour
 
 ## Current State
-Full-featured virtual ice cream parlour with 34+ cosmic flavors, cart/order flow, loyalty points, Nova AI manager, referral system, Customer Favourites, Flash Deal timer, Family Pack category, and Family Combo Deal banner.
+Full-featured Galaxy Ice Cream Parlour with Nova AI chatbot, 34+ cosmic flavors, cart, loyalty points, referral, spin to win, family packs, flash deal, reviews, analytics dashboard, delivery/packaging, animated HD ad, toppings, combos, birthday surprise, trending ticker. Nova already understands some Hindi-style keywords. UI is entirely in English.
 
 ## Requested Changes (Diff)
 
 ### Add
-- **Customer Review System**: After placing an order, customers can submit a star rating (1-5) and a written comment. Reviews are stored in local state and shown in a public "Customer Reviews" section.
-- **Owner Analytics Dashboard**: A dedicated panel (toggle via a button in the header or footer) showing:
-  - Total orders placed
-  - Average star rating
-  - Top 3 most ordered flavors
-  - Full list of customer reviews (name, rating, comment, date)
-  - Simple visual star breakdown (how many 5-star, 4-star, etc.)
+- Language toggle button (Hindi / English) visible in the parlour header
+- Hindi translations for all major UI text: headings, buttons, flavor names, banners, section titles, Nova responses, cart labels, order flow, loyalty/referral text, delivery/packaging section, footer
+- Nova AI chatbot responses in Hindi when Hindi mode is active
 
 ### Modify
-- Order confirmation flow: after order success, prompt the customer to leave a review (name + star rating + comment).
+- App language state to switch between 'en' and 'hi'
+- All parlour text rendered from a translation map (en/hi) keyed to current language
+- Nova chatbot to reply in Hindi when language is set to Hindi
 
 ### Remove
-- Nothing removed.
+- Nothing removed
 
 ## Implementation Plan
-1. Add a `reviews` state array (stored in localStorage for persistence) with fields: name, rating, comment, date, orderId.
-2. After order placement, show a review prompt modal/section.
-3. Add a public "What Our Customers Say" section below Customer Favourites showing latest reviews with star ratings.
-4. Add an owner dashboard panel (accessible via a small "Owner View" button) showing analytics: total orders, avg rating, flavor popularity, star breakdown, and all reviews.
+1. Create a language context/state ('en' | 'hi') at the top level of the Galaxy Parlour section in App.tsx
+2. Build a translations object with English and Hindi strings for all major UI text (headings, buttons, banners, section labels, Nova responses)
+3. Add a visible language toggle button (EN | हिंदी) in the parlour header
+4. Replace all hardcoded parlour strings with translation lookups
+5. Update Nova chatbot response logic to serve Hindi replies when language is 'hi'
+6. Validate and build
