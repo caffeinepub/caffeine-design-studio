@@ -1,27 +1,26 @@
 # AI Galaxy Ice Cream Parlour
 
 ## Current State
-Full-featured Galaxy Ice Cream Parlour with Nova AI chatbot, 34+ cosmic flavors, cart, loyalty points, referral, spin to win, family packs, flash deal, reviews, analytics dashboard, delivery/packaging, animated HD ad, toppings, combos, birthday surprise, trending ticker. Nova already understands some Hindi-style keywords. UI is entirely in English.
+Full-featured virtual ice cream parlour with 34+ flavors, cart/order flow, Nova AI, loyalty points, spin to win, family/jumbo packs, bulk enquiry, order queue/tracker, SMS notifications, reviews, analytics, Hindi/English toggle, animated HD ad, and delivery/packaging section. Stripe was not previously integrated.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Language toggle button (Hindi / English) visible in the parlour header
-- Hindi translations for all major UI text: headings, buttons, flavor names, banners, section titles, Nova responses, cart labels, order flow, loyalty/referral text, delivery/packaging section, footer
-- Nova AI chatbot responses in Hindi when Hindi mode is active
+- Stripe payment integration for real checkout payments
+- Owner settings: enter Stripe publishable key via gear icon modal
+- Real Stripe payment button at checkout when Stripe is activated
+- Payment confirmation after successful Stripe payment completes the order
 
 ### Modify
-- App language state to switch between 'en' and 'hi'
-- All parlour text rendered from a translation map (en/hi) keyed to current language
-- Nova chatbot to reply in Hindi when language is set to Hindi
+- Checkout flow: Stripe payment button when activated, simulated flow when not
+- Owner Dashboard: show Stripe activation status and setup instructions
 
 ### Remove
-- Nothing removed
+- Nothing
 
 ## Implementation Plan
-1. Create a language context/state ('en' | 'hi') at the top level of the Galaxy Parlour section in App.tsx
-2. Build a translations object with English and Hindi strings for all major UI text (headings, buttons, banners, section labels, Nova responses)
-3. Add a visible language toggle button (EN | हिंदी) in the parlour header
-4. Replace all hardcoded parlour strings with translation lookups
-5. Update Nova chatbot response logic to serve Hindi replies when language is 'hi'
-6. Validate and build
+1. Wire Stripe component backend APIs for payment session creation
+2. Add publishable key input in owner settings modal (gear icon)
+3. Replace checkout confirm with Stripe payment flow when activated
+4. Show success/failure feedback and complete order on payment success
+5. Show Stripe activation prompt in Owner Dashboard if not configured

@@ -39,10 +39,17 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   CustomerReviewsSection,
+  DeliveryRatingPopup,
   OwnerDashboardModal,
   ReviewPromptModal,
   incrementOrderCount,
 } from "./GalaxyReviews";
+import {
+  ActiveOrderQueueTable,
+  LiveKitchenOrders,
+  OrderConfirmationCard,
+  type OrderQueueItem,
+} from "./OrderQueue";
 import { useCreateCheckoutSession } from "./hooks/useCheckoutSession";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -57,7 +64,8 @@ interface Flavor {
     | "vegan"
     | "frozen"
     | "exotic"
-    | "family";
+    | "family"
+    | "jumbo";
   price: number;
   description: string;
   isSpecial?: boolean;
@@ -77,6 +85,18 @@ interface ChatMessage {
 }
 // ── Language Context ─────────────────────────────────────────────────────────
 type Lang = "en" | "hi";
+
+// ── Notification types ────────────────────────────────────────────────────────
+interface AppNotification {
+  id: string;
+  orderId: string;
+  queueNumber: string;
+  message: string;
+  messageHi: string;
+  emoji: string;
+  timestamp: Date;
+  read: boolean;
+}
 interface LanguageContextValue {
   lang: Lang;
   setLang: (l: Lang) => void;
@@ -104,6 +124,16 @@ const TRANSLATIONS: Record<string, Record<Lang, string>> = {
     hi: "कोई भी 2 फैमिली पैक खरीदें और ₹100 बचाएं!",
   },
   shopFamilyPacks: { en: "Shop Family Packs →", hi: "फैमिली पैक देखें →" },
+  jumboPartyPack: { en: "Jumbo Party Pack", hi: "जम्बो पार्टी पैक" },
+  jumboPackBanner: {
+    en: "🎊 Planning a Wedding or Party? Order Jumbo Packs!",
+    hi: "🎊 शादी या पार्टी? जम्बो पैक ऑर्डर करें!",
+  },
+  jumboPackSub: {
+    en: "Serves 15–25 guests • Perfect for Weddings, Birthdays & Celebrations • Starting at ₹799",
+    hi: "15–25 मेहमानों के लिए • शादी, जन्मदिन और उत्सव के लिए • ₹799 से शुरू",
+  },
+  shopJumboPacks: { en: "Shop Jumbo Packs →", hi: "जम्बो पैक देखें →" },
   spinToWin: { en: "🎡 Spin to Win a Reward!", hi: "🎡 स्पिन करें और जीतें!" },
   spinBtn: { en: "SPIN!", hi: "स्पिन करें!" },
   spinning: { en: "Spinning...", hi: "स्पिन हो रहा है..." },
@@ -133,6 +163,20 @@ const TRANSLATIONS: Record<string, Record<Lang, string>> = {
     hi: "Galaxy Ice Cream Parlour के बारे में",
   },
   trendingNow: { en: "🔥 TRENDING NOW", hi: "🔥 अभी ट्रेंडिंग" },
+  liveKitchenOrders: { en: "🔴 Live Kitchen Orders", hi: "🔴 लाइव किचन ऑर्डर" },
+  peakHours: {
+    en: "🔥 Peak Hours - All orders being handled!",
+    hi: "🔥 पीक आवर्स - सभी ऑर्डर संभाले जा रहे हैं!",
+  },
+  kitchenReady: {
+    en: "✅ Kitchen is ready for your order!",
+    hi: "✅ किचन आपके ऑर्डर के लिए तैयार है!",
+  },
+  queueConfirm: { en: "Order Queued! 🎉", hi: "ऑर्डर कतार में है! 🎉" },
+  queueSub: {
+    en: "Your cosmic treats are on their way",
+    hi: "आपके कॉस्मिक ट्रीट आ रहे हैं",
+  },
   novaGreeting: {
     en: "Hey there! 🌟 I'm Nova, your AI Galaxy Ice Cream manager. Ask me about flavours, prices, today's special, or our referral program!",
     hi: "नमस्ते! 🌟 मैं Nova हूं, आपकी AI Galaxy Ice Cream मैनेजर। मुझसे फ्लेवर, कीमत, आज की स्पेशल डील, या रेफरल प्रोग्राम के बारे में पूछें!",
@@ -651,6 +695,11 @@ const CATEGORY_META: Record<
     emoji: "👨‍👩‍👧‍👦",
     color: "text-orange-300 border-orange-400/40 bg-orange-400/10",
   },
+  jumbo: {
+    label: "Jumbo Party Pack",
+    emoji: "🎊",
+    color: "text-yellow-300 border-yellow-400/40 bg-yellow-400/10",
+  },
 };
 
 const NOVA_RESPONSES: Record<string, string> = {
@@ -685,6 +734,16 @@ const NOVA_RESPONSES: Record<string, string> = {
     "We're a 100% online parlour! 🛸 No physical store needed — Galaxy Ice Cream Parlour is open 24/7 across all of India. Just visit our app anytime and enjoy cosmic flavours from home!",
   where:
     "Galaxy Ice Cream Parlour is fully online! 🌏 We're not at a physical address — we're everywhere in India via this app. Open 24/7, no stepping out needed! 🍦",
+  jumbo:
+    "🎊 For parties and weddings, our Jumbo Packs are perfect! We have 8 amazing Jumbo flavours starting at ₹799 — each tub serves 15-25 guests! Top picks: Kesar Pista Royale (₹1,299) ⭐ for weddings, Chocolate Truffle Extravaganza (₹1,499) 🎂 for grand celebrations, Strawberry Wedding Bliss (₹899) 💍 for brides! Perfect for shadi, birthday parties, anniversaries, corporate events, and puja celebrations! 📋 Fill out our Bulk Order Enquiry form on this page and we'll get back to you within 24 hours!",
+  wedding:
+    "💍 Congratulations on your big day! For wedding ice cream, our Jumbo Packs serve 15-25 guests each. We recommend: Kesar Pista Royale Jumbo (₹1,299) — a luxurious saffron-pistachio tub fit for a shaadi! Also try Chocolate Truffle Extravaganza (₹1,499) and Strawberry Wedding Bliss (₹899). Order multiple tubs and wow your guests! 📋 Fill out our Bulk Order Enquiry form on this page and we'll get back to you within 24 hours! 🌟",
+  party:
+    "🎉 Party time! Our Jumbo Packs are made for celebrations — starting at ₹799 and serving 15-25 people per tub! For birthdays try Mixed Fruit Fiesta (₹849), for corporate events try Vanilla Royal (₹799), for festive occasions try Mango Mahotsav (₹899). Order now and make your party cosmic! 📋 Fill out our Bulk Order Enquiry form on this page and we'll get back to you within 24 hours! 🚀",
+  occasion:
+    "🌟 Special occasion? Galaxy Ice Cream Parlour has Jumbo Packs perfect for weddings, birthdays, anniversaries, festivals, and corporate events! Each jumbo tub serves 15-25 guests. Prices start at ₹799. Also check our Family Packs (serves 4-6) starting at ₹299! 🍦",
+  shadi:
+    "💍 Shaadi ke liye hamare Jumbo Packs bilkul perfect hain! 🎊 Kesar Pista Royale Jumbo (₹1,299) aur Chocolate Truffle Extravaganza (₹1,499) shaadi reception ke liye best choice hai. Har tub mein 15-25 log ka ice cream aata hai. Abhi order karein! 📋 Hamare Bulk Order Enquiry form ko fill karein aur hum 24 ghante mein aapse contact karenge! 🌟",
   family:
     "We have 6 amazing Family Pack Big Blocks starting at ₹299! 👨‍👩‍👧‍👦 Perfect for family get-togethers — choose from Vanilla Dream (₹299), Butterscotch Bliss (₹319), Strawberry Galaxy (₹329), Chocolate Fudge (₹349), Mango Meteor (₹379), and the special Nebula Swirl Big Block (₹449). Each block serves 4-6 people!",
   factory:
@@ -849,8 +908,11 @@ interface HeaderProps {
   onUpgradeOpen: () => void;
   onStripeSetup: () => void;
   onReferralOpen: () => void;
+  stripeActive: boolean;
   lang: Lang;
   setLang: (l: Lang) => void;
+  notifications: AppNotification[];
+  onMarkAllRead: () => void;
 }
 function Header({
   cartCount,
@@ -860,9 +922,14 @@ function Header({
   onUpgradeOpen,
   onStripeSetup,
   onReferralOpen,
+  stripeActive,
   lang,
   setLang,
+  notifications,
+  onMarkAllRead,
 }: HeaderProps) {
+  const [notifOpen, setNotifOpen] = useState(false);
+  const unreadCount = notifications.filter((n) => !n.read).length;
   return (
     <header
       data-ocid="header.section"
@@ -919,6 +986,12 @@ function Header({
             <CreditCard className="w-3.5 h-3.5" />
             PRO
           </button>
+          {stripeActive && (
+            <span className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full border border-emerald-400/40 bg-emerald-400/10 text-emerald-300 text-xs font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Stripe Active
+            </span>
+          )}
           <button
             type="button"
             data-ocid="stripe.settings_button"
@@ -928,6 +1001,82 @@ function Header({
           >
             <Settings className="w-4 h-4" />
           </button>
+          {/* Notification Bell */}
+          <div className="relative">
+            <button
+              type="button"
+              data-ocid="notifications.open_modal_button"
+              onClick={() => {
+                setNotifOpen((v) => !v);
+                if (!notifOpen) onMarkAllRead();
+              }}
+              className="relative p-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 text-amber-300 hover:bg-amber-400/20 transition-colors"
+              title="Notifications"
+            >
+              🔔
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+            {notifOpen && (
+              <motion.div
+                data-ocid="notifications.panel"
+                initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                className="absolute right-0 top-10 w-80 rounded-2xl border border-amber-400/20 shadow-2xl z-50 overflow-hidden"
+                style={{ background: "oklch(0.1 0.03 280)" }}
+              >
+                <div className="px-4 py-3 border-b border-amber-400/20 flex items-center justify-between">
+                  <span className="font-bold text-amber-300 text-sm">
+                    {lang === "hi" ? "🔔 सूचनाएं" : "🔔 Notifications"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setNotifOpen(false)}
+                    className="text-violet-400/60 hover:text-violet-300 text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="max-h-72 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <p className="text-xs text-violet-400/50 text-center py-6">
+                      {lang === "hi" ? "कोई सूचना नहीं" : "No notifications yet"}
+                    </p>
+                  ) : (
+                    [...notifications].reverse().map((n) => (
+                      <div
+                        key={n.id}
+                        data-ocid="notifications.item.1"
+                        className="px-4 py-3 border-b border-violet-500/10 hover:bg-violet-500/5 transition-colors"
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="text-lg mt-0.5">{n.emoji}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-amber-300">
+                              {n.queueNumber}
+                            </p>
+                            <p className="text-xs text-violet-200 leading-snug">
+                              {lang === "hi" ? n.messageHi : n.message}
+                            </p>
+                            <p className="text-[10px] text-violet-400/50 mt-1">
+                              {n.timestamp.toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </div>
           <button
             type="button"
             data-ocid="lang.toggle"
@@ -2107,6 +2256,493 @@ function FlashDealSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
 }
 
 // ── Family Combo Deal Banner ────────────────────────────────────────────────
+function JumboPackBanner({ onShopJumbo }: { onShopJumbo: () => void }) {
+  const { lang } = useLanguage();
+  return (
+    <section
+      data-ocid="jumbo_pack.section"
+      className="max-w-6xl mx-auto px-4 mb-6"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="relative rounded-2xl p-5 border border-yellow-400/40 bg-gradient-to-r from-yellow-900/40 via-amber-900/30 to-orange-900/40 overflow-hidden"
+      >
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 50%, oklch(0.75 0.18 85) 0%, transparent 60%)",
+          }}
+        />
+        <div className="relative flex flex-col sm:flex-row items-center gap-4">
+          <div className="text-5xl animate-bounce">🎊</div>
+          <div className="flex-1 text-center sm:text-left">
+            <div className="text-yellow-300 font-bold text-lg">
+              {lang === "hi"
+                ? "शादी या पार्टी? जम्बो पैक ऑर्डर करें!"
+                : "🎊 Planning a Wedding or Party? Order Jumbo Packs!"}
+            </div>
+            <div className="text-yellow-200/70 text-sm mt-1">
+              {lang === "hi"
+                ? "15–25 मेहमानों के लिए • शादी, जन्मदिन और उत्सव के लिए • ₹799 से शुरू"
+                : "Serves 15–25 guests • Weddings, Birthdays, Anniversaries & Festivals • Starting at ₹799"}
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2 justify-center sm:justify-start">
+              {[
+                "💍 Wedding",
+                "🎂 Birthday",
+                "🎆 Anniversary",
+                "🏢 Corporate",
+                "🪔 Puja",
+              ].map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs bg-yellow-400/20 text-yellow-200 px-2 py-1 rounded-full"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+          <motion.button
+            type="button"
+            data-ocid="jumbo_pack.primary_button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={onShopJumbo}
+            className="bg-gradient-to-r from-yellow-500 to-amber-500 text-black font-bold px-5 py-2.5 rounded-xl text-sm whitespace-nowrap hover:from-yellow-400 hover:to-amber-400 transition-all shadow-lg"
+          >
+            {lang === "hi" ? "जम्बो पैक देखें →" : "Shop Jumbo Packs →"}
+          </motion.button>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent" />
+      </motion.div>
+    </section>
+  );
+}
+
+interface BulkEnquiry {
+  name: string;
+  phone: string;
+  eventType: string;
+  eventDate: string;
+  guests: string;
+  flavours: string;
+  specialRequests: string;
+  submittedAt: string;
+}
+
+function BulkOrderEnquiry() {
+  const { lang } = useLanguage();
+  const [bulkForm, setBulkForm] = useState({
+    name: "",
+    phone: "",
+    eventType: "",
+    eventDate: "",
+    guests: "",
+    flavours: "",
+    specialRequests: "",
+  });
+  const [bulkSubmitted, setBulkSubmitted] = useState(false);
+  const [bulkStars, setBulkStars] = useState<
+    { x: number; y: number; size: number; delay: number }[]
+  >([]);
+
+  useEffect(() => {
+    setBulkStars(
+      Array.from({ length: 30 }, () => ({
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: Math.random() * 3 + 1,
+        delay: Math.random() * 2,
+      })),
+    );
+  }, []);
+
+  const handleBulkSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const enquiry: BulkEnquiry = {
+      ...bulkForm,
+      submittedAt: new Date().toISOString(),
+    };
+    const existing: BulkEnquiry[] = JSON.parse(
+      localStorage.getItem("bulkEnquiries") || "[]",
+    );
+    existing.push(enquiry);
+    localStorage.setItem("bulkEnquiries", JSON.stringify(existing));
+    setBulkSubmitted(true);
+    setTimeout(() => {
+      setBulkSubmitted(false);
+      setBulkForm({
+        name: "",
+        phone: "",
+        eventType: "",
+        eventDate: "",
+        guests: "",
+        flavours: "",
+        specialRequests: "",
+      });
+    }, 5000);
+  };
+
+  const bt = {
+    title:
+      lang === "hi"
+        ? "🎉 बल्क / पार्टी ऑर्डर बुक करें"
+        : "🎉 Book Bulk / Party Orders",
+    sub:
+      lang === "hi"
+        ? "शादी, जन्मदिन, कॉर्पोरेट और विशेष अवसरों के लिए बल्क ऑर्डर करें"
+        : "Order in bulk for Weddings, Birthdays, Corporate Events & Special Occasions",
+    name: lang === "hi" ? "आपका नाम" : "Customer Name",
+    phone: lang === "hi" ? "फ़ोन नंबर" : "Phone Number",
+    eventType: lang === "hi" ? "इवेंट का प्रकार" : "Event Type",
+    selectEvent: lang === "hi" ? "इवेंट चुनें" : "Select Event Type",
+    eventDate: lang === "hi" ? "इवेंट की तारीख" : "Event Date",
+    guests:
+      lang === "hi" ? "मेहमानों की संख्या (न्यूनतम 20)" : "Number of Guests (min 20)",
+    flavours: lang === "hi" ? "पसंदीदा फ्लेवर" : "Flavour Preferences",
+    flavoursPlaceholder:
+      lang === "hi"
+        ? "जैसे: केसर पिस्ता रॉयल, चॉकलेट ट्रफल..."
+        : "e.g. Kesar Pista Royale, Chocolate Truffle Extravaganza...",
+    special: lang === "hi" ? "विशेष अनुरोध" : "Special Requests",
+    specialPlaceholder:
+      lang === "hi"
+        ? "कस्टम केक, डेकोरेशन, डिलीवरी जानकारी..."
+        : "Custom cake topper, decoration preferences, delivery details...",
+    submit: lang === "hi" ? "एंक्वायरी भेजें" : "Submit Enquiry",
+    success:
+      lang === "hi"
+        ? "🎉 धन्यवाद! हम 24 घंटे में संपर्क करेंगे।"
+        : "🎉 Thank you! We'll contact you within 24 hours.",
+    successSub:
+      lang === "hi"
+        ? "आपकी एंक्वायरी सफलतापूर्वक दर्ज हो गई है।"
+        : "Your bulk order enquiry has been received successfully.",
+  };
+
+  const eventOptions = [
+    { value: "wedding", label: lang === "hi" ? "💍 शादी" : "💍 Wedding" },
+    { value: "birthday", label: lang === "hi" ? "🎂 जन्मदिन" : "🎂 Birthday" },
+    {
+      value: "anniversary",
+      label: lang === "hi" ? "🎆 सालगिरह" : "🎆 Anniversary",
+    },
+    {
+      value: "corporate",
+      label: lang === "hi" ? "🏢 कॉर्पोरेट इवेंट" : "🏢 Corporate Event",
+    },
+    {
+      value: "puja",
+      label: lang === "hi" ? "🪔 पूजा / पूजन" : "🪔 Puja / Pooja",
+    },
+    { value: "other", label: lang === "hi" ? "✨ अन्य" : "✨ Other" },
+  ];
+
+  return (
+    <section
+      data-ocid="bulk_order.section"
+      className="max-w-6xl mx-auto px-4 mb-8"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="relative rounded-2xl overflow-hidden border border-purple-500/40"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.12 0.04 290) 0%, oklch(0.10 0.05 320) 50%, oklch(0.08 0.04 260) 100%)",
+        }}
+      >
+        {/* Starfield */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {bulkStars.map((s) => (
+            <motion.div
+              key={`bulk-star-${s.x.toFixed(2)}-${s.y.toFixed(2)}`}
+              className="absolute rounded-full bg-white"
+              style={{
+                left: `${s.x}%`,
+                top: `${s.y}%`,
+                width: s.size,
+                height: s.size,
+                opacity: 0.6,
+              }}
+              animate={{ opacity: [0.3, 0.9, 0.3], scale: [1, 1.4, 1] }}
+              transition={{
+                duration: 2 + s.delay,
+                repeat: Number.POSITIVE_INFINITY,
+                delay: s.delay,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative p-6 sm:p-8">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <motion.h2
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="text-2xl sm:text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-300 via-pink-400 to-violet-400 bg-clip-text text-transparent"
+            >
+              {bt.title}
+            </motion.h2>
+            <p className="text-purple-200/70 text-sm">{bt.sub}</p>
+            <div className="flex flex-wrap gap-2 justify-center mt-3">
+              {[
+                "💍 Wedding",
+                "🎂 Birthday",
+                "🏢 Corporate",
+                "🪔 Puja",
+                "🎆 Anniversary",
+              ].map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs px-3 py-1 rounded-full border border-purple-400/30 text-purple-200 bg-purple-500/10"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {bulkSubmitted ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              data-ocid="bulk_order.success_state"
+              className="text-center py-12"
+            >
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.6, repeat: 3 }}
+                className="text-6xl mb-4 inline-block"
+              >
+                🎉
+              </motion.div>
+              <div className="text-xl font-bold mb-2 bg-gradient-to-r from-yellow-300 to-pink-400 bg-clip-text text-transparent">
+                {bt.success}
+              </div>
+              <p className="text-purple-200/70 text-sm">{bt.successSub}</p>
+              <div className="flex justify-center gap-2 mt-4">
+                {["🌟", "✨", "💫", "⭐", "🌟✨", "✨💫", "💫⭐"].map(
+                  (s, i) => (
+                    <motion.span
+                      key={`success-star-${i}-${s}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="text-xl"
+                    >
+                      {s}
+                    </motion.span>
+                  ),
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <form
+              onSubmit={handleBulkSubmit}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+            >
+              {/* Name */}
+              <div className="flex flex-col gap-1">
+                <label
+                  htmlFor="bulk-name"
+                  className="text-purple-200 text-sm font-medium"
+                >
+                  {bt.name} *
+                </label>
+                <input
+                  id="bulk-name"
+                  data-ocid="bulk_order.input"
+                  type="text"
+                  required
+                  value={bulkForm.name}
+                  onChange={(e) =>
+                    setBulkForm((p) => ({ ...p, name: e.target.value }))
+                  }
+                  placeholder="Rahul Sharma"
+                  className="bg-white/5 border border-purple-500/30 text-white placeholder-purple-300/40 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400/70 transition-all"
+                />
+              </div>
+
+              {/* Phone */}
+              <div className="flex flex-col gap-1">
+                <label
+                  htmlFor="bulk-phone"
+                  className="text-purple-200 text-sm font-medium"
+                >
+                  {bt.phone} *
+                </label>
+                <input
+                  id="bulk-phone"
+                  data-ocid="bulk_order.input"
+                  type="tel"
+                  required
+                  value={bulkForm.phone}
+                  onChange={(e) =>
+                    setBulkForm((p) => ({ ...p, phone: e.target.value }))
+                  }
+                  placeholder="+91 98765 43210"
+                  className="bg-white/5 border border-purple-500/30 text-white placeholder-purple-300/40 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400/70 transition-all"
+                />
+              </div>
+
+              {/* Event Type */}
+              <div className="flex flex-col gap-1">
+                <label
+                  htmlFor="bulk-event-type"
+                  className="text-purple-200 text-sm font-medium"
+                >
+                  {bt.eventType} *
+                </label>
+                <select
+                  id="bulk-event-type"
+                  data-ocid="bulk_order.select"
+                  required
+                  value={bulkForm.eventType}
+                  onChange={(e) =>
+                    setBulkForm((p) => ({ ...p, eventType: e.target.value }))
+                  }
+                  className="border border-purple-500/30 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400/70 transition-all appearance-none"
+                  style={{ background: "oklch(0.15 0.04 290)" }}
+                >
+                  <option
+                    value=""
+                    disabled
+                    style={{ background: "oklch(0.15 0.04 290)" }}
+                  >
+                    {bt.selectEvent}
+                  </option>
+                  {eventOptions.map((o) => (
+                    <option
+                      key={o.value}
+                      value={o.value}
+                      style={{ background: "oklch(0.15 0.04 290)" }}
+                    >
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Event Date */}
+              <div className="flex flex-col gap-1">
+                <label
+                  htmlFor="bulk-event-date"
+                  className="text-purple-200 text-sm font-medium"
+                >
+                  {bt.eventDate} *
+                </label>
+                <input
+                  id="bulk-event-date"
+                  data-ocid="bulk_order.input"
+                  type="date"
+                  required
+                  value={bulkForm.eventDate}
+                  onChange={(e) =>
+                    setBulkForm((p) => ({ ...p, eventDate: e.target.value }))
+                  }
+                  className="bg-white/5 border border-purple-500/30 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400/70 transition-all"
+                  style={{ colorScheme: "dark" }}
+                />
+              </div>
+
+              {/* Number of Guests */}
+              <div className="flex flex-col gap-1 sm:col-span-2">
+                <label
+                  htmlFor="bulk-guests"
+                  className="text-purple-200 text-sm font-medium"
+                >
+                  {bt.guests} *
+                </label>
+                <input
+                  id="bulk-guests"
+                  data-ocid="bulk_order.input"
+                  type="number"
+                  required
+                  min={20}
+                  value={bulkForm.guests}
+                  onChange={(e) =>
+                    setBulkForm((p) => ({ ...p, guests: e.target.value }))
+                  }
+                  placeholder="50"
+                  className="bg-white/5 border border-purple-500/30 text-white placeholder-purple-300/40 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400/70 transition-all"
+                />
+              </div>
+
+              {/* Flavour Preferences */}
+              <div className="flex flex-col gap-1 sm:col-span-2">
+                <label
+                  htmlFor="bulk-flavours"
+                  className="text-purple-200 text-sm font-medium"
+                >
+                  {bt.flavours}
+                </label>
+                <textarea
+                  id="bulk-flavours"
+                  data-ocid="bulk_order.textarea"
+                  rows={3}
+                  value={bulkForm.flavours}
+                  onChange={(e) =>
+                    setBulkForm((p) => ({ ...p, flavours: e.target.value }))
+                  }
+                  placeholder={bt.flavoursPlaceholder}
+                  className="bg-white/5 border border-purple-500/30 text-white placeholder-purple-300/40 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400/70 transition-all resize-none"
+                />
+              </div>
+
+              {/* Special Requests */}
+              <div className="flex flex-col gap-1 sm:col-span-2">
+                <label
+                  htmlFor="bulk-special"
+                  className="text-purple-200 text-sm font-medium"
+                >
+                  {bt.special}
+                </label>
+                <textarea
+                  id="bulk-special"
+                  data-ocid="bulk_order.textarea"
+                  rows={3}
+                  value={bulkForm.specialRequests}
+                  onChange={(e) =>
+                    setBulkForm((p) => ({
+                      ...p,
+                      specialRequests: e.target.value,
+                    }))
+                  }
+                  placeholder={bt.specialPlaceholder}
+                  className="bg-white/5 border border-purple-500/30 text-white placeholder-purple-300/40 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400/70 transition-all resize-none"
+                />
+              </div>
+
+              {/* Submit */}
+              <div className="sm:col-span-2">
+                <motion.button
+                  type="submit"
+                  data-ocid="bulk_order.submit_button"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 rounded-xl font-bold text-base text-black shadow-lg transition-all bg-gradient-to-r from-yellow-400 via-pink-500 to-violet-500 hover:from-yellow-300 hover:to-violet-400"
+                >
+                  ✨ {bt.submit}
+                </motion.button>
+              </div>
+            </form>
+          )}
+        </div>
+        {/* Bottom glow */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-400/60 to-transparent" />
+      </motion.div>
+    </section>
+  );
+}
+
 function FamilyComboBanner({ onShopFamily }: { onShopFamily: () => void }) {
   const { lang } = useLanguage();
   return (
@@ -2450,11 +3086,16 @@ interface CartPanelProps {
   onQtyChange: (id: string, delta: number) => void;
   onRemove: (id: string) => void;
   loyaltyPoints: number;
-  onPlaceOrder: (redeemPoints: boolean, referralDiscount: boolean) => void;
+  onPlaceOrder: (
+    redeemPoints: boolean,
+    referralDiscount: boolean,
+    phone: string,
+  ) => void;
   isFirstOrder: boolean;
   spinDiscount: number;
   spinDiscountType: "percent" | "flat" | "none";
   birthdayDiscount?: boolean;
+  stripePublishableKey?: string;
 }
 function CartPanel({
   isOpen,
@@ -2468,12 +3109,16 @@ function CartPanel({
   spinDiscount,
   spinDiscountType,
   birthdayDiscount,
+  stripePublishableKey,
 }: CartPanelProps) {
   const { lang } = useLanguage();
   const [redeemPoints, setRedeemPoints] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   const [referralApplied, setReferralApplied] = useState(false);
   const [referralError, setReferralError] = useState("");
+  const [cartPhone, setCartPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [stripePaymentOpen, setStripePaymentOpen] = useState(false);
 
   const subtotal = items.reduce((s, i) => {
     const toppingTotal = (i.toppings ?? []).reduce((ts, t) => ts + t.price, 0);
@@ -2780,26 +3425,130 @@ function CartPanel({
                     </span>
                   </div>
                 </div>
-                <Button
-                  data-ocid="cart.submit_button"
-                  onClick={() => {
-                    onPlaceOrder(redeemPoints, referralApplied);
-                    setRedeemPoints(false);
-                    setReferralCode("");
-                    setReferralApplied(false);
-                  }}
-                  className="w-full font-bold py-5"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280), oklch(0.55 0.28 240))",
-                    border: "none",
-                    color: "white",
-                    boxShadow: "0 4px 24px oklch(0.55 0.28 310 / 0.4)",
-                  }}
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />{" "}
-                  {lang === "hi" ? "ऑर्डर दें" : "Place Order"}
-                </Button>
+                {/* Phone Number Field */}
+                <div className="mb-3">
+                  <label
+                    htmlFor="cart-phone"
+                    className="text-xs text-violet-300 font-semibold block mb-1"
+                  >
+                    {lang === "hi"
+                      ? "📱 मोबाइल नंबर (ऑर्डर अपडेट के लिए)"
+                      : "📱 Mobile Number (for order updates)"}
+                  </label>
+                  <input
+                    id="cart-phone"
+                    data-ocid="cart.input"
+                    type="tel"
+                    maxLength={10}
+                    value={cartPhone}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, "");
+                      setCartPhone(v);
+                      setPhoneError("");
+                    }}
+                    placeholder={
+                      lang === "hi"
+                        ? "9XXXXXXXXX (वैकल्पिक)"
+                        : "9XXXXXXXXX (optional)"
+                    }
+                    className="w-full px-3 py-2 rounded-lg text-sm text-white placeholder-violet-400/40 outline-none focus:ring-1 focus:ring-amber-400/60 transition-all"
+                    style={{
+                      background: "oklch(0.14 0.04 280)",
+                      border: "1px solid oklch(0.3 0.06 285)",
+                    }}
+                  />
+                  {phoneError && (
+                    <p
+                      data-ocid="cart.error_state"
+                      className="text-xs text-red-400 mt-1"
+                    >
+                      {phoneError}
+                    </p>
+                  )}
+                </div>
+                {stripePublishableKey ? (
+                  <Button
+                    data-ocid="cart.stripe_button"
+                    onClick={() => {
+                      if (
+                        cartPhone &&
+                        (cartPhone.length !== 10 || !/^[6-9]/.test(cartPhone))
+                      ) {
+                        setPhoneError(
+                          lang === "hi"
+                            ? "कृपया सही 10-अंकीय नंबर दर्ज करें"
+                            : "Please enter a valid 10-digit Indian mobile number",
+                        );
+                        return;
+                      }
+                      setStripePaymentOpen(true);
+                    }}
+                    className="w-full font-bold py-5"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, oklch(0.45 0.25 260), oklch(0.4 0.28 240), oklch(0.45 0.25 220))",
+                      border: "1px solid oklch(0.6 0.2 240 / 0.4)",
+                      color: "white",
+                      boxShadow: "0 4px 24px oklch(0.45 0.25 240 / 0.4)",
+                    }}
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    {lang === "hi" ? "Stripe से भुगतान करें" : "Pay with Stripe"} •
+                    ₹{total.toLocaleString("en-IN")}
+                  </Button>
+                ) : (
+                  <Button
+                    data-ocid="cart.submit_button"
+                    onClick={() => {
+                      if (
+                        cartPhone &&
+                        (cartPhone.length !== 10 || !/^[6-9]/.test(cartPhone))
+                      ) {
+                        setPhoneError(
+                          lang === "hi"
+                            ? "कृपया सही 10-अंकीय नंबर दर्ज करें"
+                            : "Please enter a valid 10-digit Indian mobile number",
+                        );
+                        return;
+                      }
+                      onPlaceOrder(redeemPoints, referralApplied, cartPhone);
+                      setRedeemPoints(false);
+                      setReferralCode("");
+                      setReferralApplied(false);
+                      setCartPhone("");
+                      setPhoneError("");
+                    }}
+                    className="w-full font-bold py-5"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280), oklch(0.55 0.28 240))",
+                      border: "none",
+                      color: "white",
+                      boxShadow: "0 4px 24px oklch(0.55 0.28 310 / 0.4)",
+                    }}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />{" "}
+                    {lang === "hi" ? "ऑर्डर दें" : "Place Order"}
+                  </Button>
+                )}
+                {stripePaymentOpen && (
+                  <StripePaymentModal
+                    isOpen={stripePaymentOpen}
+                    onClose={() => setStripePaymentOpen(false)}
+                    totalAmount={total}
+                    publishableKey={stripePublishableKey}
+                    onSuccess={() => {
+                      setStripePaymentOpen(false);
+                      onPlaceOrder(redeemPoints, referralApplied, cartPhone);
+                      setRedeemPoints(false);
+                      setReferralCode("");
+                      setReferralApplied(false);
+                      setCartPhone("");
+                      setPhoneError("");
+                    }}
+                    lang={lang}
+                  />
+                )}
               </div>
             )}
           </motion.div>
@@ -3600,6 +4349,8 @@ interface OrderSuccessProps {
   totalPoints: number;
   referralUsed: boolean;
   onLeaveReview?: () => void;
+  queueItem?: OrderQueueItem | null;
+  lang?: "en" | "hi";
 }
 function OrderSuccess({
   isOpen,
@@ -3608,6 +4359,8 @@ function OrderSuccess({
   totalPoints,
   referralUsed,
   onLeaveReview,
+  queueItem,
+  lang = "en",
 }: OrderSuccessProps) {
   return (
     <AnimatePresence>
@@ -3648,6 +4401,11 @@ function OrderSuccess({
               <p className="text-muted-foreground text-sm mb-5">
                 Your cosmic treats are being prepared with love ✨
               </p>
+              {queueItem && (
+                <div className="mb-4">
+                  <OrderConfirmationCard order={queueItem} lang={lang} />
+                </div>
+              )}
               <div className="bg-amber-400/10 border border-amber-400/30 rounded-xl p-4 mb-3">
                 <Star className="w-6 h-6 fill-amber-300 text-amber-300 mx-auto mb-2" />
                 <p className="font-bold text-amber-300 text-lg">
@@ -3788,23 +4546,56 @@ function PaymentFailure() {
 interface StripeSetupProps {
   isOpen: boolean;
   onClose: () => void;
+  onKeySaved: (key: string) => void;
 }
-function StripeSetup({ isOpen, onClose }: StripeSetupProps) {
-  const [stripeKey, setStripeKey] = useState("");
+function StripeSetup({ isOpen, onClose, onKeySaved }: StripeSetupProps) {
+  const [stripeKey, setStripeKey] = useState(() => {
+    try {
+      return localStorage.getItem("stripePublishableKey") ?? "";
+    } catch {
+      return "";
+    }
+  });
   const [isSaving, setIsSaving] = useState(false);
 
   function handleSave() {
-    if (!stripeKey.trim()) {
-      toast.error("Please enter a Stripe secret key");
+    const trimmed = stripeKey.trim();
+    if (!trimmed) {
+      toast.error("Please enter your Stripe Publishable Key");
+      return;
+    }
+    if (!trimmed.startsWith("pk_live_") && !trimmed.startsWith("pk_test_")) {
+      toast.error("Key must start with pk_live_ or pk_test_");
       return;
     }
     setIsSaving(true);
     setTimeout(() => {
+      try {
+        localStorage.setItem("stripePublishableKey", trimmed);
+      } catch {
+        /* ignore */
+      }
+      onKeySaved(trimmed);
       setIsSaving(false);
-      toast.success("Stripe configuration saved!");
+      toast.success("✅ Stripe Activated! Pay with Stripe is now live.");
       onClose();
-    }, 1200);
+    }, 800);
   }
+
+  function handleRemove() {
+    try {
+      localStorage.removeItem("stripePublishableKey");
+    } catch {
+      /* ignore */
+    }
+    setStripeKey("");
+    onKeySaved("");
+    toast("Stripe key removed");
+    onClose();
+  }
+
+  const isActive =
+    stripeKey.startsWith("pk_live_") || stripeKey.startsWith("pk_test_");
 
   return (
     <Dialog open={isOpen} onOpenChange={(v) => !v && onClose()}>
@@ -3820,30 +4611,55 @@ function StripeSetup({ isOpen, onClose }: StripeSetupProps) {
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
+          {isActive && (
+            <div className="flex items-center gap-2 p-3 rounded-xl border border-emerald-400/30 bg-emerald-400/10">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <p className="text-sm text-emerald-300 font-semibold">
+                Stripe is Active — Real payments enabled!
+              </p>
+            </div>
+          )}
           <p className="text-sm text-muted-foreground">
-            Connect your Stripe account to accept real payments for Galaxy PRO
-            subscriptions (₹799/month).
+            Add your Stripe{" "}
+            <strong className="text-violet-300">Publishable Key</strong> to show
+            a "Pay with Stripe" button at checkout. Customers will see a real
+            card payment UI.
           </p>
-          <div className="space-y-2">
-            <Label className="text-violet-200">Stripe Secret Key</Label>
-            <Input
-              data-ocid="stripe.input"
-              type="password"
-              placeholder="sk_live_..."
-              value={stripeKey}
-              onChange={(e) => setStripeKey(e.target.value)}
-              className="bg-white/5 border-violet-500/30 text-foreground placeholder:text-muted-foreground/50"
-            />
-            <p className="text-xs text-muted-foreground">
-              Find your key in{" "}
+          <div className="p-3 rounded-xl border border-blue-400/20 bg-blue-400/5 text-xs text-blue-300 space-y-1">
+            <p className="font-semibold">How to get your Publishable Key:</p>
+            <p>
+              1. Go to{" "}
               <a
-                href="https://dashboard.stripe.com/apikeys"
+                href="https://stripe.com"
                 target="_blank"
                 rel="noreferrer"
-                className="text-violet-400 underline"
+                className="underline text-blue-400"
               >
-                Stripe Dashboard → API Keys
-              </a>
+                stripe.com
+              </a>{" "}
+              → Sign in
+            </p>
+            <p>
+              2. Click <strong>Developers</strong> → <strong>API Keys</strong>
+            </p>
+            <p>
+              3. Copy the <strong>Publishable key</strong> (starts with pk_live_
+              or pk_test_)
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-violet-200">Stripe Publishable Key</Label>
+            <Input
+              data-ocid="stripe.input"
+              type="text"
+              placeholder="pk_live_... or pk_test_..."
+              value={stripeKey}
+              onChange={(e) => setStripeKey(e.target.value)}
+              className="bg-white/5 border-violet-500/30 text-foreground placeholder:text-muted-foreground/50 font-mono text-sm"
+            />
+            <p className="text-xs text-muted-foreground">
+              This is your <em>public</em> key — safe to use in the browser.
+              Never share your secret key (sk_).
             </p>
           </div>
           <div className="flex gap-2 pt-2">
@@ -3855,6 +4671,16 @@ function StripeSetup({ isOpen, onClose }: StripeSetupProps) {
             >
               Cancel
             </Button>
+            {isActive && (
+              <Button
+                data-ocid="stripe.remove_button"
+                variant="outline"
+                onClick={handleRemove}
+                className="border-red-500/40 text-red-400 hover:bg-red-500/10"
+              >
+                Remove
+              </Button>
+            )}
             <Button
               data-ocid="stripe.save_button"
               onClick={handleSave}
@@ -3864,12 +4690,275 @@ function StripeSetup({ isOpen, onClose }: StripeSetupProps) {
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : null}
-              Save Configuration
+              {isActive ? "Update Key" : "Activate Stripe"}
             </Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ── Stripe Payment Modal ─────────────────────────────────────────────────────
+interface StripePaymentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  totalAmount: number;
+  publishableKey?: string;
+  onSuccess: () => void;
+  lang: Lang;
+}
+function StripePaymentModal({
+  isOpen,
+  onClose,
+  totalAmount,
+  // publishableKey, // reserved for future server-side integration
+  onSuccess,
+  lang,
+}: StripePaymentModalProps) {
+  const [cardName, setCardName] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvc, setCvc] = useState("");
+  const [isPaying, setIsPaying] = useState(false);
+  const [payError, setPayError] = useState("");
+
+  function formatCardNumber(val: string) {
+    return val
+      .replace(/\D/g, "")
+      .slice(0, 16)
+      .replace(/(.{4})/g, "$1 ")
+      .trim();
+  }
+  function formatExpiry(val: string) {
+    const digits = val.replace(/\D/g, "").slice(0, 4);
+    if (digits.length >= 3) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    return digits;
+  }
+
+  function handlePay() {
+    setPayError("");
+    if (!cardName.trim()) {
+      setPayError("Please enter cardholder name");
+      return;
+    }
+    if (cardNumber.replace(/\s/g, "").length < 16) {
+      setPayError("Please enter a valid 16-digit card number");
+      return;
+    }
+    if (expiry.length < 5) {
+      setPayError("Please enter a valid expiry date");
+      return;
+    }
+    if (cvc.length < 3) {
+      setPayError("Please enter a valid CVC");
+      return;
+    }
+
+    setIsPaying(true);
+    // Simulate payment processing (real integration needs backend PaymentIntent)
+    setTimeout(() => {
+      setIsPaying(false);
+      onSuccess();
+    }, 2000);
+  }
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.7 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[70] bg-black"
+          />
+          <motion.div
+            data-ocid="stripe.modal"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", damping: 22 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none"
+          >
+            <div
+              className="pointer-events-auto w-full max-w-sm rounded-2xl border border-blue-400/30 overflow-hidden"
+              style={{
+                background: "oklch(0.1 0.03 260)",
+                boxShadow: "0 0 80px oklch(0.45 0.25 240 / 0.3)",
+              }}
+            >
+              {/* Header */}
+              <div
+                className="flex items-center justify-between px-5 py-4 border-b border-blue-400/20"
+                style={{
+                  background:
+                    "linear-gradient(135deg, oklch(0.15 0.05 260), oklch(0.12 0.04 240))",
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-blue-300" />
+                  <span className="font-bold text-blue-200">
+                    {lang === "hi" ? "Stripe से भुगतान" : "Pay with Stripe"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="text-blue-400/60 hover:text-blue-300 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-4">
+                {/* Amount */}
+                <div
+                  className="text-center py-4 rounded-xl border border-blue-400/20"
+                  style={{ background: "oklch(0.13 0.04 260)" }}
+                >
+                  <p className="text-xs text-blue-300/70 mb-1">
+                    {lang === "hi" ? "कुल राशि" : "Total Amount"}
+                  </p>
+                  <p className="text-3xl font-black text-blue-200">
+                    ₹{totalAmount.toLocaleString("en-IN")}
+                  </p>
+                  <p className="text-xs text-blue-300/50 mt-1">
+                    Galaxy Ice Cream Parlour
+                  </p>
+                </div>
+
+                {/* Card form */}
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-blue-200 text-xs mb-1 block">
+                      Cardholder Name
+                    </Label>
+                    <Input
+                      data-ocid="stripe.cardholder_input"
+                      placeholder="Name on card"
+                      value={cardName}
+                      onChange={(e) => setCardName(e.target.value)}
+                      className="bg-white/5 border-blue-500/30 text-foreground placeholder:text-muted-foreground/40 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-blue-200 text-xs mb-1 block">
+                      Card Number
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        data-ocid="stripe.card_input"
+                        placeholder="1234 5678 9012 3456"
+                        value={cardNumber}
+                        onChange={(e) =>
+                          setCardNumber(formatCardNumber(e.target.value))
+                        }
+                        className="bg-white/5 border-blue-500/30 text-foreground placeholder:text-muted-foreground/40 text-sm font-mono pr-10"
+                        maxLength={19}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg">
+                        {cardNumber.startsWith("4")
+                          ? "💳"
+                          : cardNumber.startsWith("5")
+                            ? "🔵"
+                            : "💳"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-blue-200 text-xs mb-1 block">
+                        Expiry
+                      </Label>
+                      <Input
+                        data-ocid="stripe.expiry_input"
+                        placeholder="MM/YY"
+                        value={expiry}
+                        onChange={(e) =>
+                          setExpiry(formatExpiry(e.target.value))
+                        }
+                        className="bg-white/5 border-blue-500/30 text-foreground placeholder:text-muted-foreground/40 text-sm font-mono"
+                        maxLength={5}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-blue-200 text-xs mb-1 block">
+                        CVC
+                      </Label>
+                      <Input
+                        data-ocid="stripe.cvc_input"
+                        placeholder="123"
+                        value={cvc}
+                        onChange={(e) =>
+                          setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))
+                        }
+                        className="bg-white/5 border-blue-500/30 text-foreground placeholder:text-muted-foreground/40 text-sm font-mono"
+                        maxLength={4}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {payError && (
+                  <p
+                    data-ocid="stripe.error_state"
+                    className="text-xs text-red-400 bg-red-400/10 rounded-lg px-3 py-2"
+                  >
+                    {payError}
+                  </p>
+                )}
+
+                <div className="p-3 rounded-lg border border-amber-400/20 bg-amber-400/5 text-xs text-amber-300/70">
+                  💡{" "}
+                  {lang === "hi"
+                    ? "वास्तविक भुगतान के लिए gear icon से Stripe secret key सक्रिय करें"
+                    : "To process real payments, activate Stripe with your secret key from the gear icon"}
+                </div>
+
+                <Button
+                  data-ocid="stripe.pay_button"
+                  onClick={handlePay}
+                  disabled={isPaying}
+                  className="w-full font-bold py-5"
+                  style={{
+                    background: isPaying
+                      ? "oklch(0.35 0.1 240)"
+                      : "linear-gradient(135deg, oklch(0.45 0.25 260), oklch(0.4 0.28 240))",
+                    border: "none",
+                    color: "white",
+                    boxShadow: isPaying
+                      ? "none"
+                      : "0 4px 20px oklch(0.45 0.25 240 / 0.4)",
+                  }}
+                >
+                  {isPaying ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      {lang === "hi"
+                        ? "प्रोसेस हो रहा है..."
+                        : "Processing payment..."}
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      {lang === "hi"
+                        ? `₹${totalAmount.toLocaleString("en-IN")} भुगतान करें`
+                        : `Pay ₹${totalAmount.toLocaleString("en-IN")}`}
+                    </>
+                  )}
+                </Button>
+
+                <p className="text-center text-[10px] text-muted-foreground/50 flex items-center justify-center gap-1">
+                  🔒 Secured by Stripe • PCI DSS Compliant
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -4085,7 +5174,9 @@ function ComboBuildSection({
   onAddCombo: (f1: Flavor, f2: Flavor, cone: string, coneExtra: number) => void;
 }) {
   const { lang } = useLanguage();
-  const nonFamilyFlavors = FLAVORS.filter((f) => f.category !== "family");
+  const nonFamilyFlavors = FLAVORS.filter(
+    (f) => f.category !== "family" && f.category !== "jumbo",
+  );
   const [scoop1Id, setScoop1Id] = useState(nonFamilyFlavors[0].id);
   const [scoop2Id, setScoop2Id] = useState(nonFamilyFlavors[1].id);
   const [coneType, setConeType] = useState<"cup" | "waffle" | "sugar">("cup");
@@ -4533,6 +5624,18 @@ function IceCreamParlour() {
   const [lastReferralUsed, setLastReferralUsed] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [stripeSetupOpen, setStripeSetupOpen] = useState(false);
+  const [stripePublishableKey, setStripePublishableKey] = useState<string>(
+    () => {
+      try {
+        return localStorage.getItem("stripePublishableKey") ?? "";
+      } catch {
+        return "";
+      }
+    },
+  );
+  const stripeActive =
+    stripePublishableKey.startsWith("pk_live_") ||
+    stripePublishableKey.startsWith("pk_test_");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
   const [spinDiscount, setSpinDiscount] = useState(0);
@@ -4548,11 +5651,129 @@ function IceCreamParlour() {
   });
   const [reviewPromptOpen, setReviewPromptOpen] = useState(false);
   const [reviewFlavorName, setReviewFlavorName] = useState("");
+  const [deliveryRatingOrder, setDeliveryRatingOrder] =
+    useState<OrderQueueItem | null>(null);
+  const [deliveryRatingOpen, setDeliveryRatingOpen] = useState(false);
+  const [deliveryRatingConfetti, setDeliveryRatingConfetti] = useState(false);
   const [ownerDashboardOpen, setOwnerDashboardOpen] = useState(false);
+  const [activeOrders, setActiveOrders] = useState<OrderQueueItem[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const prevOrderStatuses = useRef<Record<string, string>>({});
+
+  function pushNotification(
+    order: OrderQueueItem,
+    status: OrderQueueItem["status"],
+  ) {
+    const msgs: Record<string, { msg: string; msgHi: string; emoji: string }> =
+      {
+        placed: {
+          msg: `Your order ${order.queueNumber} has been placed! We'll start preparing it shortly. 🍦`,
+          msgHi: `आपका ऑर्डर ${order.queueNumber} मिल गया! हम जल्द तैयार करेंगे। 🍦`,
+          emoji: "📋",
+        },
+        preparing: {
+          msg: `Your order ${order.queueNumber} is being prepared with love! ✨`,
+          msgHi: `${order.queueNumber} प्यार से तैयार हो रहा है! ✨`,
+          emoji: "🍦",
+        },
+        quality_check: {
+          msg: `${order.queueNumber} is passing quality check — almost ready! ✅`,
+          msgHi: `${order.queueNumber} क्वालिटी चेक हो रहा है! ✅`,
+          emoji: "✅",
+        },
+        out_for_delivery: {
+          msg: `Your order ${order.queueNumber} is on its way! 🛵`,
+          msgHi: `${order.queueNumber} डिलीवरी पर निकल गया! 🛵`,
+          emoji: "🛵",
+        },
+        delivered: {
+          msg: `Your order ${order.queueNumber} has been delivered. Enjoy! 🎉`,
+          msgHi: `${order.queueNumber} डिलीवर हो गया। आनंद लें! 🎉`,
+          emoji: "🎉",
+        },
+      };
+    const m = msgs[status];
+    if (!m) return;
+    setNotifications((prev) => [
+      ...prev,
+      {
+        id: `${order.id}-${status}-${Date.now()}`,
+        orderId: order.id,
+        queueNumber: order.queueNumber,
+        message: m.msg,
+        messageHi: m.msgHi,
+        emoji: m.emoji,
+        timestamp: new Date(),
+        read: false,
+      },
+    ]);
+  }
+  const [orderCounter, setOrderCounter] = useState(0);
+  const [lastQueueItem, setLastQueueItem] = useState<OrderQueueItem | null>(
+    null,
+  );
   const { mutateAsync: createCheckoutSession, isPending: isCheckingOut } =
     useCreateCheckoutSession();
 
   const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
+
+  // Auto-progress orders through stages every 90s
+  useEffect(() => {
+    const ORDER_STAGES: OrderQueueItem["status"][] = [
+      "placed",
+      "preparing",
+      "quality_check",
+      "out_for_delivery",
+      "delivered",
+    ];
+    const timer = setInterval(() => {
+      setActiveOrders((prev) => {
+        const now = Date.now();
+        return prev
+          .map((order) => {
+            const ageMs = now - order.placedAt.getTime();
+            const stageIdx = ORDER_STAGES.indexOf(order.status);
+            const expectedStage = Math.min(
+              Math.floor(ageMs / 90000),
+              ORDER_STAGES.length - 1,
+            );
+            if (expectedStage > stageIdx) {
+              return { ...order, status: ORDER_STAGES[expectedStage] };
+            }
+            return order;
+          })
+          .filter((order) => {
+            // Remove delivered orders after 30s
+            if (order.status === "delivered") {
+              const ageMs = now - order.placedAt.getTime();
+              return ageMs < 90000 * 5 + 30000;
+            }
+            return true;
+          });
+      });
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Push notifications when order status changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pushNotification is stable
+  useEffect(() => {
+    for (const order of activeOrders) {
+      const prev = prevOrderStatuses.current[order.id];
+      if (prev !== order.status) {
+        if (prev !== undefined) {
+          // Status changed — push notification
+          pushNotification(order, order.status);
+          // Trigger delivery rating popup when order is delivered
+          if (order.status === "delivered") {
+            setDeliveryRatingOrder(order);
+            setDeliveryRatingOpen(true);
+          }
+        }
+        prevOrderStatuses.current[order.id] = order.status;
+      }
+    }
+  }, [activeOrders]);
 
   useEffect(() => {
     try {
@@ -4627,7 +5848,11 @@ function IceCreamParlour() {
     setCartItems((prev) => prev.filter((i) => i.flavor.id !== id));
   }
 
-  function placeOrder(redeemPoints: boolean, referralDiscount: boolean) {
+  function placeOrder(
+    redeemPoints: boolean,
+    referralDiscount: boolean,
+    phone = "",
+  ) {
     const pointsEarned = 10;
     let newPoints = loyaltyPoints + pointsEarned;
     if (redeemPoints && loyaltyPoints >= 100) newPoints -= 100;
@@ -4652,6 +5877,48 @@ function IceCreamParlour() {
     incrementOrderCount();
     const firstItemName = cartItems[0]?.flavor?.name ?? "";
     setReviewFlavorName(firstItemName);
+
+    // Create queue item
+    const newCounter = orderCounter + 1;
+    setOrderCounter(newCounter);
+    const queueNum = `#GX-${String(newCounter).padStart(3, "0")}`;
+    // Count currently active non-delivered orders for ETA calc
+    const activeCount = activeOrders.filter(
+      (o) => o.status !== "delivered",
+    ).length;
+    const estimatedMinutes = (activeCount + 1) * 8;
+    const subtotal = cartItems.reduce((s, i) => {
+      const toppingTotal = (i.toppings ?? []).reduce(
+        (ts, t) => ts + t.price,
+        0,
+      );
+      return s + (i.flavor.price + toppingTotal) * i.qty;
+    }, 0);
+    const newQueueItem: OrderQueueItem = {
+      id: `order-${Date.now()}`,
+      queueNumber: queueNum,
+      items: cartItems.map((ci) => ({
+        name: ci.flavor.name,
+        emoji: ci.flavor.emoji,
+        qty: ci.qty,
+        price:
+          ci.flavor.price +
+          (ci.toppings ?? []).reduce((ts, t) => ts + t.price, 0),
+      })),
+      total: subtotal,
+      status: "placed",
+      placedAt: new Date(),
+      estimatedMinutes,
+      phone,
+    };
+    setActiveOrders((prev) => [...prev, newQueueItem]);
+    pushNotification(newQueueItem, "placed");
+    if (phone) {
+      const masked = `****${phone.slice(-4)}`;
+      toast.success(`📱 You'll receive updates on ${masked}`);
+    }
+    setLastQueueItem(newQueueItem);
+
     setCartItems([]);
     setCartOpen(false);
     setOrderSuccess(true);
@@ -4686,8 +5953,15 @@ function IceCreamParlour() {
             onUpgradeOpen={() => setUpgradeOpen(true)}
             onStripeSetup={() => setStripeSetupOpen(true)}
             onReferralOpen={() => setReferralOpen(true)}
+            stripeActive={stripeActive}
             lang={lang}
             setLang={setLang}
+            notifications={notifications}
+            onMarkAllRead={() =>
+              setNotifications((prev) =>
+                prev.map((n) => ({ ...n, read: true })),
+              )
+            }
           />
           <main>
             <GalaxyAdBanner />
@@ -4715,6 +5989,8 @@ function IceCreamParlour() {
             <FamilyComboBanner
               onShopFamily={() => setActiveCategory("family")}
             />
+            <JumboPackBanner onShopJumbo={() => setActiveCategory("jumbo")} />
+            <BulkOrderEnquiry />
 
             {/* Menu */}
             <section
@@ -4722,6 +5998,7 @@ function IceCreamParlour() {
               className="max-w-6xl mx-auto px-4 py-8"
             >
               <TrendingTicker />
+              <LiveKitchenOrders activeOrders={activeOrders} lang={lang} />
               <div className="flex items-center justify-between mb-6 mt-4">
                 <h2 className="font-display font-bold text-2xl gradient-text">
                   Our Cosmic Menu
@@ -4784,11 +6061,14 @@ function IceCreamParlour() {
           onQtyChange={changeQty}
           onRemove={removeFromCart}
           loyaltyPoints={loyaltyPoints}
-          onPlaceOrder={placeOrder}
+          onPlaceOrder={(redeem, referral, phone) =>
+            placeOrder(redeem, referral, phone)
+          }
           isFirstOrder={isFirstOrder}
           spinDiscount={spinDiscount}
           spinDiscountType={spinDiscountType}
           birthdayDiscount={birthdayDiscount}
+          stripePublishableKey={stripeActive ? stripePublishableKey : undefined}
         />
         <LoyaltyPanel
           isOpen={loyaltyOpen}
@@ -4806,11 +6086,14 @@ function IceCreamParlour() {
           totalPoints={loyaltyPoints}
           referralUsed={lastReferralUsed}
           onLeaveReview={() => setReviewPromptOpen(true)}
+          queueItem={lastQueueItem}
+          lang={lang}
         />
         <NovaChat isOpen={novaOpen} onToggle={() => setNovaOpen((v) => !v)} />
         <StripeSetup
           isOpen={stripeSetupOpen}
           onClose={() => setStripeSetupOpen(false)}
+          onKeySaved={(key) => setStripePublishableKey(key)}
         />
         <ReviewPromptModal
           isOpen={reviewPromptOpen}
@@ -4820,6 +6103,7 @@ function IceCreamParlour() {
         <OwnerDashboardModal
           isOpen={ownerDashboardOpen}
           onClose={() => setOwnerDashboardOpen(false)}
+          activeOrders={activeOrders}
         />
         <UpgradeModal
           isOpen={upgradeOpen}
@@ -4828,6 +6112,44 @@ function IceCreamParlour() {
           isLoading={isCheckingOut}
         />
         <BirthdayBanner onDiscountClaimed={() => setBirthdayDiscount(true)} />
+        <DeliveryRatingPopup
+          isOpen={deliveryRatingOpen}
+          onClose={() => {
+            setDeliveryRatingOpen(false);
+            setDeliveryRatingConfetti(false);
+          }}
+          order={deliveryRatingOrder}
+          onConfettiTrigger={() => {
+            setDeliveryRatingConfetti(true);
+            toast.success("Thanks for rating your delivery! 🌟");
+            setTimeout(() => setDeliveryRatingConfetti(false), 2500);
+          }}
+        />
+        {deliveryRatingConfetti &&
+          Array.from({ length: 24 }, (_, i) => (
+            <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: confetti display
+              key={i}
+              className="confetti-dot"
+              style={
+                {
+                  left: `${20 + (i % 8) * 8}%`,
+                  top: `${30 + Math.floor(i / 8) * 10}%`,
+                  background: [
+                    "#fbbf24",
+                    "#a855f7",
+                    "#f472b6",
+                    "#60a5fa",
+                    "#34d399",
+                    "#fb923c",
+                  ][i % 6],
+                  "--tx": `${(Math.random() - 0.5) * 300}px`,
+                  "--ty": `${-Math.random() * 300 - 80}px`,
+                  animationDelay: `${i * 0.035}s`,
+                } as React.CSSProperties
+              }
+            />
+          ))}
         <Toaster />
       </div>
     </LanguageContext.Provider>

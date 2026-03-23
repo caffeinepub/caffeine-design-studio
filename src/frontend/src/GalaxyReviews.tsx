@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BarChart3, Star, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { ActiveOrderQueueTable, type OrderQueueItem } from "./OrderQueue";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export interface Review {
@@ -452,13 +453,71 @@ export function CustomerReviewsSection() {
   );
 }
 
+// ── Stripe Status Card ──────────────────────────────────────────────────────
+function StripeStatusCard() {
+  const isActive = (() => {
+    try {
+      const key = localStorage.getItem("stripePublishableKey") ?? "";
+      return key.startsWith("pk_live_") || key.startsWith("pk_test_");
+    } catch {
+      return false;
+    }
+  })();
+
+  if (isActive) {
+    return (
+      <div
+        data-ocid="dashboard.stripe.success_state"
+        className="flex items-center gap-3 p-4 rounded-xl border border-emerald-400/30"
+        style={{ background: "oklch(0.12 0.04 150)" }}
+      >
+        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-400/20 flex items-center justify-center text-xl">
+          ✅
+        </div>
+        <div>
+          <p className="font-bold text-emerald-300 text-sm">Stripe Active</p>
+          <p className="text-xs text-emerald-300/70">
+            Real payments are enabled! Customers can pay with their debit/credit
+            cards.
+          </p>
+        </div>
+        <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      data-ocid="dashboard.stripe.error_state"
+      className="flex items-center gap-3 p-4 rounded-xl border border-amber-400/30"
+      style={{ background: "oklch(0.12 0.04 80)" }}
+    >
+      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-400/20 flex items-center justify-center text-xl">
+        ⚠️
+      </div>
+      <div>
+        <p className="font-bold text-amber-300 text-sm">Stripe Not Activated</p>
+        <p className="text-xs text-amber-300/70">
+          You are not receiving real payments. Click the ⚙️ gear icon in the
+          header to add your Stripe Publishable Key.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ── Owner Dashboard Modal ──────────────────────────────────────────────────
 interface OwnerDashboardProps {
   isOpen: boolean;
   onClose: () => void;
+  activeOrders?: OrderQueueItem[];
 }
 
-export function OwnerDashboardModal({ isOpen, onClose }: OwnerDashboardProps) {
+export function OwnerDashboardModal({
+  isOpen,
+  onClose,
+  activeOrders = [],
+}: OwnerDashboardProps) {
   const reviews = loadReviews();
   const orderCount = getOrderCount();
   const avg =
@@ -533,6 +592,21 @@ export function OwnerDashboardModal({ isOpen, onClose }: OwnerDashboardProps) {
 
               <ScrollArea className="h-[70vh]">
                 <div className="p-6 space-y-6">
+                  {/* Stripe Status Card */}
+                  <StripeStatusCard />
+
+                  {/* Active Order Queue */}
+                  <div>
+                    <h3 className="font-semibold text-sm text-violet-200 mb-3 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                      📋 Active Order Queue
+                      <span className="ml-auto text-xs font-normal text-violet-400">
+                        {activeOrders.length} orders
+                      </span>
+                    </h3>
+                    <ActiveOrderQueueTable activeOrders={activeOrders} />
+                  </div>
+
                   {/* KPI cards */}
                   <div className="grid grid-cols-3 gap-3">
                     <div className="bg-violet-950/60 border border-violet-400/20 rounded-xl p-4 text-center">
@@ -696,6 +770,290 @@ export function OwnerDashboardModal({ isOpen, onClose }: OwnerDashboardProps) {
                   </div>
                 </div>
               </ScrollArea>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ── Delivery Rating Popup ──────────────────────────────────────────────────
+interface DeliveryRatingPopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  order: {
+    queueNumber: string;
+    items: { name: string; emoji: string; qty: number; price: number }[];
+  } | null;
+  onConfettiTrigger: () => void;
+}
+
+export function DeliveryRatingPopup({
+  isOpen,
+  onClose,
+  order,
+  onConfettiTrigger,
+}: DeliveryRatingPopupProps) {
+  const [rating, setRating] = useState(0);
+  const [hovered, setHovered] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  function handleClose() {
+    setRating(0);
+    setHovered(0);
+    setComment("");
+    setSubmitted(false);
+    onClose();
+  }
+
+  function handleSubmit() {
+    if (rating === 0) return;
+    const flavorOrdered =
+      order?.items
+        .slice(0, 2)
+        .map((i) => `${i.emoji} ${i.name}`)
+        .join(", ") ?? "Cosmic Flavour";
+    const review: Review = {
+      id: Date.now().toString(),
+      name: "Cosmic Customer",
+      rating,
+      comment: comment.trim(),
+      date: new Date().toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }),
+      flavorOrdered,
+    };
+    saveReview(review);
+    setSubmitted(true);
+    onConfettiTrigger();
+    // toast is triggered from the parent via onConfettiTrigger callback side-effect
+    setTimeout(() => {
+      handleClose();
+    }, 1800);
+  }
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={handleClose}
+            className="fixed inset-0 z-[70] bg-black/75 backdrop-blur-sm"
+          />
+
+          {/* Modal */}
+          <motion.div
+            data-ocid="delivery_rating.dialog"
+            initial={{ opacity: 0, scale: 0.8, y: 40 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 40 }}
+            transition={{ type: "spring", damping: 20, stiffness: 220 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none"
+          >
+            <div
+              className="pointer-events-auto w-full max-w-sm rounded-3xl p-7 border border-amber-400/30 relative overflow-hidden"
+              style={{
+                background:
+                  "linear-gradient(145deg, oklch(0.09 0.04 280), oklch(0.11 0.05 310))",
+                boxShadow:
+                  "0 0 60px oklch(0.82 0.2 75 / 0.15), 0 0 120px oklch(0.55 0.28 310 / 0.2)",
+              }}
+            >
+              {/* Glow top bar */}
+              <div
+                className="absolute top-0 left-0 right-0 h-0.5"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, oklch(0.82 0.2 75 / 0.8), oklch(0.65 0.3 310 / 0.6), transparent)",
+                }}
+              />
+
+              {/* Close button */}
+              <button
+                type="button"
+                data-ocid="delivery_rating.close_button"
+                onClick={handleClose}
+                className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-white/10 transition-colors text-violet-300"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {submitted ? (
+                <motion.div
+                  data-ocid="delivery_rating.success_state"
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center py-4"
+                >
+                  <motion.div
+                    animate={{
+                      rotate: [0, -10, 10, -10, 0],
+                      scale: [1, 1.2, 1],
+                    }}
+                    transition={{ duration: 0.6 }}
+                    className="text-5xl mb-3"
+                  >
+                    🌟
+                  </motion.div>
+                  <h3
+                    className="font-display font-black text-xl mb-2"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, oklch(0.85 0.15 60), oklch(0.8 0.22 40))",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
+                    Thanks for Rating! 🚀
+                  </h3>
+                  <p className="text-sm text-violet-300/70">
+                    Your feedback powers the galaxy! ✨
+                  </p>
+                </motion.div>
+              ) : (
+                <>
+                  {/* Header */}
+                  <div className="mb-5 pr-6">
+                    <motion.div
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{
+                        repeat: Number.POSITIVE_INFINITY,
+                        duration: 2,
+                      }}
+                      className="text-3xl mb-2"
+                    >
+                      🎉
+                    </motion.div>
+                    <h2
+                      className="font-display font-black text-xl leading-tight"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, oklch(0.85 0.15 60), oklch(0.75 0.22 40))",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                      }}
+                    >
+                      Your Order Arrived!
+                    </h2>
+                    <p className="text-xs text-violet-300/60 mt-1">
+                      {order?.queueNumber} — How was your delivery?
+                    </p>
+                  </div>
+
+                  {/* Star rating */}
+                  <div className="mb-5">
+                    <p className="text-xs text-violet-300/70 mb-2 uppercase tracking-wider">
+                      Rate Your Delivery
+                    </p>
+                    <div className="flex gap-2 justify-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <motion.button
+                          key={star}
+                          type="button"
+                          data-ocid={`delivery_rating.star.${star}`}
+                          whileHover={{ scale: 1.25 }}
+                          whileTap={{ scale: 0.9 }}
+                          onMouseEnter={() => setHovered(star)}
+                          onMouseLeave={() => setHovered(0)}
+                          onClick={() => setRating(star)}
+                          className="relative"
+                        >
+                          <Star
+                            className="w-9 h-9 transition-all duration-150"
+                            style={{
+                              fill:
+                                star <= (hovered || rating)
+                                  ? "oklch(0.82 0.2 75)"
+                                  : "transparent",
+                              color:
+                                star <= (hovered || rating)
+                                  ? "oklch(0.82 0.2 75)"
+                                  : "oklch(0.35 0.05 280)",
+                              filter:
+                                star <= (hovered || rating)
+                                  ? "drop-shadow(0 0 8px oklch(0.82 0.2 75 / 0.8))"
+                                  : "none",
+                            }}
+                          />
+                        </motion.button>
+                      ))}
+                    </div>
+                    {rating > 0 && (
+                      <motion.p
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center text-xs mt-2 text-amber-300/80"
+                      >
+                        {
+                          [
+                            "",
+                            "😞 Poor",
+                            "😐 Fair",
+                            "🙂 Good",
+                            "😊 Great!",
+                            "🤩 Cosmic!",
+                          ][rating]
+                        }
+                      </motion.p>
+                    )}
+                  </div>
+
+                  {/* Comment */}
+                  <div className="mb-5">
+                    <p className="text-xs text-violet-300/70 mb-2 uppercase tracking-wider">
+                      Any feedback?{" "}
+                      <span className="normal-case opacity-60">(optional)</span>
+                    </p>
+                    <Textarea
+                      data-ocid="delivery_rating.textarea"
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      placeholder="Tell us about your cosmic delivery experience..."
+                      rows={3}
+                      className="bg-white/5 border-violet-500/30 text-sm text-foreground placeholder:text-muted-foreground/50 resize-none rounded-xl"
+                    />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      data-ocid="delivery_rating.cancel_button"
+                      onClick={handleClose}
+                      className="flex-1 py-2.5 rounded-xl text-sm text-violet-300/60 hover:text-violet-200 border border-violet-400/20 hover:border-violet-400/40 transition-all"
+                    >
+                      Skip
+                    </button>
+                    <motion.button
+                      type="button"
+                      data-ocid="delivery_rating.submit_button"
+                      whileHover={{ scale: rating > 0 ? 1.02 : 1 }}
+                      whileTap={{ scale: rating > 0 ? 0.97 : 1 }}
+                      onClick={handleSubmit}
+                      disabled={rating === 0}
+                      className="flex-2 flex-grow py-2.5 px-4 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.25 280))",
+                        boxShadow:
+                          rating > 0
+                            ? "0 0 20px oklch(0.55 0.28 310 / 0.4)"
+                            : "none",
+                      }}
+                    >
+                      Submit Review ✨
+                    </motion.button>
+                  </div>
+                </>
+              )}
             </div>
           </motion.div>
         </>
