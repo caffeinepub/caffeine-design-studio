@@ -803,6 +803,15 @@ function getNovaResponse(input: string, lang: Lang = "en"): string {
       lower.includes("best")
     )
       return "मेरी टॉप पिक्स: 1) Aurora Borealis Blast (₹159) — जादुई 🌈 2) Supernova Saffron (₹169) — शाही केसर ✨ 3) Lavender Lightyear (₹169) — अनोखा और अविस्मरणीय 💐 4) Taro Titan (₹149) — कॉस्मिक बैंगनी सपना 🟣";
+    if (
+      lower.includes("quality") ||
+      lower.includes("brand") ||
+      lower.includes("a1") ||
+      lower.includes("certified") ||
+      lower.includes("गुणवत्ता") ||
+      lower.includes("ब्रांड")
+    )
+      return "Galaxy Ice Cream Parlour सिर्फ A1 Quality सामग्री उपयोग करता है! 🏅✨ हम Premium A1 Grade दूध, 100% प्राकृतिक सामग्री, और बिना artificial colors के आइसक्रीम बनाते हैं। हम FSSAI certified हैं। हर स्कूप सर्वोच्च गुणवत्ता का है! 🥛🌿";
     return "मैं मदद करना चाहूंगी! 🤖 आप मुझसे पूछ सकते हैं: लोकेशन, वेगन ऑप्शन, आज की स्पेशल, कीमतें, फैमिली पैक, ऑफर, या किसी खास फ्लेवर के बारे में!";
   }
   // Multi-word pattern checks first
@@ -835,6 +844,16 @@ function getNovaResponse(input: string, lang: Lang = "en"): string {
   for (const key of Object.keys(NOVA_RESPONSES)) {
     if (key !== "default" && lower.includes(key)) return NOVA_RESPONSES[key];
   }
+  if (
+    lower.includes("quality") ||
+    lower.includes("brand") ||
+    lower.includes("a1") ||
+    lower.includes("certified") ||
+    lower.includes("fssai") ||
+    lower.includes("milk") ||
+    lower.includes("ingredients")
+  )
+    return "Galaxy Ice Cream Parlour uses only A1 Quality certified ingredients! 🏅✨ We use Premium A1 Grade Milk from certified dairy farms, 100% natural ingredients, zero artificial colors, and we're fully FSSAI certified. Every scoop is guaranteed to be of the highest quality! 🥛🌿";
   return NOVA_RESPONSES.default;
 }
 
@@ -955,6 +974,12 @@ function Header({
             </h1>
             <p className="text-xs text-violet-300/70 leading-none">
               {t("tasteTheCosmos", lang)}
+            </p>
+            <p
+              className="text-xs font-bold leading-none mt-0.5"
+              style={{ color: "oklch(0.82 0.18 80)" }}
+            >
+              Galaxy Premium | A1 Quality
             </p>
           </div>
         </div>
@@ -3161,6 +3186,17 @@ function FlavorCard({ flavor, index, onAdd }: FlavorCardProps) {
               🆕 New
             </Badge>
           )}
+          <Badge
+            className="text-xs px-2 py-0.5 font-bold"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.75 0.2 85), oklch(0.65 0.25 65))",
+              color: "oklch(0.1 0 0)",
+              border: "1px solid oklch(0.8 0.2 80)",
+            }}
+          >
+            🏅 A1 Quality
+          </Badge>
           <span className={`category-chip border ${meta.color}`}>
             {meta.emoji}
           </span>
@@ -3874,6 +3910,57 @@ function CartPanel({
                       {phoneError}
                     </p>
                   )}
+                </div>
+                {/* Quality Guarantee Seal */}
+                <div
+                  className="p-3 rounded-xl border border-green-500/30 space-y-2"
+                  style={{ background: "oklch(0.12 0.04 145)" }}
+                >
+                  <p className="text-xs font-bold text-green-400 flex items-center gap-1 justify-center">
+                    🏅 {lang === "hi" ? "गुणवत्ता गारंटी" : "Quality Guarantee"}
+                  </p>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                      { icon: "🥛", en: "A1 Grade Milk", hi: "A1 दूध" },
+                      { icon: "🌿", en: "100% Natural", hi: "100% प्राकृतिक" },
+                      {
+                        icon: "✅",
+                        en: "FSSAI Certified",
+                        hi: "FSSAI प्रमाणित",
+                      },
+                    ].map((item) => (
+                      <div
+                        key={item.en}
+                        className="flex flex-col items-center gap-0.5 p-1.5 rounded-lg bg-green-500/10 border border-green-500/20"
+                      >
+                        <span className="text-base">{item.icon}</span>
+                        <span className="text-[9px] font-semibold text-green-300 text-center leading-tight">
+                          {lang === "hi" ? item.hi : item.en}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-green-300/70 text-center">
+                    {lang === "hi"
+                      ? "🌟 हर ऑर्डर पर 100% संतुष्टि की गारंटी"
+                      : "🌟 100% Satisfaction Guaranteed on every order"}
+                  </p>
+                  {/* Satisfied or Refund Promise */}
+                  <div
+                    className="mt-2 rounded-lg px-3 py-2 text-center border border-amber-400/30"
+                    style={{ background: "oklch(0.18 0.06 70)" }}
+                  >
+                    <p className="text-xs font-bold text-amber-300">
+                      {lang === "hi"
+                        ? "😊 खुश नहीं? पूरा रिफंड!"
+                        : "😊 Not Happy? Full Refund Promise!"}
+                    </p>
+                    <p className="text-[10px] text-amber-200/70 mt-0.5 leading-tight">
+                      {lang === "hi"
+                        ? "बिना जोखिम के ऑर्डर करें। 100% संतुष्टि नहीं तो हम ठीक करेंगे।"
+                        : "Order with zero risk. If you're not 100% satisfied, we'll make it right."}
+                    </p>
+                  </div>
                 </div>
                 {/* Payment Method Selector */}
                 <div
@@ -6518,6 +6605,160 @@ function PostOrderReferralPopup({
   );
 }
 
+// ── Brand Quality Strip ──────────────────────────────────────────────────────
+function BrandQualityStrip() {
+  const badges = [
+    "🏅 A1 Quality Certified",
+    "🥛 Premium A1 Grade Milk",
+    "🌿 100% Natural Ingredients",
+    "🚫 No Artificial Colors",
+    "✅ FSSAI Certified",
+  ];
+  return (
+    <div
+      className="w-full overflow-hidden py-2 px-0"
+      style={{
+        background:
+          "linear-gradient(90deg, oklch(0.12 0.04 280), oklch(0.15 0.06 300), oklch(0.12 0.04 280))",
+      }}
+    >
+      <div className="flex items-center gap-2 mb-1 px-4">
+        <span className="text-yellow-400 text-sm">👑</span>
+        <span
+          className="text-xs font-bold tracking-widest uppercase"
+          style={{ color: "oklch(0.82 0.18 80)" }}
+        >
+          Galaxy Premium Brand
+        </span>
+        <span className="text-yellow-400 text-sm">👑</span>
+      </div>
+      <div
+        className="flex gap-3 px-4 overflow-x-auto no-scrollbar whitespace-nowrap pb-1"
+        style={{ scrollbarWidth: "none" }}
+      >
+        <style>
+          {
+            "@keyframes marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } } .marquee-inner { animation: marquee 18s linear infinite; display: flex; gap: 12px; }"
+          }
+        </style>
+        <div className="marquee-inner">
+          {[...badges, ...badges].map((badge, i) => (
+            <span
+              key={i < badges.length ? badge : `${badge}-2`}
+              className="inline-flex items-center gap-1 text-xs font-semibold rounded-full px-3 py-1 shrink-0"
+              style={{
+                background:
+                  "linear-gradient(135deg, oklch(0.18 0.08 280 / 0.8), oklch(0.22 0.1 300 / 0.8))",
+                border: "1px solid oklch(0.75 0.18 80 / 0.4)",
+                color: "oklch(0.9 0.12 80)",
+              }}
+            >
+              {badge}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Brand Quality Section ────────────────────────────────────────────────────
+function BrandQualitySection() {
+  const promises = [
+    {
+      icon: "🏅",
+      title: "A1 Quality Certified",
+      desc: "Every product meets A1 premium quality standards before reaching you",
+    },
+    {
+      icon: "🥛",
+      title: "Premium A1 Grade Milk",
+      desc: "Only the finest A1 grade cow milk sourced from certified dairy farms",
+    },
+    {
+      icon: "🌿",
+      title: "100% Natural Ingredients",
+      desc: "No preservatives, no shortcuts. Only farm-fresh natural ingredients",
+    },
+    {
+      icon: "🚫",
+      title: "Zero Artificial Colors",
+      desc: "All our vibrant flavours come from natural fruit and spice extracts",
+    },
+    {
+      icon: "✅",
+      title: "FSSAI Certified",
+      desc: "Fully compliant with Food Safety and Standards Authority of India",
+    },
+    {
+      icon: "❄️",
+      title: "Cold Chain Guarantee",
+      desc: "Maintained at -18°C throughout production, packaging and delivery",
+    },
+  ];
+  return (
+    <section className="px-4 py-12 max-w-6xl mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="text-center mb-8"
+      >
+        <h2 className="font-display text-2xl md:text-3xl font-bold gradient-text mb-2">
+          🏆 Our Brand & Quality Promise
+        </h2>
+        <div
+          className="inline-flex flex-col items-center rounded-2xl px-6 py-3 mt-4"
+          style={{
+            background:
+              "linear-gradient(135deg, oklch(0.18 0.08 280 / 0.6), oklch(0.22 0.1 300 / 0.6))",
+            border: "1px solid oklch(0.75 0.18 80 / 0.4)",
+          }}
+        >
+          <span
+            className="text-xl font-display font-bold"
+            style={{ color: "oklch(0.88 0.2 80)" }}
+          >
+            ✨ Galaxy Premium
+          </span>
+          <span className="text-xs text-violet-300/80 mt-0.5">
+            India&apos;s Most Trusted Cosmic Ice Cream Brand
+          </span>
+        </div>
+      </motion.div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {promises.map((p, i) => (
+          <motion.div
+            key={p.title}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.08 }}
+            className="rounded-2xl p-5 flex flex-col gap-2"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.14 0.06 280 / 0.8), oklch(0.18 0.08 300 / 0.8))",
+              border: "1px solid oklch(0.65 0.2 80 / 0.25)",
+              boxShadow: "0 0 20px oklch(0.65 0.2 80 / 0.08)",
+            }}
+          >
+            <div className="text-3xl">{p.icon}</div>
+            <h3
+              className="font-display font-bold text-sm"
+              style={{ color: "oklch(0.88 0.18 80)" }}
+            >
+              {p.title}
+            </h3>
+            <p className="text-xs text-violet-200/70 leading-relaxed">
+              {p.desc}
+            </p>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ── Social Proof Counter ─────────────────────────────────────────────────────
 function SocialProofCounter() {
   const { lang } = useLanguage();
@@ -7459,6 +7700,7 @@ function IceCreamParlour() {
           />
           <main>
             <GalaxyAdBanner />
+            <BrandQualityStrip />
             {!seasonalBannerDismissed && (
               <SeasonalAutoBanner
                 onDismiss={() => setSeasonalBannerDismissed(true)}
@@ -7467,6 +7709,7 @@ function IceCreamParlour() {
             <Hero />
             <PromoBanners />
             <SocialProofCounter />
+            <BrandQualitySection />
             <IceCreamOfTheMonth onAdd={addToCart} />
             <FestivalSpecialsSection onAdd={addToCart} />
             <CustomerFavouritesSection onAdd={addToCart} />
