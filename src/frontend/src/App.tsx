@@ -568,6 +568,146 @@ const FLAVORS: Flavor[] = [
     description: "Classic Indian paan flavour in a cosmic creamy form",
     isNew: true,
   },
+  // New Flavors Added
+  {
+    id: "caramel-cosmos",
+    name: "Caramel Cosmos",
+    emoji: "🍯",
+    category: "classic",
+    price: 119,
+    description:
+      "Rich caramel ribbons swirled with sea salt in a buttery cream base",
+    isNew: true,
+  },
+  {
+    id: "coffee-orbit",
+    name: "Coffee Orbit",
+    emoji: "☕",
+    category: "classic",
+    price: 129,
+    description:
+      "Strong Arabica espresso blended with velvety cream — a cosmic caffeine kick",
+    isNew: true,
+  },
+  {
+    id: "taro-twilight",
+    name: "Taro Twilight",
+    emoji: "💜",
+    category: "galaxy",
+    price: 169,
+    description:
+      "Purple taro root cream with lavender shimmer and coconut flakes",
+    isSpecial: true,
+    isNew: true,
+  },
+  {
+    id: "meteor-mint",
+    name: "Meteor Mint Choco",
+    emoji: "🌿",
+    category: "galaxy",
+    price: 159,
+    description:
+      "Cool peppermint galaxy cream with dark chocolate meteor chunks",
+    isNew: true,
+  },
+  {
+    id: "peach-planet",
+    name: "Peach Planet",
+    emoji: "🍑",
+    category: "fruity",
+    price: 129,
+    description: "Sun-ripened peaches blended into a silky peachy cosmic cream",
+    isNew: true,
+  },
+  {
+    id: "tamarind-star",
+    name: "Tamarind Star",
+    emoji: "⭐",
+    category: "fruity",
+    price: 119,
+    description: "Sweet and tangy tamarind sorbet with a chaat masala stardust",
+    isNew: true,
+  },
+  {
+    id: "pineapple-comet",
+    name: "Pineapple Comet",
+    emoji: "🍍",
+    category: "fruity",
+    price: 119,
+    description:
+      "Juicy tropical pineapple with a coconut cream tail — refreshingly cosmic",
+    isNew: true,
+  },
+  {
+    id: "oat-nebula",
+    name: "Oat Milk Nebula",
+    emoji: "🌾",
+    category: "vegan",
+    price: 149,
+    description:
+      "Creamy oat milk base with maple syrup ribbons and toasted granola",
+    isNew: true,
+  },
+  {
+    id: "mango-coconut-vegan",
+    name: "Mango Coconut Star",
+    emoji: "🥭",
+    category: "vegan",
+    price: 139,
+    description:
+      "Alphonso mango blended with coconut cream — a vegan tropical delight",
+    isNew: true,
+  },
+  {
+    id: "kulfi-frost",
+    name: "Kulfi Frost Pop",
+    emoji: "🧊",
+    category: "frozen",
+    price: 89,
+    description: "Traditional matka kulfi on a stick with rose water drizzle",
+    isNew: true,
+  },
+  {
+    id: "choco-fudge-bar",
+    name: "Choco Fudge Galaxy Bar",
+    emoji: "🍫",
+    category: "frozen",
+    price: 99,
+    description:
+      "Chocolate fudge ice cream bar coated in crispy dark chocolate shell",
+    isNew: true,
+  },
+  {
+    id: "saffron-pistachio-exotic",
+    name: "Saffron Pistachio Dream",
+    emoji: "🌟",
+    category: "exotic",
+    price: 179,
+    description:
+      "Royal Kashmiri saffron and crushed pistachios in a luxurious cream",
+    isSpecial: true,
+    isNew: true,
+  },
+  {
+    id: "gulkand-exotic",
+    name: "Gulkand Rose Swirl",
+    emoji: "🌸",
+    category: "exotic",
+    price: 149,
+    description:
+      "Sweet rose petal jam (gulkand) churned into a fragrant Indian cream",
+    isNew: true,
+  },
+  {
+    id: "chikoo-cosmic",
+    name: "Chikoo Cosmic Cream",
+    emoji: "🍂",
+    category: "exotic",
+    price: 139,
+    description:
+      "Sapodilla (chikoo) with a hint of cardamom — a truly desi cosmic treat",
+    isNew: true,
+  },
   // Family Pack — Big Blocks
   {
     id: "family-choco",
