@@ -2334,6 +2334,211 @@ interface BulkEnquiry {
   submittedAt: string;
 }
 
+function PackComparisonChart({
+  onShopFamily,
+  onShopJumbo,
+}: {
+  onShopFamily: () => void;
+  onShopJumbo: () => void;
+}) {
+  const { lang } = useLanguage();
+  const hi = lang === "hi";
+
+  const rows = [
+    {
+      feature: { en: "Serves", hi: "कितने लोग" },
+      family: { en: "4–6 people", hi: "4–6 लोग" },
+      jumbo: { en: "15–25 people", hi: "15–25 लोग" },
+    },
+    {
+      feature: { en: "Price", hi: "कीमत" },
+      family: { en: "₹299–₹449", hi: "₹299–₹449" },
+      jumbo: { en: "₹799–₹1,499", hi: "₹799–₹1,499" },
+    },
+    {
+      feature: { en: "Best For", hi: "किसके लिए" },
+      family: { en: "Home family treat", hi: "घर पर परिवार के साथ" },
+      jumbo: { en: "Weddings, parties & events", hi: "शादी, पार्टी और उत्सव" },
+    },
+    {
+      feature: { en: "Size", hi: "साइज़" },
+      family: { en: "Medium big block", hi: "मीडियम बड़ा ब्लॉक" },
+      jumbo: { en: "Extra large tub", hi: "एक्स्ट्रा लार्ज टब" },
+    },
+    {
+      feature: { en: "Flavours", hi: "फ्लेवर" },
+      family: { en: "6 flavours", hi: "6 फ्लेवर" },
+      jumbo: { en: "8 flavours", hi: "8 फ्लेवर" },
+    },
+    {
+      feature: { en: "Value per person", hi: "प्रति व्यक्ति कीमत" },
+      family: { en: "~₹75 per person", hi: "~₹75 प्रति व्यक्ति" },
+      jumbo: { en: "~₹50–₹67 per person", hi: "~₹50–₹67 प्रति व्यक्ति" },
+    },
+  ];
+
+  return (
+    <section
+      data-ocid="pack_comparison.section"
+      className="max-w-6xl mx-auto px-4 mb-8"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="relative rounded-3xl p-6 sm:p-8 border border-purple-500/30 bg-gradient-to-br from-[#0d0520]/90 via-[#120a2e]/80 to-[#0a1428]/90 overflow-hidden"
+      >
+        {/* Background starfield dots */}
+        {Array.from({ length: 30 }, (_, i) => `star-${i}`).map((id) => (
+          <div
+            key={id}
+            className="absolute rounded-full bg-white/40 animate-pulse"
+            style={{
+              width: `${Math.random() * 2 + 1}px`,
+              height: `${Math.random() * 2 + 1}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 3}s`,
+            }}
+          />
+        ))}
+
+        {/* Section Title */}
+        <div className="relative text-center mb-8">
+          <div className="inline-block">
+            <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-yellow-300">
+              {hi
+                ? "🍦 फैमिली पैक बनाम जम्बो पार्टी पैक"
+                : "🍦 Family Pack vs Jumbo Party Pack"}
+            </h2>
+            <div className="h-1 mt-2 rounded-full bg-gradient-to-r from-purple-500 via-pink-400 to-yellow-400" />
+          </div>
+          <p className="text-white/50 text-sm mt-3">
+            {hi
+              ? "अपनी ज़रूरत के अनुसार सही पैक चुनें"
+              : "Choose the right pack for your occasion"}
+          </p>
+        </div>
+
+        {/* Cards + VS layout */}
+        <div className="relative grid grid-cols-[1fr_auto_1fr] gap-3 sm:gap-6 items-start">
+          {/* Family Pack Card */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="rounded-2xl border border-purple-400/40 bg-gradient-to-b from-purple-900/60 to-purple-950/80 overflow-hidden"
+          >
+            <div className="bg-gradient-to-r from-purple-600 to-violet-600 px-4 py-3 text-center">
+              <div className="text-2xl">🏠</div>
+              <div className="font-bold text-white text-base sm:text-lg">
+                {hi ? "फैमिली पैक" : "Family Pack"}
+              </div>
+              <div className="text-purple-200 text-xs mt-0.5">
+                {hi ? "बिग ब्लॉक" : "Big Block"}
+              </div>
+            </div>
+            <div className="divide-y divide-purple-700/30">
+              {rows.map((row) => (
+                <div key={row.feature.en} className="px-3 py-2.5 text-center">
+                  <div className="text-purple-300/60 text-xs mb-0.5">
+                    {hi ? row.feature.hi : row.feature.en}
+                  </div>
+                  <div className="text-white font-medium text-sm">
+                    {hi ? row.family.hi : row.family.en}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-3">
+              <motion.button
+                type="button"
+                data-ocid="pack_comparison.family.button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onShopFamily}
+                className="w-full bg-gradient-to-r from-purple-600 to-violet-600 text-white font-bold px-4 py-2.5 rounded-xl text-sm hover:from-purple-500 hover:to-violet-500 transition-all shadow-lg shadow-purple-900/40"
+              >
+                {hi ? "फैमिली पैक देखें →" : "Shop Family Packs →"}
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* VS Badge */}
+          <div className="flex flex-col items-center justify-start pt-16 gap-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center text-white font-black text-sm sm:text-base shadow-lg shadow-pink-900/50 border-2 border-pink-300/30 z-10 relative">
+              VS
+            </div>
+            <div className="w-px flex-1 bg-gradient-to-b from-pink-500/50 to-transparent min-h-[80px]" />
+          </div>
+
+          {/* Jumbo Party Pack Card */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="rounded-2xl border border-yellow-400/40 bg-gradient-to-b from-yellow-900/60 to-amber-950/80 overflow-hidden"
+          >
+            <div className="bg-gradient-to-r from-yellow-500 to-amber-500 px-4 py-3 text-center relative">
+              <div className="text-2xl">👑</div>
+              <div className="font-bold text-black text-base sm:text-lg">
+                {hi ? "जम्बो पार्टी पैक" : "Jumbo Party Pack"}
+              </div>
+              <div className="text-yellow-900 text-xs mt-0.5">
+                {hi ? "एक्स्ट्रा लार्ज टब" : "Extra Large Tub"}
+              </div>
+              {/* Best Value Badge */}
+              <div className="absolute -top-2 -right-2 bg-gradient-to-r from-green-400 to-emerald-500 text-black text-[9px] sm:text-[10px] font-black px-2 py-1 rounded-full shadow-lg transform rotate-6 leading-tight">
+                {hi ? "⭐ बेस्ट वैल्यू" : "⭐ Best Value"}
+                <br />
+                {hi ? "इवेंट के लिए!" : "for Events!"}
+              </div>
+            </div>
+            <div className="divide-y divide-yellow-700/30">
+              {rows.map((row) => (
+                <div key={row.feature.en} className="px-3 py-2.5 text-center">
+                  <div className="text-yellow-300/60 text-xs mb-0.5">
+                    {hi ? row.feature.hi : row.feature.en}
+                  </div>
+                  <div className="text-white font-medium text-sm">
+                    {hi ? row.jumbo.hi : row.jumbo.en}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-3">
+              <motion.button
+                type="button"
+                data-ocid="pack_comparison.jumbo.button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onShopJumbo}
+                className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 text-black font-bold px-4 py-2.5 rounded-xl text-sm hover:from-yellow-400 hover:to-amber-400 transition-all shadow-lg shadow-yellow-900/40"
+              >
+                {hi ? "जम्बो पैक देखें →" : "Shop Jumbo Packs →"}
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Footer tip */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.4 }}
+          className="relative mt-6 text-center text-white/50 text-xs"
+        >
+          💡{" "}
+          {hi
+            ? "जम्बो पैक में प्रति व्यक्ति कीमत सबसे कम है — बड़े आयोजनों के लिए आदर्श!"
+            : "Jumbo Pack offers the lowest cost per person — ideal for large gatherings!"}
+        </motion.div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
+      </motion.div>
+    </section>
+  );
+}
+
 function BulkOrderEnquiry() {
   const { lang } = useLanguage();
   const [bulkForm, setBulkForm] = useState({
@@ -3096,6 +3301,12 @@ interface CartPanelProps {
   spinDiscountType: "percent" | "flat" | "none";
   birthdayDiscount?: boolean;
   stripePublishableKey?: string;
+  onPreOrder?: (
+    date: string,
+    time: string,
+    phone: string,
+    total: number,
+  ) => void;
 }
 function CartPanel({
   isOpen,
@@ -3110,6 +3321,7 @@ function CartPanel({
   spinDiscountType,
   birthdayDiscount,
   stripePublishableKey,
+  onPreOrder,
 }: CartPanelProps) {
   const { lang } = useLanguage();
   const [redeemPoints, setRedeemPoints] = useState(false);
@@ -3118,7 +3330,19 @@ function CartPanel({
   const [referralError, setReferralError] = useState("");
   const [cartPhone, setCartPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [scheduleForLater, setScheduleForLater] = useState(false);
+  const [preOrderDate, setPreOrderDate] = useState("");
+  const [preOrderTime, setPreOrderTime] = useState("");
   const [stripePaymentOpen, setStripePaymentOpen] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponDiscountType, setCouponDiscountType] = useState<
+    "percent" | "flat"
+  >("flat");
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "online">(
+    "online",
+  );
 
   const subtotal = items.reduce((s, i) => {
     const toppingTotal = (i.toppings ?? []).reduce((ts, t) => ts + t.price, 0);
@@ -3135,15 +3359,61 @@ function CartPanel({
   const birthdayDiscountAmount = birthdayDiscount
     ? Math.round(subtotal * 0.15)
     : 0;
+  const couponDiscountAmount = appliedCoupon
+    ? couponDiscountType === "percent"
+      ? Math.round(subtotal * couponDiscount)
+      : couponDiscount
+    : 0;
   const total = Math.max(
     0,
     subtotal -
       loyaltyDiscount -
       referralDiscount -
       spinDiscountAmount -
-      birthdayDiscountAmount,
+      birthdayDiscountAmount -
+      couponDiscountAmount,
   );
   const canRedeem = loyaltyPoints >= 100;
+
+  const VALID_COUPONS: Record<
+    string,
+    { type: "percent" | "flat"; value: number; label: string }
+  > = {
+    GALAXY10: { type: "percent", value: 0.1, label: "10% off" },
+    DIWALI20: { type: "percent", value: 0.2, label: "20% off" },
+    HOLI15: { type: "percent", value: 0.15, label: "15% off" },
+    WELCOME50: { type: "flat", value: 50, label: "₹50 off" },
+    JUMBO100: { type: "flat", value: 100, label: "₹100 off" },
+  };
+
+  function applyCoupon() {
+    const code = couponCode.trim().toUpperCase();
+    if (!code) {
+      toast.error(
+        lang === "hi" ? "कृपया कूपन कोड दर्ज करें" : "Please enter a coupon code",
+      );
+      return;
+    }
+    if (appliedCoupon) {
+      toast.error(
+        lang === "hi" ? "एक ऑर्डर पर केवल एक कूपन" : "Only one coupon per order",
+      );
+      return;
+    }
+    const coupon = VALID_COUPONS[code];
+    if (!coupon) {
+      toast.error(lang === "hi" ? "अमान्य कूपन कोड" : "Invalid coupon code");
+      return;
+    }
+    setAppliedCoupon(code);
+    setCouponDiscountType(coupon.type);
+    setCouponDiscount(coupon.value);
+    toast.success(
+      lang === "hi"
+        ? `🎉 कूपन लागू! ${coupon.label}`
+        : `🎉 Coupon applied! ${coupon.label}`,
+    );
+  }
 
   function applyReferralCode() {
     const code = referralCode.trim().toUpperCase();
@@ -3356,6 +3626,68 @@ function CartPanel({
                   </div>
                 )}
 
+                {/* Coupon Code */}
+                <div className="p-3 rounded-xl bg-violet-400/5 border border-violet-400/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Gift className="w-4 h-4 text-violet-300" />
+                    <span className="text-xs font-semibold text-violet-300">
+                      {lang === "hi" ? "कूपन कोड लगाएं" : "Have a coupon code?"}
+                    </span>
+                    {appliedCoupon && (
+                      <Badge
+                        className="text-xs ml-auto"
+                        style={{
+                          background: "oklch(0.45 0.2 290)",
+                          color: "white",
+                          border: "none",
+                        }}
+                      >
+                        ✓ {appliedCoupon} applied
+                      </Badge>
+                    )}
+                  </div>
+                  {!appliedCoupon ? (
+                    <div className="flex gap-2">
+                      <Input
+                        data-ocid="cart.input"
+                        value={couponCode}
+                        onChange={(e) =>
+                          setCouponCode(e.target.value.toUpperCase())
+                        }
+                        placeholder={
+                          lang === "hi" ? "कूपन कोड डालें" : "Enter Coupon Code"
+                        }
+                        className="text-xs h-8 flex-1"
+                        style={{
+                          background: "oklch(0.14 0.04 280)",
+                          border: "1px solid oklch(0.3 0.06 285)",
+                          color: "white",
+                        }}
+                      />
+                      <button
+                        type="button"
+                        data-ocid="cart.secondary_button"
+                        onClick={applyCoupon}
+                        className="text-xs px-3 py-1 rounded-lg font-bold transition-all"
+                        style={{
+                          background: "oklch(0.45 0.2 290)",
+                          color: "white",
+                        }}
+                      >
+                        {lang === "hi" ? "लगाएं" : "Apply"}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-violet-300">
+                      🎉{" "}
+                      {lang === "hi"
+                        ? "कूपन लागू हो गया!"
+                        : "Coupon discount active!"}{" "}
+                      Use codes: GALAXY10, DIWALI20, HOLI15, WELCOME50, JUMBO100
+                    </p>
+                  )}
+                </div>
+
                 {/* Loyalty redemption */}
                 <div className="p-3 rounded-xl bg-amber-400/5 border border-amber-400/20">
                   <div className="flex items-center gap-2 mb-1">
@@ -3411,6 +3743,12 @@ function CartPanel({
                       <span>-₹{spinDiscountAmount}</span>
                     </div>
                   )}
+                  {couponDiscountAmount > 0 && (
+                    <div className="flex justify-between text-violet-300">
+                      <span>🎟️ Coupon ({appliedCoupon})</span>
+                      <span>-₹{couponDiscountAmount}</span>
+                    </div>
+                  )}
                   {birthdayDiscountAmount > 0 && (
                     <div className="flex justify-between text-pink-400">
                       <span>🎂 Birthday 15% Off</span>
@@ -3424,6 +3762,77 @@ function CartPanel({
                       ₹{total}
                     </span>
                   </div>
+                </div>
+                {/* Pre-Order Schedule */}
+                <div
+                  className="mb-3 p-3 rounded-xl"
+                  style={{
+                    background: "oklch(0.12 0.04 280)",
+                    border: "1px solid oklch(0.25 0.08 280)",
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-violet-300 font-semibold flex items-center gap-1.5">
+                      📅{" "}
+                      {lang === "hi"
+                        ? "बाद के लिए शेड्यूल करें"
+                        : "Schedule for Later"}
+                    </span>
+                    <button
+                      type="button"
+                      data-ocid="cart.toggle"
+                      onClick={() => setScheduleForLater((v) => !v)}
+                      className={`relative w-11 h-6 rounded-full transition-all ${scheduleForLater ? "bg-violet-500" : "bg-white/10"}`}
+                      style={{ border: "1px solid oklch(0.35 0.1 280)" }}
+                    >
+                      <span
+                        className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${scheduleForLater ? "left-5" : "left-0.5"}`}
+                      />
+                    </button>
+                  </div>
+                  {scheduleForLater && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div>
+                        <span className="text-xs text-violet-400 mb-1 block">
+                          {lang === "hi" ? "तारीख" : "Date"}
+                        </span>
+                        <input
+                          type="date"
+                          data-ocid="cart.input"
+                          value={preOrderDate}
+                          min={
+                            new Date(Date.now() + 86400000)
+                              .toISOString()
+                              .split("T")[0]
+                          }
+                          onChange={(e) => setPreOrderDate(e.target.value)}
+                          className="w-full px-2 py-1.5 rounded-lg text-xs text-white outline-none"
+                          style={{
+                            background: "oklch(0.16 0.04 280)",
+                            border: "1px solid oklch(0.3 0.06 285)",
+                            colorScheme: "dark",
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <span className="text-xs text-violet-400 mb-1 block">
+                          {lang === "hi" ? "समय" : "Time"}
+                        </span>
+                        <input
+                          type="time"
+                          data-ocid="cart.input"
+                          value={preOrderTime}
+                          onChange={(e) => setPreOrderTime(e.target.value)}
+                          className="w-full px-2 py-1.5 rounded-lg text-xs text-white outline-none"
+                          style={{
+                            background: "oklch(0.16 0.04 280)",
+                            border: "1px solid oklch(0.3 0.06 285)",
+                            colorScheme: "dark",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {/* Phone Number Field */}
                 <div className="mb-3">
@@ -3466,7 +3875,53 @@ function CartPanel({
                     </p>
                   )}
                 </div>
-                {stripePublishableKey ? (
+                {/* Payment Method Selector */}
+                <div
+                  className="p-3 rounded-xl border border-border space-y-2"
+                  style={{ background: "oklch(0.13 0.03 280)" }}
+                >
+                  <p className="text-xs font-semibold text-violet-300 flex items-center gap-1">
+                    💳{" "}
+                    {lang === "hi"
+                      ? "भुगतान का तरीका चुनें"
+                      : "Choose Payment Method"}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("cod")}
+                      className={`flex flex-col items-center gap-1 p-2.5 rounded-lg border text-xs font-semibold transition-all ${paymentMethod === "cod" ? "border-amber-400 bg-amber-400/10 text-amber-300" : "border-border text-muted-foreground hover:border-amber-400/40"}`}
+                    >
+                      <span className="text-lg">🚚</span>
+                      {lang === "hi" ? "कैश ऑन डिलीवरी" : "Cash on Delivery"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("online")}
+                      className={`flex flex-col items-center gap-1 p-2.5 rounded-lg border text-xs font-semibold transition-all ${paymentMethod === "online" ? "border-violet-400 bg-violet-400/10 text-violet-300" : "border-border text-muted-foreground hover:border-violet-400/40"}`}
+                    >
+                      <span className="text-lg">💳</span>
+                      {lang === "hi" ? "ऑनलाइन भुगतान" : "Online Payment"}
+                    </button>
+                  </div>
+                  {paymentMethod === "cod" && (
+                    <p className="text-xs text-amber-300/70 text-center">
+                      🏠{" "}
+                      {lang === "hi"
+                        ? "डिलीवरी पर नकद दें"
+                        : "Pay cash when your order arrives"}
+                    </p>
+                  )}
+                  {paymentMethod === "online" && !stripePublishableKey && (
+                    <p className="text-xs text-violet-300/70 text-center">
+                      ⚙️{" "}
+                      {lang === "hi"
+                        ? "Stripe की कुंजी डालें"
+                        : "Activate Stripe via the gear icon to enable"}
+                    </p>
+                  )}
+                </div>
+                {stripePublishableKey && paymentMethod === "online" ? (
                   <Button
                     data-ocid="cart.stripe_button"
                     onClick={() => {
@@ -3511,7 +3966,38 @@ function CartPanel({
                         );
                         return;
                       }
-                      onPlaceOrder(redeemPoints, referralApplied, cartPhone);
+                      if (
+                        scheduleForLater &&
+                        (!preOrderDate || !preOrderTime)
+                      ) {
+                        toast.error(
+                          "Please select date and time for scheduled delivery",
+                        );
+                        return;
+                      }
+                      if (scheduleForLater && onPreOrder) {
+                        onPreOrder(
+                          preOrderDate,
+                          preOrderTime,
+                          cartPhone,
+                          total,
+                        );
+                        toast.success(
+                          `🗓️ Pre-order scheduled! We'll prepare it for ${preOrderDate} at ${preOrderTime}`,
+                        );
+                        setScheduleForLater(false);
+                        setPreOrderDate("");
+                        setPreOrderTime("");
+                      } else {
+                        onPlaceOrder(redeemPoints, referralApplied, cartPhone);
+                        if (paymentMethod === "cod") {
+                          toast.success(
+                            lang === "hi"
+                              ? "✅ ऑर्डर दिया! डिलीवरी पर नकद दें 💵"
+                              : "✅ Order placed! Pay cash on delivery 💵",
+                          );
+                        }
+                      }
                       setRedeemPoints(false);
                       setReferralCode("");
                       setReferralApplied(false);
@@ -3519,16 +4005,39 @@ function CartPanel({
                       setPhoneError("");
                     }}
                     className="w-full font-bold py-5"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280), oklch(0.55 0.28 240))",
-                      border: "none",
-                      color: "white",
-                      boxShadow: "0 4px 24px oklch(0.55 0.28 310 / 0.4)",
-                    }}
+                    style={
+                      paymentMethod === "cod"
+                        ? {
+                            background:
+                              "linear-gradient(135deg, oklch(0.55 0.22 60), oklch(0.5 0.24 50))",
+                            border: "none",
+                            color: "white",
+                            boxShadow: "0 4px 24px oklch(0.55 0.22 60 / 0.4)",
+                          }
+                        : {
+                            background:
+                              "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280), oklch(0.55 0.28 240))",
+                            border: "none",
+                            color: "white",
+                            boxShadow: "0 4px 24px oklch(0.55 0.28 310 / 0.4)",
+                          }
+                    }
                   >
-                    <Sparkles className="w-4 h-4 mr-2" />{" "}
-                    {lang === "hi" ? "ऑर्डर दें" : "Place Order"}
+                    {paymentMethod === "cod" ? (
+                      <>
+                        <span className="mr-2">🚚</span>
+                        {lang === "hi"
+                          ? "कैश ऑन डिलीवरी ऑर्डर करें"
+                          : "Order with Cash on Delivery"}{" "}
+                        • ₹{total.toLocaleString("en-IN")}
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        {lang === "hi" ? "ऑर्डर दें" : "Place Order"} • ₹
+                        {total.toLocaleString("en-IN")}
+                      </>
+                    )}
                   </Button>
                 )}
                 {stripePaymentOpen && (
@@ -5597,6 +6106,940 @@ function BirthdayBanner({
   );
 }
 
+// ── Seasonal Auto-Banner ──────────────────────────────────────────────────────
+function SeasonalAutoBanner({ onDismiss }: { onDismiss: () => void }) {
+  const month = new Date().getMonth() + 1; // 1-12
+  const bannerData =
+    month === 3
+      ? {
+          msg: "🎨 Holi Special! Use code HOLI15 for 15% off all orders!",
+          color: "oklch(0.65 0.22 30)",
+          glow: "oklch(0.65 0.22 30 / 0.5)",
+        }
+      : month === 10 || month === 11
+        ? {
+            msg: "🪔 Diwali Dhamaka! Use code DIWALI20 for 20% off!",
+            color: "oklch(0.75 0.2 60)",
+            glow: "oklch(0.75 0.2 60 / 0.5)",
+          }
+        : month === 12
+          ? {
+              msg: "🎄 Christmas Special! Use code XMAS25 for 25% off!",
+              color: "oklch(0.55 0.2 150)",
+              glow: "oklch(0.55 0.2 150 / 0.5)",
+            }
+          : month === 1
+            ? {
+                msg: "🎆 New Year Offer! Use code NEWYEAR30 for 30% off!",
+                color: "oklch(0.65 0.25 240)",
+                glow: "oklch(0.65 0.25 240 / 0.5)",
+              }
+            : null;
+  if (!bannerData) return null;
+  return (
+    <div
+      className="relative text-center py-3 px-10 text-sm font-bold"
+      style={{
+        background: "oklch(0.12 0.05 280)",
+        borderTop: `2px solid ${bannerData.color}`,
+        borderBottom: `2px solid ${bannerData.color}`,
+        animation: "seasonalPulse 2s ease-in-out infinite",
+        color: bannerData.color,
+        textShadow: `0 0 12px ${bannerData.glow}`,
+        boxShadow: `inset 0 0 30px ${bannerData.glow}`,
+      }}
+    >
+      {bannerData.msg}
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="absolute right-3 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 transition-opacity"
+        style={{ color: bannerData.color }}
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+// ── Ice Cream of the Month ────────────────────────────────────────────────────
+function IceCreamOfTheMonth({ onAdd }: { onAdd: (f: Flavor) => void }) {
+  const { lang } = useLanguage();
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
+  useEffect(() => {
+    function calc() {
+      const now = new Date();
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const diff = endOfMonth.getTime() - now.getTime();
+      const days = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const mins = Math.floor((diff % 3600000) / 60000);
+      setTimeLeft({ days, hours, mins });
+    }
+    calc();
+    const id = setInterval(calc, 60000);
+    return () => clearInterval(id);
+  }, []);
+  const monthFlavor: Flavor = {
+    id: "galactic-mango-tango",
+    name: "Galactic Mango Tango",
+    emoji: "🥭",
+    category: "galaxy",
+    price: 89,
+    description:
+      "Handcrafted with Alphonso mangoes from Ratnagiri, blended with cosmic stardust and a hint of saffron. Our most requested flavor this summer!",
+  };
+  return (
+    <section className="max-w-6xl mx-auto px-4 py-8" data-ocid="month.section">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="relative overflow-hidden rounded-3xl p-1"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.7 0.22 60), oklch(0.65 0.2 30), oklch(0.6 0.18 20), oklch(0.7 0.22 60))",
+          backgroundSize: "300% 300%",
+          animation: "gradientShift 4s ease infinite",
+        }}
+      >
+        <div
+          className="rounded-[22px] p-6 md:p-8 relative"
+          style={{ background: "oklch(0.1 0.04 280)" }}
+        >
+          <div className="absolute top-4 right-4">
+            <span
+              className="px-3 py-1 rounded-full text-xs font-black tracking-widest"
+              style={{
+                background: "oklch(0.7 0.22 60)",
+                color: "oklch(0.1 0.04 280)",
+              }}
+            >
+              THIS MONTH ONLY
+            </span>
+          </div>
+          <div className="flex flex-col md:flex-row gap-6 items-center">
+            <div
+              className="text-8xl md:text-9xl select-none"
+              style={{
+                filter: "drop-shadow(0 0 30px oklch(0.7 0.22 60 / 0.8))",
+                animation: "floatBob 3s ease-in-out infinite",
+              }}
+            >
+              🥭
+            </div>
+            <div className="flex-1 text-center md:text-left">
+              <p
+                className="text-xs font-bold tracking-widest mb-2"
+                style={{ color: "oklch(0.7 0.22 60)" }}
+              >
+                🌟{" "}
+                {lang === "hi"
+                  ? "इस महीने का आइसक्रीम"
+                  : "ICE CREAM OF THE MONTH"}
+              </p>
+              <h2 className="text-2xl md:text-3xl font-black mb-3 text-white">
+                {monthFlavor.name}
+              </h2>
+              <p className="text-sm text-white/70 mb-4 leading-relaxed max-w-md">
+                {monthFlavor.description}
+              </p>
+              <div className="flex items-center gap-4 flex-wrap justify-center md:justify-start mb-4">
+                <div className="flex items-baseline gap-2">
+                  <span
+                    className="text-3xl font-black"
+                    style={{ color: "oklch(0.7 0.22 60)" }}
+                  >
+                    ₹89
+                  </span>
+                  <span className="text-lg line-through text-white/40">
+                    ₹119
+                  </span>
+                  <span
+                    className="text-xs px-2 py-0.5 rounded-full font-bold"
+                    style={{
+                      background: "oklch(0.35 0.15 30)",
+                      color: "oklch(0.9 0.12 60)",
+                    }}
+                  >
+                    Save ₹30
+                  </span>
+                </div>
+              </div>
+              {/* Countdown */}
+              <div className="flex gap-3 mb-5 justify-center md:justify-start">
+                {[
+                  { val: timeLeft.days, label: "Days" },
+                  { val: timeLeft.hours, label: "Hrs" },
+                  { val: timeLeft.mins, label: "Min" },
+                ].map(({ val, label }) => (
+                  <div
+                    key={label}
+                    className="text-center px-3 py-2 rounded-xl"
+                    style={{
+                      background: "oklch(0.15 0.06 280)",
+                      border: "1px solid oklch(0.7 0.22 60 / 0.4)",
+                    }}
+                  >
+                    <div className="text-xl font-black text-white">{val}</div>
+                    <div className="text-xs text-white/50">{label}</div>
+                  </div>
+                ))}
+              </div>
+              <Button
+                data-ocid="month.primary_button"
+                onClick={() => {
+                  onAdd(monthFlavor);
+                  toast.success("🥭 Galactic Mango Tango added to cart!");
+                }}
+                className="font-bold px-8 py-5 text-base"
+                style={{
+                  background:
+                    "linear-gradient(135deg, oklch(0.7 0.22 60), oklch(0.65 0.2 30))",
+                  color: "oklch(0.1 0.04 280)",
+                  border: "none",
+                  boxShadow: "0 4px 24px oklch(0.7 0.22 60 / 0.5)",
+                }}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                {lang === "hi" ? "कार्ट में जोड़ें • ₹89" : "Add to Cart • ₹89"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+// ── Milestone Badge Popup ─────────────────────────────────────────────────────
+function MilestoneBadgePopup({
+  isOpen,
+  badge,
+  onClose,
+}: {
+  isOpen: boolean;
+  badge: { title: string; emoji: string; desc: string } | null;
+  onClose: () => void;
+}) {
+  if (!isOpen || !badge) return null;
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      data-ocid="badge.modal"
+    >
+      <div
+        className="absolute inset-0 bg-black/70"
+        onClick={onClose}
+        onKeyDown={onClose}
+        role="button"
+        tabIndex={0}
+      />
+      {/* Confetti */}
+      {Array.from({ length: 30 }, (_, i) => {
+        const ck = `badge-confetti-${i}`;
+        return (
+          <div
+            key={ck}
+            className="confetti-dot"
+            style={
+              {
+                left: `${10 + (i % 10) * 8}%`,
+                top: `${20 + Math.floor(i / 10) * 15}%`,
+                background: [
+                  "#fbbf24",
+                  "#a855f7",
+                  "#f472b6",
+                  "#60a5fa",
+                  "#34d399",
+                  "#fb923c",
+                ][i % 6],
+                "--tx": `${(i % 2 === 0 ? 1 : -1) * (20 + i * 8)}px`,
+                "--ty": `${-(50 + i * 12)}px`,
+                animationDelay: `${i * 0.04}s`,
+              } as React.CSSProperties
+            }
+          />
+        );
+      })}
+      <motion.div
+        initial={{ scale: 0.5, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.5, opacity: 0 }}
+        className="relative z-10 text-center p-8 rounded-3xl max-w-sm w-full"
+        style={{
+          background: "oklch(0.12 0.05 280)",
+          border: "2px solid oklch(0.7 0.22 60)",
+          boxShadow: "0 0 60px oklch(0.7 0.22 60 / 0.4)",
+        }}
+        data-ocid="badge.dialog"
+      >
+        <div
+          className="text-7xl mb-4"
+          style={{ animation: "floatBob 2s ease-in-out infinite" }}
+        >
+          {badge.emoji}
+        </div>
+        <h2 className="text-xl font-black text-white mb-2">{badge.title}</h2>
+        <p className="text-sm text-white/60 mb-6">{badge.desc}</p>
+        <Button
+          data-ocid="badge.close_button"
+          onClick={onClose}
+          className="w-full font-bold"
+          style={{
+            background:
+              "linear-gradient(135deg, oklch(0.7 0.22 60), oklch(0.65 0.2 30))",
+            color: "oklch(0.1 0.04 280)",
+            border: "none",
+          }}
+        >
+          🎉 Awesome! Claim Badge
+        </Button>
+      </motion.div>
+    </div>
+  );
+}
+
+// ── Post Order Referral Popup ─────────────────────────────────────────────────
+function PostOrderReferralPopup({
+  isOpen,
+  referralCode,
+  onClose,
+}: { isOpen: boolean; referralCode: string; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  if (!isOpen) return null;
+  const waMsg = encodeURIComponent(
+    `Hey! Order cosmic ice cream from Galaxy Parlour and use my code ${referralCode} for ₹50 off! 🍦✨ https://wa.me/`,
+  );
+  function handleCopy() {
+    navigator.clipboard.writeText(referralCode).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+  return (
+    <div
+      className="fixed inset-0 z-[190] flex items-center justify-center p-4"
+      data-ocid="referral.modal"
+    >
+      <div
+        className="absolute inset-0 bg-black/70"
+        onClick={onClose}
+        onKeyDown={onClose}
+        role="button"
+        tabIndex={0}
+      />
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.8, opacity: 0 }}
+        className="relative z-10 text-center p-7 rounded-3xl max-w-sm w-full"
+        style={{
+          background: "oklch(0.12 0.05 280)",
+          border: "2px solid oklch(0.55 0.28 310 / 0.7)",
+          boxShadow: "0 0 60px oklch(0.55 0.28 310 / 0.3)",
+        }}
+        data-ocid="referral.dialog"
+      >
+        <button
+          type="button"
+          data-ocid="referral.close_button"
+          onClick={onClose}
+          className="absolute top-3 right-3 text-white/40 hover:text-white/80 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        <div className="text-5xl mb-3">🎁</div>
+        <h2 className="text-xl font-black text-white mb-2">Share & Earn!</h2>
+        <p className="text-sm text-white/60 mb-5">
+          Share your referral code with friends. You both get{" "}
+          <span className="text-emerald-400 font-bold">₹50 off</span> your next
+          order!
+        </p>
+        <div
+          className="rounded-2xl p-4 mb-4"
+          style={{
+            background: "oklch(0.16 0.06 280)",
+            border: "1px solid oklch(0.35 0.1 310)",
+          }}
+        >
+          <p className="text-xs text-white/50 mb-1">Your Referral Code</p>
+          <p
+            className="text-2xl font-black tracking-widest"
+            style={{ color: "oklch(0.85 0.18 60)" }}
+          >
+            {referralCode}
+          </p>
+        </div>
+        <div className="flex gap-2 mb-3">
+          <Button
+            data-ocid="referral.primary_button"
+            onClick={handleCopy}
+            className="flex-1 font-bold transition-all"
+            style={{
+              background: copied
+                ? "oklch(0.5 0.2 150)"
+                : "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280))",
+              color: "white",
+              border: "none",
+            }}
+          >
+            {copied ? (
+              <>
+                <Check className="w-4 h-4 mr-1.5" /> Copied!
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4 mr-1.5" /> Copy Code
+              </>
+            )}
+          </Button>
+          <a
+            href={`https://wa.me/?text=${waMsg}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-ocid="referral.secondary_button"
+            className="flex-1 flex items-center justify-center gap-2 rounded-md font-bold text-sm"
+            style={{ background: "oklch(0.45 0.2 150)", color: "white" }}
+          >
+            <Share2 className="w-4 h-4" /> WhatsApp
+          </a>
+        </div>
+        <button
+          type="button"
+          data-ocid="referral.cancel_button"
+          onClick={onClose}
+          className="text-xs text-white/40 hover:text-white/60 transition-colors"
+        >
+          Maybe later
+        </button>
+      </motion.div>
+    </div>
+  );
+}
+
+// ── Social Proof Counter ─────────────────────────────────────────────────────
+function SocialProofCounter() {
+  const { lang } = useLanguage();
+  const [counts, setCounts] = useState([0, 0, 0, 0]);
+  const targets = [12847, 3200, 890, 49];
+
+  useEffect(() => {
+    const duration = 2000;
+    const steps = 60;
+    const interval = duration / steps;
+    let step = 0;
+    const timer = setInterval(() => {
+      step++;
+      const progress = step / steps;
+      const ease = 1 - (1 - progress) ** 3;
+      setCounts(targets.map((t) => Math.floor(t * ease)));
+      if (step >= steps) clearInterval(timer);
+    }, interval);
+    return () => clearInterval(timer);
+  }, []);
+
+  const stats = [
+    {
+      icon: "🍦",
+      value: `${counts[0].toLocaleString()}+`,
+      label: lang === "hi" ? "स्कूप्स परोसे" : "Scoops Served",
+      color: "from-violet-500/20 to-purple-600/20",
+      glow: "oklch(0.65 0.25 290)",
+    },
+    {
+      icon: "😊",
+      value: `${counts[1].toLocaleString()}+`,
+      label: lang === "hi" ? "खुश ग्राहक" : "Happy Customers",
+      color: "from-pink-500/20 to-rose-600/20",
+      glow: "oklch(0.65 0.28 0)",
+    },
+    {
+      icon: "⭐",
+      value: `${counts[2].toLocaleString()}+`,
+      label: lang === "hi" ? "पांच सितारा समीक्षाएं" : "Five-Star Reviews",
+      color: "from-amber-500/20 to-yellow-600/20",
+      glow: "oklch(0.8 0.18 80)",
+    },
+    {
+      icon: "🏆",
+      value: `${(counts[3] / 10).toFixed(1)}★`,
+      label: lang === "hi" ? "औसत रेटिंग" : "Average Rating",
+      color: "from-emerald-500/20 to-teal-600/20",
+      glow: "oklch(0.7 0.2 160)",
+    },
+  ];
+
+  return (
+    <section data-ocid="social.section" className="max-w-6xl mx-auto px-4 py-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="text-center mb-6"
+      >
+        <h2 className="font-display font-bold text-2xl gradient-text mb-1">
+          {lang === "hi"
+            ? "🌌 Galaxy की ताकत"
+            : "🌌 Trusted by India's Ice Cream Lovers"}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {lang === "hi"
+            ? "हमारे खुश ग्राहकों की संख्या देखें"
+            : "Join thousands of satisfied cosmic ice cream fans"}
+        </p>
+      </motion.div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {stats.map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.1, duration: 0.5 }}
+            className={`relative p-5 rounded-2xl bg-gradient-to-br ${stat.color} border border-white/10 text-center overflow-hidden`}
+            style={{ boxShadow: `0 0 24px ${stat.glow}30` }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+            <div className="text-3xl mb-2">{stat.icon}</div>
+            <div
+              className="font-display font-black text-2xl"
+              style={{ color: stat.glow }}
+            >
+              {stat.value}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {stat.label}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ── Festival Specials ─────────────────────────────────────────────────────────
+const FESTIVAL_FLAVORS = {
+  holi: [
+    {
+      id: "holi-1",
+      name: "Rose Gulal Swirl",
+      emoji: "🌸",
+      price: 149,
+      desc: "Delicate rose petals with gulal pink swirl",
+    },
+    {
+      id: "holi-2",
+      name: "Rainbow Thandai Blast",
+      emoji: "🌈",
+      price: 159,
+      desc: "Festive thandai with rainbow sherbet layers",
+    },
+    {
+      id: "holi-3",
+      name: "Kesariya Mango Surprise",
+      emoji: "🥭",
+      price: 169,
+      desc: "Golden saffron mango with surprise center",
+    },
+    {
+      id: "holi-4",
+      name: "Gulkand Rose Dream",
+      emoji: "🌺",
+      price: 149,
+      desc: "Sweet gulkand with dreamy rose cream",
+    },
+  ],
+  diwali: [
+    {
+      id: "diwali-1",
+      name: "Kesar Pista Gold",
+      emoji: "✨",
+      price: 179,
+      desc: "Saffron and pistachio golden delight",
+    },
+    {
+      id: "diwali-2",
+      name: "Badam Halwa Delight",
+      emoji: "🪔",
+      price: 169,
+      desc: "Almond halwa with cardamom warmth",
+    },
+    {
+      id: "diwali-3",
+      name: "Motichoor Ladoo Swirl",
+      emoji: "🟠",
+      price: 159,
+      desc: "Motichoor ladoo blended into creamy ice cream",
+    },
+    {
+      id: "diwali-4",
+      name: "Chocolate Barfi Fusion",
+      emoji: "🍫",
+      price: 179,
+      desc: "Dark chocolate meets traditional barfi",
+    },
+  ],
+};
+
+function FestivalSpecialsSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
+  const { lang } = useLanguage();
+  const [tab, setTab] = useState<"holi" | "diwali">("holi");
+
+  const getCountdown = (month: number, day: number) => {
+    const now = new Date();
+    let target = new Date(now.getFullYear(), month - 1, day);
+    if (target < now) target = new Date(now.getFullYear() + 1, month - 1, day);
+    const diff = Math.ceil(
+      (target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    return diff;
+  };
+
+  const holiDays = getCountdown(3, 14);
+  const diwaliDays = getCountdown(10, 20);
+
+  const flavors = FESTIVAL_FLAVORS[tab];
+  const isHoli = tab === "holi";
+
+  return (
+    <section
+      data-ocid="festival.section"
+      className="max-w-6xl mx-auto px-4 py-8"
+    >
+      {/* Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="relative rounded-2xl overflow-hidden mb-6 p-6 text-center"
+        style={{
+          background: isHoli
+            ? "linear-gradient(135deg, oklch(0.25 0.08 330), oklch(0.22 0.1 300), oklch(0.25 0.09 20))"
+            : "linear-gradient(135deg, oklch(0.25 0.1 60), oklch(0.22 0.12 40), oklch(0.25 0.08 30))",
+        }}
+      >
+        <div className="absolute inset-0 flex items-center justify-center opacity-10 text-9xl select-none pointer-events-none">
+          {isHoli ? "🌸🌈🎨" : "🪔✨🎆"}
+        </div>
+        <div className="relative z-10">
+          <div
+            className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 animate-pulse"
+            style={{
+              background: isHoli
+                ? "oklch(0.55 0.25 330)"
+                : "oklch(0.65 0.22 60)",
+              color: "white",
+            }}
+          >
+            🎉 LIMITED TIME ONLY
+          </div>
+          <h2 className="font-display font-black text-2xl text-white mb-1">
+            {lang === "hi"
+              ? isHoli
+                ? "🎨 होली स्पेशल फ्लेवर"
+                : "🪔 दिवाली स्पेशल फ्लेवर"
+              : isHoli
+                ? "🎨 Holi Special Flavours"
+                : "🪔 Diwali Special Flavours"}
+          </h2>
+          <p className="text-sm text-white/70">
+            {lang === "hi"
+              ? `${isHoli ? holiDays : diwaliDays} दिन बाकी हैं`
+              : `Only ${isHoli ? holiDays : diwaliDays} days to go! Don't miss out`}
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6">
+        {(["holi", "diwali"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            data-ocid="festival.tab"
+            onClick={() => setTab(t)}
+            className={`px-5 py-2 rounded-full text-sm font-bold border transition-all ${
+              tab === t
+                ? t === "holi"
+                  ? "border-pink-400/60 bg-pink-500/20 text-pink-200"
+                  : "border-amber-400/60 bg-amber-500/20 text-amber-200"
+                : "border-border text-muted-foreground hover:border-violet-400/40"
+            }`}
+          >
+            {t === "holi" ? "🎨 " : "🪔 "}
+            {lang === "hi"
+              ? t === "holi"
+                ? "होली स्पेशल"
+                : "दिवाली स्पेशल"
+              : t === "holi"
+                ? "Holi Special"
+                : "Diwali Special"}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {flavors.map((fl, i) => (
+          <motion.div
+            key={fl.id}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.1 }}
+            className="relative rounded-2xl p-4 border overflow-hidden"
+            style={{
+              background: isHoli
+                ? "oklch(0.15 0.06 330)"
+                : "oklch(0.15 0.06 50)",
+              borderColor: isHoli
+                ? "oklch(0.45 0.2 330)"
+                : "oklch(0.55 0.22 60)",
+            }}
+          >
+            <div
+              className="absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded-full"
+              style={{
+                background: isHoli
+                  ? "oklch(0.55 0.25 330)"
+                  : "oklch(0.65 0.22 60)",
+                color: "white",
+              }}
+            >
+              ⏰ Limited
+            </div>
+            <div className="text-4xl mb-2 text-center">{fl.emoji}</div>
+            <h3 className="font-bold text-sm text-white mb-1">{fl.name}</h3>
+            <p className="text-xs text-muted-foreground mb-3">{fl.desc}</p>
+            <div className="flex items-center justify-between">
+              <span
+                className="font-bold text-sm"
+                style={{
+                  color: isHoli ? "oklch(0.75 0.25 330)" : "oklch(0.8 0.22 60)",
+                }}
+              >
+                ₹{fl.price}
+              </span>
+              <button
+                type="button"
+                data-ocid={`festival.item.${i + 1}`}
+                onClick={() =>
+                  onAdd({
+                    id: fl.id,
+                    name: fl.name,
+                    emoji: fl.emoji,
+                    category: "exotic",
+                    price: fl.price,
+                    description: fl.desc,
+                    isSpecial: true,
+                  })
+                }
+                className="text-xs px-3 py-1.5 rounded-full font-bold transition-all hover:scale-105"
+                style={{
+                  background: isHoli
+                    ? "oklch(0.55 0.25 330)"
+                    : "oklch(0.65 0.22 60)",
+                  color: "white",
+                }}
+              >
+                {lang === "hi" ? "कार्ट में डालें" : "Add to Cart"}
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ── Loyalty Leaderboard ───────────────────────────────────────────────────────
+const LEADERBOARD_DATA = [
+  {
+    rank: 1,
+    name: "Priya Sharma",
+    points: 2450,
+    badge: "👑 Galaxy Champion",
+    tier: "gold",
+  },
+  {
+    rank: 2,
+    name: "Rahul Verma",
+    points: 2100,
+    badge: "⭐ Star Customer",
+    tier: "silver",
+  },
+  {
+    rank: 3,
+    name: "Anjali Singh",
+    points: 1890,
+    badge: "🌟 Cosmic Fan",
+    tier: "bronze",
+  },
+  {
+    rank: 4,
+    name: "Deepak Gupta",
+    points: 1650,
+    badge: "🍦 Ice Cream Lover",
+    tier: "regular",
+  },
+  {
+    rank: 5,
+    name: "Sunita Patel",
+    points: 1420,
+    badge: "🚀 Rising Star",
+    tier: "regular",
+  },
+  {
+    rank: 6,
+    name: "Amit Kumar",
+    points: 1280,
+    badge: "💫 Cosmic Explorer",
+    tier: "regular",
+  },
+  {
+    rank: 7,
+    name: "Rekha Joshi",
+    points: 1050,
+    badge: "🌙 Night Craver",
+    tier: "regular",
+  },
+  {
+    rank: 8,
+    name: "Vikram Rao",
+    points: 940,
+    badge: "✨ Flavor Hunter",
+    tier: "regular",
+  },
+  {
+    rank: 9,
+    name: "Meena Agarwal",
+    points: 820,
+    badge: "🍨 Scoop Seeker",
+    tier: "regular",
+  },
+  {
+    rank: 10,
+    name: "Rohit Mishra",
+    points: 710,
+    badge: "🌌 Galaxy Newbie",
+    tier: "regular",
+  },
+];
+
+function LoyaltyLeaderboard() {
+  const { lang } = useLanguage();
+
+  const tierStyle: Record<
+    string,
+    { border: string; bg: string; rankColor: string }
+  > = {
+    gold: {
+      border: "oklch(0.8 0.22 80)",
+      bg: "oklch(0.18 0.06 60)",
+      rankColor: "oklch(0.85 0.22 80)",
+    },
+    silver: {
+      border: "oklch(0.75 0.05 280)",
+      bg: "oklch(0.18 0.04 280)",
+      rankColor: "oklch(0.78 0.05 280)",
+    },
+    bronze: {
+      border: "oklch(0.65 0.15 40)",
+      bg: "oklch(0.18 0.05 40)",
+      rankColor: "oklch(0.68 0.15 40)",
+    },
+    regular: {
+      border: "oklch(0.3 0.06 285)",
+      bg: "oklch(0.15 0.03 280)",
+      rankColor: "oklch(0.55 0.15 290)",
+    },
+  };
+
+  return (
+    <section
+      data-ocid="leaderboard.section"
+      className="max-w-6xl mx-auto px-4 py-8"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="text-center mb-6"
+      >
+        <h2 className="font-display font-bold text-2xl gradient-text mb-1">
+          🏆{" "}
+          {lang === "hi"
+            ? "लॉयल्टी चैंपियंस लीडरबोर्ड"
+            : "Loyalty Champions Leaderboard"}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {lang === "hi"
+            ? "लीडरबोर्ड पर चढ़ने के लिए प्रति ऑर्डर 10 पॉइंट्स कमाएं!"
+            : "Earn 10 points per order to climb the leaderboard!"}
+        </p>
+      </motion.div>
+
+      <div className="space-y-2 max-w-2xl mx-auto">
+        {LEADERBOARD_DATA.map((entry, i) => {
+          const style = tierStyle[entry.tier];
+          return (
+            <motion.div
+              key={entry.name}
+              data-ocid={`leaderboard.item.${i + 1}`}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.05 }}
+              className="flex items-center gap-4 p-3 rounded-xl border"
+              style={{ background: style.bg, borderColor: style.border }}
+            >
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
+                style={{
+                  background: `${style.border}30`,
+                  color: style.rankColor,
+                  border: `2px solid ${style.border}`,
+                }}
+              >
+                {entry.rank <= 3
+                  ? ["🥇", "🥈", "🥉"][entry.rank - 1]
+                  : entry.rank}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm text-white">{entry.name}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {entry.badge}
+                </p>
+              </div>
+              <div
+                className="font-black text-base flex-shrink-0"
+                style={{ color: style.rankColor }}
+              >
+                {entry.points.toLocaleString()} {lang === "hi" ? "pts" : "pts"}
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        className="mt-6 text-center p-4 rounded-xl border border-violet-400/20 bg-violet-500/5"
+      >
+        <p className="text-sm font-bold text-violet-300">
+          🚀{" "}
+          {lang === "hi"
+            ? "हर ऑर्डर पर 10 पॉइंट्स कमाएं और टॉप 10 में शामिल हों!"
+            : "Place orders & earn 10 pts each to join the Top 10!"}
+        </p>
+      </motion.div>
+    </section>
+  );
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 function IceCreamParlour() {
   const [lang, setLang] = useState<Lang>("en");
@@ -5709,6 +7152,26 @@ function IceCreamParlour() {
     ]);
   }
   const [orderCounter, setOrderCounter] = useState(0);
+  const [sessionOrderCount, setSessionOrderCount] = useState(0);
+  const [badgePopupOpen, setBadgePopupOpen] = useState(false);
+  const [currentBadge, setCurrentBadge] = useState<{
+    title: string;
+    emoji: string;
+    desc: string;
+  } | null>(null);
+  const [seasonalBannerDismissed, setSeasonalBannerDismissed] = useState(false);
+  const [postOrderReferralOpen, setPostOrderReferralOpen] = useState(false);
+  const [postOrderReferralCode, setPostOrderReferralCode] = useState("");
+  const [preOrders, setPreOrders] = useState<
+    Array<{
+      id: string;
+      items: string;
+      date: string;
+      time: string;
+      phone: string;
+      total: number;
+    }>
+  >([]);
   const [lastQueueItem, setLastQueueItem] = useState<OrderQueueItem | null>(
     null,
   );
@@ -5924,6 +7387,37 @@ function IceCreamParlour() {
     setOrderSuccess(true);
     setIsFirstOrder(false);
 
+    // Milestone badge check
+    const newSessionCount = sessionOrderCount + 1;
+    setSessionOrderCount(newSessionCount);
+    if (newSessionCount === 1) {
+      setCurrentBadge({
+        title: "Star Taster Badge Unlocked!",
+        emoji: "⭐",
+        desc: "You placed your first cosmic order!",
+      });
+      setBadgePopupOpen(true);
+    } else if (newSessionCount === 5) {
+      setCurrentBadge({
+        title: "Galaxy Explorer Badge Unlocked!",
+        emoji: "🚀",
+        desc: "5 orders! You're exploring the galaxy!",
+      });
+      setBadgePopupOpen(true);
+    } else if (newSessionCount === 10) {
+      setCurrentBadge({
+        title: "Cosmic Legend Badge Unlocked!",
+        emoji: "👑",
+        desc: "10 orders! You are a Cosmic Legend!",
+      });
+      setBadgePopupOpen(true);
+    }
+
+    // Post-order referral popup
+    const rCode = `GAL-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    setPostOrderReferralCode(rCode);
+    setTimeout(() => setPostOrderReferralOpen(true), 2000);
+
     try {
       localStorage.setItem("galaxy_has_ordered", "1");
     } catch {
@@ -5965,10 +7459,19 @@ function IceCreamParlour() {
           />
           <main>
             <GalaxyAdBanner />
+            {!seasonalBannerDismissed && (
+              <SeasonalAutoBanner
+                onDismiss={() => setSeasonalBannerDismissed(true)}
+              />
+            )}
             <Hero />
             <PromoBanners />
+            <SocialProofCounter />
+            <IceCreamOfTheMonth onAdd={addToCart} />
+            <FestivalSpecialsSection onAdd={addToCart} />
             <CustomerFavouritesSection onAdd={addToCart} />
             <CustomerReviewsSection />
+            <LoyaltyLeaderboard />
             <FlashDealSection onAdd={addToCart} />
             <SpinToWinSection
               onWin={(val) => {
@@ -5990,6 +7493,10 @@ function IceCreamParlour() {
               onShopFamily={() => setActiveCategory("family")}
             />
             <JumboPackBanner onShopJumbo={() => setActiveCategory("jumbo")} />
+            <PackComparisonChart
+              onShopFamily={() => setActiveCategory("family")}
+              onShopJumbo={() => setActiveCategory("jumbo")}
+            />
             <BulkOrderEnquiry />
 
             {/* Menu */}
@@ -6064,6 +7571,21 @@ function IceCreamParlour() {
           onPlaceOrder={(redeem, referral, phone) =>
             placeOrder(redeem, referral, phone)
           }
+          onPreOrder={(date, time, phone, total) => {
+            setPreOrders((prev) => [
+              ...prev,
+              {
+                id: `pre-${Date.now()}`,
+                items: cartItems.map((i) => i.flavor.name).join(", "),
+                date,
+                time,
+                phone,
+                total,
+              },
+            ]);
+            setCartItems([]);
+            setCartOpen(false);
+          }}
           isFirstOrder={isFirstOrder}
           spinDiscount={spinDiscount}
           spinDiscountType={spinDiscountType}
@@ -6104,6 +7626,7 @@ function IceCreamParlour() {
           isOpen={ownerDashboardOpen}
           onClose={() => setOwnerDashboardOpen(false)}
           activeOrders={activeOrders}
+          preOrders={preOrders}
         />
         <UpgradeModal
           isOpen={upgradeOpen}
@@ -6150,6 +7673,16 @@ function IceCreamParlour() {
               }
             />
           ))}
+        <MilestoneBadgePopup
+          isOpen={badgePopupOpen}
+          badge={currentBadge}
+          onClose={() => setBadgePopupOpen(false)}
+        />
+        <PostOrderReferralPopup
+          isOpen={postOrderReferralOpen}
+          referralCode={postOrderReferralCode}
+          onClose={() => setPostOrderReferralOpen(false)}
+        />
         <Toaster />
       </div>
     </LanguageContext.Provider>

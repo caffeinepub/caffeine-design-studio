@@ -507,16 +507,27 @@ function StripeStatusCard() {
 }
 
 // ── Owner Dashboard Modal ──────────────────────────────────────────────────
+interface PreOrderItem {
+  id: string;
+  items: string;
+  date: string;
+  time: string;
+  phone: string;
+  total: number;
+}
+
 interface OwnerDashboardProps {
   isOpen: boolean;
   onClose: () => void;
   activeOrders?: OrderQueueItem[];
+  preOrders?: PreOrderItem[];
 }
 
 export function OwnerDashboardModal({
   isOpen,
   onClose,
   activeOrders = [],
+  preOrders = [],
 }: OwnerDashboardProps) {
   const reviews = loadReviews();
   const orderCount = getOrderCount();
@@ -769,6 +780,55 @@ export function OwnerDashboardModal({
                     )}
                   </div>
                 </div>
+                {/* Pre-Orders Section */}
+                {preOrders.length > 0 && (
+                  <div
+                    className="mt-6 p-4 rounded-2xl"
+                    style={{
+                      background: "oklch(0.1 0.04 280)",
+                      border: "1px solid oklch(0.3 0.08 240 / 0.5)",
+                    }}
+                  >
+                    <h3 className="font-bold text-white text-sm mb-3 flex items-center gap-2">
+                      📅 Pre-Orders ({preOrders.length})
+                    </h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs text-white/70">
+                        <thead>
+                          <tr className="text-white/40 border-b border-white/10">
+                            <th className="text-left py-1.5">Date</th>
+                            <th className="text-left py-1.5">Time</th>
+                            <th className="text-left py-1.5">Items</th>
+                            <th className="text-left py-1.5">Phone</th>
+                            <th className="text-right py-1.5">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {preOrders.map((po) => (
+                            <tr key={po.id} className="border-b border-white/5">
+                              <td className="py-1.5 text-violet-300">
+                                {po.date}
+                              </td>
+                              <td className="py-1.5">{po.time}</td>
+                              <td className="py-1.5 max-w-[120px] truncate">
+                                {po.items}
+                              </td>
+                              <td className="py-1.5">
+                                {po.phone ? `****${po.phone.slice(-4)}` : "—"}
+                              </td>
+                              <td
+                                className="py-1.5 text-right font-bold"
+                                style={{ color: "oklch(0.85 0.18 60)" }}
+                              >
+                                ₹{po.total}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </ScrollArea>
             </div>
           </motion.div>
