@@ -65,7 +65,8 @@ interface Flavor {
     | "frozen"
     | "exotic"
     | "family"
-    | "jumbo";
+    | "jumbo"
+    | "summer";
   price: number;
   description: string;
   isSpecial?: boolean;
@@ -708,6 +709,103 @@ const FLAVORS: Flavor[] = [
       "Sapodilla (chikoo) with a hint of cardamom — a truly desi cosmic treat",
     isNew: true,
   },
+  // Summer Special Flavors
+  {
+    id: "aam-panna-burst",
+    name: "Aam Panna Burst",
+    emoji: "🥭",
+    category: "summer",
+    price: 99,
+    description: "Tangy raw mango panna with a cooling twist",
+    isNew: true,
+  },
+  {
+    id: "lemon-zesty-star",
+    name: "Lemon Zesty Star",
+    emoji: "🍋",
+    category: "summer",
+    price: 89,
+    description: "Refreshing lemon with chaat masala swirl",
+    isNew: true,
+  },
+  {
+    id: "strawberry-watermelon-wave",
+    name: "Strawberry Watermelon Wave",
+    emoji: "🍓",
+    category: "summer",
+    price: 109,
+    description: "Summer watermelon meets juicy strawberry",
+    isNew: true,
+  },
+  {
+    id: "peach-sunrise-scoop",
+    name: "Peach Sunrise Scoop",
+    emoji: "🍑",
+    category: "summer",
+    price: 99,
+    description: "Peachy sunrise with vanilla cream ripple",
+    isNew: true,
+  },
+  {
+    id: "kokum-cooler-sorbet",
+    name: "Kokum Cooler Sorbet",
+    emoji: "🧊",
+    category: "summer",
+    price: 79,
+    description: "Tangy Goan kokum in a refreshing sorbet",
+    isSpecial: true,
+    isNew: true,
+  },
+  {
+    id: "coconut-palm-bliss",
+    name: "Coconut Palm Bliss",
+    emoji: "🌴",
+    category: "summer",
+    price: 89,
+    description: "Creamy coconut with palm jaggery swirl",
+    isSpecial: true,
+    isNew: true,
+  },
+  // New Exotic Flavors
+  {
+    id: "sesame-halva-dream",
+    name: "Sesame Halva Dream",
+    emoji: "🫚",
+    category: "exotic",
+    price: 119,
+    description: "Creamy sesame halva with tahini ribbon",
+    isSpecial: true,
+    isNew: true,
+  },
+  {
+    id: "matcha-moonbeam",
+    name: "Matcha Moonbeam",
+    emoji: "🍵",
+    category: "exotic",
+    price: 129,
+    description: "Japanese matcha meets Indian cardamom",
+    isNew: true,
+  },
+  {
+    id: "chilli-chocolate-eclipse",
+    name: "Chilli Chocolate Eclipse",
+    emoji: "🌶️",
+    category: "exotic",
+    price: 119,
+    description: "Dark chocolate with a spicy chilli kick",
+    isSpecial: true,
+    isNew: true,
+  },
+  {
+    id: "pistachio-rose-mist",
+    name: "Pistachio Rose Mist",
+    emoji: "🧆",
+    category: "exotic",
+    price: 139,
+    description: "Salted pistachio with dried rose petal mist",
+    isSpecial: true,
+    isNew: true,
+  },
   // Family Pack — Big Blocks
   {
     id: "family-choco",
@@ -840,7 +938,55 @@ const CATEGORY_META: Record<
     emoji: "🎊",
     color: "text-yellow-300 border-yellow-400/40 bg-yellow-400/10",
   },
+  summer: {
+    label: "Summer Special",
+    emoji: "☀️",
+    color: "text-orange-300 border-orange-400/40 bg-orange-400/10",
+  },
 };
+
+// ── Loyalty Tier System ──────────────────────────────────────────────────────
+function getLoyaltyTier(pts: number): {
+  emoji: string;
+  name: string;
+  next: number;
+  nextName: string;
+} {
+  if (pts >= 1000)
+    return {
+      emoji: "💎",
+      name: "Diamond Universe",
+      next: Number.POSITIVE_INFINITY,
+      nextName: "",
+    };
+  if (pts >= 600)
+    return {
+      emoji: "💎",
+      name: "Platinum Cosmic",
+      next: 1000,
+      nextName: "Diamond Universe",
+    };
+  if (pts >= 300)
+    return {
+      emoji: "🥇",
+      name: "Gold Galaxy",
+      next: 600,
+      nextName: "Platinum Cosmic",
+    };
+  if (pts >= 100)
+    return {
+      emoji: "🥈",
+      name: "Silver Nova",
+      next: 300,
+      nextName: "Gold Galaxy",
+    };
+  return {
+    emoji: "🥉",
+    name: "Bronze Star",
+    next: 100,
+    nextName: "Silver Nova",
+  };
+}
 
 const NOVA_RESPONSES: Record<string, string> = {
   hello:
@@ -1131,7 +1277,11 @@ function Header({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 text-amber-300 text-sm font-semibold hover:bg-amber-400/20 transition-colors"
           >
             <Star className="w-3.5 h-3.5 fill-amber-300" />
-            {loyaltyPoints} pts
+            <span>{loyaltyPoints} pts</span>
+            <span className="text-xs opacity-70">
+              {getLoyaltyTier(loyaltyPoints).emoji}{" "}
+              {getLoyaltyTier(loyaltyPoints).name}
+            </span>
           </button>
           <button
             type="button"
@@ -4344,12 +4494,77 @@ function LoyaltyPanel({ isOpen, onClose, points }: LoyaltyPanelProps) {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <div className="text-center py-4 px-6 rounded-xl bg-amber-400/10 border border-amber-400/20 mb-5">
+              <div className="text-center py-4 px-6 rounded-xl bg-amber-400/10 border border-amber-400/20 mb-4">
                 <p className="text-4xl font-black text-amber-300 mb-1">
                   {points}
                 </p>
                 <p className="text-sm text-amber-200/70">Your current points</p>
               </div>
+              {/* Tier Progress */}
+              {(() => {
+                const tier = getLoyaltyTier(points);
+                const tierMin =
+                  points >= 1000
+                    ? 600
+                    : points >= 600
+                      ? 300
+                      : points >= 300
+                        ? 100
+                        : points >= 100
+                          ? 0
+                          : 0;
+                const progress =
+                  tier.next === Number.POSITIVE_INFINITY
+                    ? 100
+                    : Math.min(
+                        100,
+                        Math.round(
+                          ((points - tierMin) / (tier.next - tierMin)) * 100,
+                        ),
+                      );
+                return (
+                  <div
+                    className="mb-5 p-4 rounded-xl border"
+                    style={{
+                      background: "oklch(0.12 0.04 280)",
+                      borderColor: "oklch(0.45 0.2 60 / 0.4)",
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span
+                        className="font-bold text-sm"
+                        style={{ color: "oklch(0.82 0.18 60)" }}
+                      >
+                        {tier.emoji} {tier.name}
+                      </span>
+                      {tier.next !== Number.POSITIVE_INFINITY && (
+                        <span className="text-xs text-muted-foreground">
+                          {tier.next - points} pts to {tier.nextName}
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      className="h-2.5 rounded-full overflow-hidden"
+                      style={{ background: "oklch(0.2 0.05 280)" }}
+                    >
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{
+                          width: `${progress}%`,
+                          background:
+                            "linear-gradient(90deg, oklch(0.65 0.22 60), oklch(0.75 0.25 290))",
+                          boxShadow: "0 0 8px oklch(0.7 0.25 60 / 0.6)",
+                        }}
+                      />
+                    </div>
+                    {tier.next !== Number.POSITIVE_INFINITY && (
+                      <p className="text-xs text-center mt-1.5 text-muted-foreground">
+                        {progress}% to {tier.nextName}
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
               <p className="text-sm text-muted-foreground mb-4">
                 Earn <strong className="text-amber-300">10 points</strong> on
                 every order. Redeem rewards below:
@@ -7064,6 +7279,105 @@ const FESTIVAL_FLAVORS = {
   ],
 };
 
+// ── Summer Specials Section ──────────────────────────────────────────────────
+const SUMMER_FLAVORS = [
+  "aam-panna-burst",
+  "lemon-zesty-star",
+  "strawberry-watermelon-wave",
+  "peach-sunrise-scoop",
+  "kokum-cooler-sorbet",
+  "coconut-palm-bliss",
+];
+
+function SummerSpecialsSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
+  const { lang } = useLanguage();
+  const summerFlavors = FLAVORS.filter((f) => SUMMER_FLAVORS.includes(f.id));
+
+  return (
+    <section data-ocid="summer.section" className="max-w-6xl mx-auto px-4 py-8">
+      {/* Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="relative rounded-2xl overflow-hidden mb-6 p-6 text-center"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.28 0.14 60), oklch(0.22 0.16 40), oklch(0.25 0.12 50))",
+        }}
+      >
+        <div className="absolute inset-0 flex items-center justify-center opacity-10 text-9xl select-none pointer-events-none">
+          ☀️🌊🥭
+        </div>
+        <div className="relative z-10">
+          <div
+            className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 animate-pulse"
+            style={{ background: "oklch(0.65 0.22 55)", color: "white" }}
+          >
+            🌡️ {lang === "hi" ? "सीमित समय — मानसून तक" : "Limited till Monsoon!"}
+          </div>
+          <h2 className="font-display font-black text-2xl text-white mb-1">
+            {lang === "hi" ? "☀️ गर्मी स्पेशल" : "☀️ Summer Specials"}
+          </h2>
+          <p className="text-sm text-white/70">
+            {lang === "hi"
+              ? "गर्मी की ठंडक — बेस्ट समर फ्लेवर्स"
+              : "Beat the heat with our coolest summer flavours — only till monsoon!"}
+          </p>
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {summerFlavors.map((flavor, i) => (
+          <motion.div
+            key={flavor.id}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.08 }}
+            className="relative rounded-2xl p-4 border overflow-hidden"
+            style={{
+              background: "oklch(0.14 0.06 55)",
+              borderColor: "oklch(0.5 0.2 55)",
+            }}
+          >
+            {flavor.isSpecial && (
+              <div
+                className="absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded-full"
+                style={{ background: "oklch(0.65 0.22 55)", color: "white" }}
+              >
+                ⭐ Special
+              </div>
+            )}
+            <div className="text-4xl mb-2 text-center">{flavor.emoji}</div>
+            <h3 className="font-bold text-sm text-white mb-1">{flavor.name}</h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              {flavor.description}
+            </p>
+            <div className="flex items-center justify-between">
+              <span
+                className="font-bold text-sm"
+                style={{ color: "oklch(0.78 0.2 60)" }}
+              >
+                ₹{flavor.price}
+              </span>
+              <button
+                type="button"
+                data-ocid={`summer.item.${i + 1}`}
+                onClick={() => onAdd(flavor)}
+                className="text-xs px-3 py-1.5 rounded-full font-bold transition-all hover:scale-105"
+                style={{ background: "oklch(0.62 0.22 55)", color: "white" }}
+              >
+                {lang === "hi" ? "कार्ट में डालें" : "Add to Cart"}
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function FestivalSpecialsSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
   const { lang } = useLanguage();
   const [tab, setTab] = useState<"holi" | "diwali">("holi");
@@ -7852,6 +8166,7 @@ function IceCreamParlour() {
             <BrandQualitySection />
             <IceCreamOfTheMonth onAdd={addToCart} />
             <FestivalSpecialsSection onAdd={addToCart} />
+            <SummerSpecialsSection onAdd={addToCart} />
             <CustomerFavouritesSection onAdd={addToCart} />
             <CustomerReviewsSection />
             <LoyaltyLeaderboard />
