@@ -35,7 +35,15 @@ import {
   XCircle,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
 import {
   CustomerReviewsSection,
@@ -71,6 +79,7 @@ interface Flavor {
   description: string;
   isSpecial?: boolean;
   isNew?: boolean;
+  isValentine?: boolean;
 }
 
 interface CartItem {
@@ -868,6 +877,59 @@ const FLAVORS: Flavor[] = [
       "Fiery Alphonso mango in a grand family block — an Indian summer classic",
     isNew: true,
   },
+  {
+    id: "v1",
+    name: "Rose Petal Dream 🌹",
+    emoji: "🌹",
+    category: "galaxy",
+    price: 129,
+    description:
+      "Delicate rose petals with creamy vanilla and a hint of raspberry. Pure romance in every scoop!",
+    isSpecial: true,
+    isValentine: true,
+  },
+  {
+    id: "v2",
+    name: "Strawberry Love Swirl 💕",
+    emoji: "💕",
+    category: "galaxy",
+    price: 119,
+    description:
+      "Sweet strawberry swirls with white chocolate flakes. Made for love!",
+    isValentine: true,
+  },
+  {
+    id: "v3",
+    name: "Chocolate Heart Velvet 🍫",
+    emoji: "🍫",
+    category: "galaxy",
+    price: 139,
+    description:
+      "Rich dark chocolate velvet with heart-shaped wafer bits. The ultimate Valentine's indulgence!",
+    isSpecial: true,
+    isValentine: true,
+  },
+  {
+    id: "v4",
+    name: "Pink Lychee Bliss 🩷",
+    emoji: "🩷",
+    category: "galaxy",
+    price: 109,
+    description:
+      "Refreshing lychee sorbet with pink hibiscus swirl. Light and romantic!",
+    isValentine: true,
+  },
+  {
+    id: "v5",
+    name: "Gulab Jamun Sundae 🌸",
+    emoji: "🌸",
+    category: "galaxy",
+    price: 149,
+    description:
+      "Creamy milk ice cream with real gulab jamun pieces. A desi Valentine's treat!",
+    isSpecial: true,
+    isValentine: true,
+  },
 ];
 
 // ── Customer Favourites Data ────────────────────────────────────────────────
@@ -1418,6 +1480,338 @@ function Header({
         </div>
       </div>
     </header>
+  );
+}
+
+// ── Daily Deal Banner ────────────────────────────────────────────────────────
+function DailyDealBanner() {
+  const { lang } = useLanguage();
+  const [dismissed, setDismissed] = useState(false);
+  const day = new Date().getDay();
+  const deals = [
+    {
+      en: "🎉 Sunday Special: Free Waffle Cone with any order above ₹199!",
+      hi: "🎉 संडे स्पेशल: ₹199 से ऊपर के ऑर्डर पर मुफ़्त वेफल कोन!",
+    },
+    {
+      en: "🌟 Monday Offer: GALAXY10 coupon gives 10% off today!",
+      hi: "🌟 मंडे ऑफर: GALAXY10 कूपन से आज 10% छूट!",
+    },
+    {
+      en: "🍦 Tuesday Treat: Buy 2 scoops, get Rainbow Sprinkles FREE!",
+      hi: "🍦 मंगलवार ट्रीट: 2 स्कूप लें, रेनबो स्प्रिंकल्स मुफ़्त पाएं!",
+    },
+    {
+      en: "💜 Wednesday Deal: Vegan flavors at ₹10 off per scoop!",
+      hi: "💜 बुधवार डील: वीगन फ्लेवर पर ₹10 प्रति स्कूप की छूट!",
+    },
+    {
+      en: "🚀 Thursday Boost: Double loyalty points on all orders today!",
+      hi: "🚀 गुरुवार बूस्ट: आज सभी ऑर्डर पर डबल लॉयल्टी पॉइंट्स!",
+    },
+    {
+      en: "🎊 Friday Fiesta: Free Cherry on Top with Jumbo Pack orders!",
+      hi: "🎊 शुक्रवार फिएस्टा: जम्बो पैक ऑर्डर पर मुफ़्त चेरी ऑन टॉप!",
+    },
+    {
+      en: "❄️ Saturday Chill: Buy 3 scoops, get 15% off automatically!",
+      hi: "❄️ शनिवार चिल: 3 स्कूप लें, अपने आप 15% छूट पाएं!",
+    },
+  ];
+  const deal = deals[day];
+
+  if (dismissed) return null;
+
+  return (
+    <div
+      data-ocid="daily_deal.panel"
+      className="relative overflow-hidden px-4 py-3 flex items-center justify-between gap-3"
+      style={{
+        background:
+          "linear-gradient(90deg, oklch(0.35 0.12 75), oklch(0.4 0.16 60), oklch(0.35 0.12 50))",
+        borderBottom: "1px solid oklch(0.55 0.18 70 / 0.4)",
+        boxShadow: "0 2px 20px oklch(0.5 0.2 65 / 0.3)",
+      }}
+    >
+      <div
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(45deg, oklch(0.9 0.1 70) 0, oklch(0.9 0.1 70) 1px, transparent 0, transparent 50%)",
+          backgroundSize: "8px 8px",
+        }}
+      />
+      <p className="relative text-sm font-semibold text-amber-100 text-center flex-1">
+        {lang === "hi" ? deal.hi : deal.en}
+      </p>
+      <button
+        type="button"
+        data-ocid="daily_deal.close_button"
+        onClick={() => setDismissed(true)}
+        className="relative flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center hover:bg-black/20 transition-colors text-amber-200"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+// ── Valentine Section ─────────────────────────────────────────────────────────
+function ValentineSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
+  const { lang } = useLanguage();
+  const valentineFlavors = FLAVORS.filter((f) => f.isValentine);
+  return (
+    <section
+      data-ocid="valentine.section"
+      className="px-4 py-8 relative overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(135deg, oklch(0.15 0.05 10), oklch(0.18 0.06 350), oklch(0.16 0.07 20))",
+        borderTop: "1px solid oklch(0.4 0.12 10 / 0.4)",
+        borderBottom: "1px solid oklch(0.4 0.12 10 / 0.4)",
+      }}
+    >
+      {/* Floating hearts */}
+      <style>{`
+        @keyframes floatHeart {
+          0% { transform: translateY(0) scale(1); opacity: 0.7; }
+          50% { transform: translateY(-20px) scale(1.2); opacity: 0.4; }
+          100% { transform: translateY(0) scale(1); opacity: 0.7; }
+        }
+        .heart-float { animation: floatHeart 3s ease-in-out infinite; }
+        .heart-float-2 { animation: floatHeart 4s ease-in-out 1s infinite; }
+        .heart-float-3 { animation: floatHeart 3.5s ease-in-out 2s infinite; }
+      `}</style>
+      <div className="absolute top-4 left-8 text-2xl heart-float opacity-30">
+        💕
+      </div>
+      <div className="absolute top-8 right-12 text-xl heart-float-2 opacity-25">
+        💖
+      </div>
+      <div className="absolute bottom-6 left-1/4 text-lg heart-float-3 opacity-20">
+        💗
+      </div>
+      <div className="absolute bottom-10 right-1/3 text-2xl heart-float opacity-20">
+        ❤️
+      </div>
+
+      <div className="max-w-6xl mx-auto relative">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-display font-bold text-rose-300 mb-1">
+            {lang === "hi" ? "💝 वैलेंटाइन स्पेशल" : "💝 Valentine's Special"}
+          </h2>
+          <p className="text-sm text-rose-300/70">
+            {lang === "hi"
+              ? "सीमित समय के रोमांटिक स्वाद"
+              : "Limited Time Romantic Flavors"}
+          </p>
+          <div
+            className="mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold"
+            style={{
+              background: "oklch(0.4 0.15 10 / 0.3)",
+              color: "oklch(0.85 0.1 10)",
+              border: "1px solid oklch(0.5 0.15 10 / 0.4)",
+            }}
+          >
+            {lang === "hi" ? "⏰ सीमित समय ऑफर" : "⏰ Limited Time Offer"}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {valentineFlavors.map((flavor, idx) => (
+            <div
+              key={flavor.id}
+              data-ocid={`valentine.item.${idx + 1}`}
+              className="rounded-2xl p-4 flex flex-col gap-2 transition-transform hover:scale-105"
+              style={{
+                background: "oklch(0.12 0.04 350 / 0.8)",
+                border: "1px solid oklch(0.5 0.15 10 / 0.4)",
+                boxShadow: "0 0 15px oklch(0.4 0.15 10 / 0.2)",
+              }}
+            >
+              <div className="text-3xl text-center">{flavor.emoji}</div>
+              <h3 className="text-xs font-bold text-rose-200 text-center leading-tight">
+                {flavor.name}
+              </h3>
+              <p className="text-xs text-rose-300/60 text-center leading-tight">
+                {flavor.description.slice(0, 60)}...
+              </p>
+              <div className="flex items-center justify-between mt-auto">
+                <span className="text-sm font-bold text-amber-300">
+                  ₹{flavor.price}
+                </span>
+                {flavor.isSpecial && <span className="text-xs">⭐</span>}
+              </div>
+              <button
+                type="button"
+                data-ocid={`valentine.item.${idx + 1}`}
+                onClick={() => onAdd(flavor)}
+                className="w-full py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
+                style={{
+                  background:
+                    "linear-gradient(135deg, oklch(0.45 0.18 10), oklch(0.5 0.2 350))",
+                  color: "white",
+                }}
+              >
+                {lang === "hi" ? "🛒 कार्ट में डालें" : "🛒 Add to Cart"}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Testimonial Wall ──────────────────────────────────────────────────────────
+const TESTIMONIALS = [
+  {
+    name: "Priya Sharma",
+    location: "Mumbai",
+    rating: 5,
+    text: "Galaxy Ice Cream is absolutely divine! The Nebula Swirl is my family's favourite. Will order again!",
+    textHi: "गैलेक्सी आइसक्रीम अद्भुत है! नेबुला स्वर्ल हमारे परिवार की पसंदीदा है।",
+  },
+  {
+    name: "Rahul Verma",
+    location: "Delhi",
+    rating: 5,
+    text: "Ordered Jumbo Pack for my son's birthday. 20 guests loved it! Best value for money.",
+    textHi: "बेटे की बर्थडे पर जम्बो पैक मंगाया। 20 मेहमानों को बहुत पसंद आया!",
+  },
+  {
+    name: "Ananya Patel",
+    location: "Ahmedabad",
+    rating: 5,
+    text: "Nova AI helped me pick the perfect flavor. The Kesar Pista Royale is extraordinary!",
+    textHi: "नोवा AI ने मुझे सही स्वाद चुनने में मदद की। केसर पिस्ता रॉयले शानदार है!",
+  },
+  {
+    name: "Suresh Kumar",
+    location: "Chennai",
+    rating: 5,
+    text: "COD option is great! No need to pay online. Ice cream arrived perfectly packed.",
+    textHi: "COD ऑप्शन बहुत अच्छा है! आइसक्रीम परफेक्ट पैक होकर आई।",
+  },
+  {
+    name: "Meera Joshi",
+    location: "Pune",
+    rating: 5,
+    text: "Won a free topping from Spin to Win! The loyalty points system keeps me coming back.",
+    textHi: "स्पिन टू विन में फ्री टॉपिंग जीती! लॉयल्टी पॉइंट्स मुझे वापस लाते हैं।",
+  },
+  {
+    name: "Arjun Singh",
+    location: "Jaipur",
+    rating: 5,
+    text: "Used JUMBO100 coupon for my wedding party. Saved ₹100! Highly recommend Galaxy Premium.",
+    textHi:
+      "शादी में JUMBO100 कूपन यूज किया। ₹100 बचाया! Galaxy Premium की सिफारिश करता हूं।",
+  },
+  {
+    name: "Kavya Nair",
+    location: "Bangalore",
+    rating: 5,
+    text: "Best vegan ice cream I've ever had! Oat Milk Nebula is creamy and delicious.",
+    textHi: "सबसे अच्छी वीगन आइसक्रीम! ओट मिल्क नेबुला क्रीमी और स्वादिष्ट है।",
+  },
+  {
+    name: "Vikram Malhotra",
+    location: "Hyderabad",
+    rating: 5,
+    text: "Pre-ordered for Diwali party 3 days in advance. Smooth experience, great quality!",
+    textHi: "दिवाली पार्टी के लिए 3 दिन पहले प्री-ऑर्डर किया। शानदार अनुभव!",
+  },
+];
+
+function TestimonialWall() {
+  const { lang } = useLanguage();
+  const [startIdx, setStartIdx] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStartIdx((prev) => (prev + 1) % TESTIMONIALS.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const visible = [0, 1, 2].map(
+    (offset) => TESTIMONIALS[(startIdx + offset) % TESTIMONIALS.length],
+  );
+
+  return (
+    <section
+      data-ocid="testimonials.section"
+      className="px-4 py-10"
+      style={{ background: "oklch(0.08 0.02 280)" }}
+    >
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-display font-bold text-white mb-1">
+            {lang === "hi" ? "🌟 ग्राहकों की राय" : "🌟 What Our Customers Say"}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {lang === "hi"
+              ? "हज़ारों खुश ग्राहक"
+              : "Thousands of happy customers across India"}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {visible.map((t, idx) => (
+            <div
+              key={`${t.name}-${startIdx}-${idx}`}
+              data-ocid={`testimonials.item.${idx + 1}`}
+              className="rounded-2xl p-5 transition-all"
+              style={{
+                background: "oklch(0.12 0.03 280)",
+                border: "1px solid oklch(0.25 0.05 280)",
+                boxShadow: "0 0 20px oklch(0.2 0.05 280 / 0.5)",
+              }}
+            >
+              <div className="flex gap-0.5 mb-3">
+                <span className="text-amber-400">{"★".repeat(t.rating)}</span>
+              </div>
+              <p className="text-sm text-slate-300 leading-relaxed mb-4 italic">
+                "{lang === "hi" ? t.textHi : t.text}"
+              </p>
+              <div className="flex items-center gap-2 mt-auto">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+                  style={{
+                    background: "oklch(0.35 0.1 280)",
+                    color: "oklch(0.9 0.05 280)",
+                  }}
+                >
+                  {t.name[0]}
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-white">{t.name}</p>
+                  <p className="text-xs text-muted-foreground">{t.location}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-center gap-2 mt-6">
+          {TESTIMONIALS.map((t, i) => (
+            <button
+              key={t.name}
+              type="button"
+              onClick={() => setStartIdx(i)}
+              className="w-2 h-2 rounded-full transition-all"
+              style={{
+                background:
+                  i === startIdx
+                    ? "oklch(0.7 0.15 280)"
+                    : "oklch(0.3 0.05 280)",
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -3522,6 +3916,18 @@ function FlavorCard({ flavor, index, onAdd }: FlavorCardProps) {
         </Button>
       </div>
 
+      <div className="flex items-center gap-1 mt-0.5">
+        <span
+          className="text-xs font-semibold px-2 py-0.5 rounded-full"
+          style={{
+            background: "oklch(0.25 0.1 145)",
+            color: "oklch(0.75 0.2 145)",
+            border: "1px solid oklch(0.45 0.2 145 / 0.5)",
+          }}
+        >
+          🛵 COD OK
+        </span>
+      </div>
       {/* Inline Topping Picker */}
       <AnimatePresence>
         {expanded && (
@@ -3633,6 +4039,7 @@ interface CartPanelProps {
     phone: string,
     total: number,
   ) => void;
+  onAdd: (f: Flavor) => void;
 }
 function CartPanel({
   isOpen,
@@ -3648,8 +4055,22 @@ function CartPanel({
   birthdayDiscount,
   stripePublishableKey,
   onPreOrder,
+  onAdd,
 }: CartPanelProps) {
   const { lang } = useLanguage();
+  const lastOrder: {
+    id: string;
+    name: string;
+    emoji: string;
+    price: number;
+  }[] = useMemo(() => {
+    try {
+      const stored = localStorage.getItem("galaxyLastOrder");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }, []);
   const [redeemPoints, setRedeemPoints] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   const [referralApplied, setReferralApplied] = useState(false);
@@ -3808,6 +4229,51 @@ function CartPanel({
               </button>
             </div>
             <ScrollArea className="flex-1 px-5 py-4">
+              {lastOrder.length > 0 && (
+                <div
+                  className="mb-4 rounded-2xl p-3"
+                  style={{
+                    background: "oklch(0.2 0.06 70 / 0.4)",
+                    border: "1px solid oklch(0.45 0.15 70 / 0.35)",
+                  }}
+                >
+                  <p className="text-xs font-bold text-amber-300 mb-2">
+                    {lang === "hi" ? "⚡ फिर से ऑर्डर करें" : "⚡ Quick Reorder"}
+                  </p>
+                  <div className="space-y-2">
+                    {lastOrder.slice(0, 3).map((item) => {
+                      const flavor = FLAVORS.find((f) => f.id === item.id);
+                      if (!flavor) return null;
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between gap-2"
+                        >
+                          <span className="text-sm">
+                            {item.emoji} {item.name}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-amber-300">
+                              ₹{item.price}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => onAdd(flavor)}
+                              className="px-2 py-0.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+                              style={{
+                                background: "oklch(0.45 0.18 70)",
+                                color: "white",
+                              }}
+                            >
+                              + {lang === "hi" ? "जोड़ें" : "Add"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               {items.length === 0 ? (
                 <div
                   data-ocid="cart.empty_state"
@@ -5223,15 +5689,45 @@ function DeliverySection() {
 function ShareSection() {
   const { lang } = useLanguage();
   const [copied, setCopied] = useState(false);
-  const shareText =
-    "🌟 I just discovered Galaxy Ice Cream Parlour! 34 cosmic flavours from ₹99, prices in Indian Rupees, and an AI manager named Nova! Come taste the cosmos 🍦✨";
+  const [showQR, setShowQR] = useState(false);
+  const parlourUrl =
+    typeof window !== "undefined"
+      ? window.location.href
+      : "https://galaxy-icecream.app";
+  const shareText = `🌟 I just discovered Galaxy Ice Cream Parlour! 58+ cosmic flavours from ₹99, AI manager Nova, Jumbo Party Packs for weddings & events! Come taste the cosmos 🍦✨ ${parlourUrl}`;
+  const whatsappMsg = encodeURIComponent(
+    `🌌 Galaxy Ice Cream Parlour — India ka sabse cosmic ice cream! 🍦\n\n58+ flavours, Jumbo Packs for parties, Spin to Win, and so much more!\n\nOrder karo abhi: ${parlourUrl}\n\n#GalaxyIceCream #CosmicFlavours`,
+  );
 
   function handleCopy() {
     navigator.clipboard.writeText(shareText).then(() => {
       setCopied(true);
-      toast.success("Copied! Share it with your friends 🚀");
+      toast.success(
+        lang === "hi"
+          ? "कॉपी हो गया! अपने दोस्तों को भेजें 🚀"
+          : "Copied! Share it with your friends 🚀",
+      );
       setTimeout(() => setCopied(false), 3000);
     });
+  }
+
+  function handleWhatsApp() {
+    window.open(`https://wa.me/?text=${whatsappMsg}`, "_blank");
+  }
+
+  function handleInstagram() {
+    navigator.clipboard
+      .writeText(
+        `🌌✨ Galaxy Ice Cream Parlour — 58+ cosmic flavours! Nova AI, Jumbo Party Packs, Spin to Win! 🍦\n\nLink: ${parlourUrl}\n\n#GalaxyIceCream #IceCreamIndia #CosmicFlavours #GalaxyPremium`,
+      )
+      .then(() => {
+        toast.success(
+          lang === "hi"
+            ? "Instagram के लिए कैप्शन कॉपी हो गया! Instagram Stories में पेस्ट करें 📸"
+            : "Caption copied for Instagram! Open Instagram and paste in Stories or Post 📸",
+        );
+        window.open("https://www.instagram.com/", "_blank");
+      });
   }
 
   return (
@@ -5249,44 +5745,190 @@ function ShareSection() {
       >
         <Heart className="w-8 h-8 mx-auto mb-3 text-pink-400 fill-pink-400" />
         <h2 className="font-display font-bold text-2xl mb-2 gradient-text">
-          Tell the world we're open! 🌍
+          {lang === "hi"
+            ? "दुनिया को बताओ हम आ गए! 🌍"
+            : "Tell the world we're open! 🌍"}
         </h2>
         <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
-          Know someone who loves ice cream? Share Galaxy Ice Cream Parlour and
-          help us spread the cosmic love!
+          {lang === "hi"
+            ? "जानते हो किसी को जो आइसक्रीम पसंद करता है? Galaxy Ice Cream Parlour शेयर करो!"
+            : "Know someone who loves ice cream? Share Galaxy Ice Cream Parlour and help us spread the cosmic love!"}
         </p>
-        <div className="bg-white/5 border border-border rounded-xl p-4 mb-5 text-left max-w-md mx-auto">
+        <div className="bg-white/5 border border-border rounded-xl p-4 mb-6 text-left max-w-lg mx-auto">
           <p className="text-sm text-foreground/80 leading-relaxed">
             {shareText}
           </p>
         </div>
-        <Button
-          data-ocid="share.button"
-          onClick={handleCopy}
-          className="font-bold px-6"
-          style={{
-            background: copied
-              ? "linear-gradient(135deg, oklch(0.5 0.2 160), oklch(0.45 0.22 160))"
-              : "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280))",
-            border: "none",
-            color: "white",
-            boxShadow: "0 4px 20px oklch(0.55 0.28 310 / 0.4)",
-            transition: "all 0.3s ease",
-          }}
-        >
-          {copied ? (
-            <Check className="w-4 h-4 mr-2" />
-          ) : (
-            <Copy className="w-4 h-4 mr-2" />
+
+        {/* Share Buttons Row */}
+        <div className="flex flex-wrap gap-3 justify-center mb-6">
+          {/* WhatsApp */}
+          <Button
+            data-ocid="share.whatsapp"
+            onClick={handleWhatsApp}
+            className="font-bold px-5 gap-2"
+            style={{
+              background: "linear-gradient(135deg, #25D366, #128C7E)",
+              border: "none",
+              color: "white",
+              boxShadow: "0 4px 20px rgba(37,211,102,0.4)",
+            }}
+          >
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <title>WhatsApp</title>
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+            </svg>
+            {lang === "hi" ? "WhatsApp पर शेयर करें" : "Share on WhatsApp"}
+          </Button>
+
+          {/* Instagram */}
+          <Button
+            data-ocid="share.instagram"
+            onClick={handleInstagram}
+            className="font-bold px-5 gap-2"
+            style={{
+              background:
+                "linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
+              border: "none",
+              color: "white",
+              boxShadow: "0 4px 20px rgba(220,39,67,0.4)",
+            }}
+          >
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <title>Instagram</title>
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+            </svg>
+            {lang === "hi" ? "Instagram Story शेयर करें" : "Share on Instagram"}
+          </Button>
+
+          {/* Copy Link */}
+          <Button
+            data-ocid="share.button"
+            onClick={handleCopy}
+            className="font-bold px-5"
+            style={{
+              background: copied
+                ? "linear-gradient(135deg, oklch(0.5 0.2 160), oklch(0.45 0.22 160))"
+                : "linear-gradient(135deg, oklch(0.55 0.28 310), oklch(0.5 0.3 280))",
+              border: "none",
+              color: "white",
+              boxShadow: "0 4px 20px oklch(0.55 0.28 310 / 0.4)",
+              transition: "all 0.3s ease",
+            }}
+          >
+            {copied ? (
+              <Check className="w-4 h-4 mr-2" />
+            ) : (
+              <Copy className="w-4 h-4 mr-2" />
+            )}
+            {copied
+              ? lang === "hi"
+                ? "कॉपी हो गया!"
+                : "Copied!"
+              : lang === "hi"
+                ? "लिंक कॉपी करें"
+                : "Copy Link"}
+          </Button>
+
+          {/* QR Code */}
+          <Button
+            data-ocid="share.qr"
+            onClick={() => setShowQR(!showQR)}
+            className="font-bold px-5"
+            style={{
+              background: showQR
+                ? "linear-gradient(135deg, oklch(0.5 0.22 200), oklch(0.45 0.25 200))"
+                : "linear-gradient(135deg, oklch(0.4 0.15 240), oklch(0.35 0.18 260))",
+              border: "1px solid oklch(0.6 0.2 240 / 0.4)",
+              color: "white",
+              boxShadow: "0 4px 20px oklch(0.4 0.15 240 / 0.4)",
+            }}
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <title>QR Code</title>
+              <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm13-2h1v1h-1v-1zm-5 0h1v1h-1v-1zm2 0h1v1h-1v-1zm0 2h1v1h-1v-1zm2 0h1v1h-1v-1zm1 2h1v1h-1v-1zm-4 0h1v1h-1v-1zm2 0h1v1h-1v-1zm0 2h1v1h-1v-1zm-2 0h1v1h-1v-1z" />
+            </svg>
+            {lang === "hi" ? "QR कोड देखें" : "Show QR Code"}
+          </Button>
+        </div>
+
+        {/* QR Code Panel */}
+        <AnimatePresence>
+          {showQR && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div
+                className="inline-block rounded-2xl p-6 mb-4 border border-violet-400/30"
+                style={{
+                  background:
+                    "linear-gradient(135deg, oklch(0.18 0.06 300 / 0.8), oklch(0.16 0.05 260 / 0.8))",
+                }}
+              >
+                <p className="text-sm font-semibold text-violet-300 mb-3">
+                  {lang === "hi"
+                    ? "📱 इस QR कोड को स्कैन करें और Galaxy Ice Cream Parlour खोलें!"
+                    : "📱 Scan this QR code to open Galaxy Ice Cream Parlour instantly!"}
+                </p>
+                <div className="bg-white p-4 rounded-xl inline-block shadow-2xl">
+                  <QRCodeSVG
+                    value={parlourUrl}
+                    size={180}
+                    bgColor="#ffffff"
+                    fgColor="#1a0033"
+                    level="H"
+                    includeMargin={false}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-3">
+                  {lang === "hi"
+                    ? "अपने दोस्तों को यह QR कोड स्कैन करने दो और वे सीधे आपके परलर पर आ जाएंगे!"
+                    : "Let your friends scan this QR code — they'll land directly on your parlour!"}
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center mt-3">
+                  {[
+                    "🎊 Weddings",
+                    "🎂 Birthday Parties",
+                    "🏢 Corporate Events",
+                    "🛍️ Share in Groups",
+                  ].map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs px-3 py-1 rounded-full border border-violet-400/30 text-violet-200"
+                      style={{ background: "oklch(0.2 0.08 300 / 0.5)" }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
           )}
-          {copied
-            ? lang === "hi"
-              ? "कॉपी हो गया!"
-              : "Copied!"
-            : lang === "hi"
-              ? "कॉपी और शेयर करें"
-              : "Copy & Share"}
-        </Button>
+        </AnimatePresence>
+
+        <p className="text-xs text-muted-foreground mt-2">
+          {lang === "hi"
+            ? "💡 Instagram पर: बटन दबाने के बाद Instagram खुलेगा — कैप्शन पेस्ट करें और पोस्ट करें!"
+            : "💡 Instagram tip: After clicking, Instagram opens — paste the copied caption in your Story or Post!"}
+        </p>
       </motion.div>
     </section>
   );
@@ -7280,6 +7922,348 @@ const FESTIVAL_FLAVORS = {
 };
 
 // ── Summer Specials Section ──────────────────────────────────────────────────
+
+function NewArrivalsCountdown({ lang }: { lang: string }) {
+  const endDate = new Date("2026-04-02").getTime();
+  const [timeLeft, setTimeLeft] = useState(() =>
+    Math.max(0, endDate - Date.now()),
+  );
+
+  useEffect(() => {
+    const id = setInterval(
+      () => setTimeLeft(Math.max(0, endDate - Date.now())),
+      1000,
+    );
+    return () => clearInterval(id);
+  }, [endDate]);
+
+  const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+  const hrs = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const mins = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (timeLeft <= 0) return null;
+
+  return (
+    <div className="flex items-center gap-2 mt-3">
+      <span
+        className="text-xs font-semibold px-3 py-1.5 rounded-full animate-pulse"
+        style={{
+          background: "oklch(0.18 0.08 290)",
+          color: "oklch(0.85 0.2 290)",
+          border: "1px solid oklch(0.45 0.2 290 / 0.6)",
+        }}
+      >
+        ⏰{" "}
+        {lang === "hi"
+          ? `उपलब्ध: ${days} दिन ${hrs} घंटे ${mins} मिनट`
+          : `Available for ${days}d ${hrs}h ${mins}m`}
+      </span>
+    </div>
+  );
+}
+
+function SummerComboDeal({ onAdd }: { onAdd: (f: Flavor) => void }) {
+  const { lang } = useLanguage();
+  const summerFlavors = FLAVORS.filter((f) => SUMMER_FLAVORS.includes(f.id));
+  const [selected, setSelected] = useState<string[]>([]);
+
+  function toggleFlavor(id: string) {
+    setSelected((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 2) return [prev[1], id];
+      return [...prev, id];
+    });
+  }
+
+  const flavor1 = summerFlavors.find((f) => f.id === selected[0]);
+  const flavor2 = summerFlavors.find((f) => f.id === selected[1]);
+
+  function handleAddCombo() {
+    if (flavor1 && flavor2) {
+      onAdd(flavor1);
+      onAdd(flavor2);
+      setSelected([]);
+    }
+  }
+
+  return (
+    <section
+      data-ocid="summer_combo.section"
+      className="max-w-6xl mx-auto px-4 py-6"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="relative rounded-2xl overflow-hidden p-6"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.3 0.18 65), oklch(0.22 0.16 45), oklch(0.28 0.14 55))",
+          border: "1px solid oklch(0.6 0.22 65 / 0.5)",
+          boxShadow: "0 0 32px oklch(0.5 0.2 60 / 0.25)",
+        }}
+      >
+        <div className="absolute inset-0 pointer-events-none opacity-10 text-8xl flex items-center justify-around select-none">
+          🍦☀️🍦
+        </div>
+        <div className="relative z-10">
+          <div className="text-center mb-4">
+            <h2 className="font-display font-black text-2xl text-white mb-1">
+              {lang === "hi" ? "☀️ समर कॉम्बो डील" : "☀️ Summer Combo Deal"}
+            </h2>
+            <p className="text-sm text-white/80">
+              {lang === "hi"
+                ? "कोई भी 2 समर स्कूप + वेफल कोन — ₹30 की बचत!"
+                : "Pick Any 2 Summer Scoops + Cone — Save ₹30!"}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2 justify-center mb-4">
+            {summerFlavors.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                data-ocid="summer_combo.toggle"
+                onClick={() => toggleFlavor(f.id)}
+                className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200"
+                style={
+                  selected.includes(f.id)
+                    ? {
+                        background: "oklch(0.65 0.22 55)",
+                        color: "white",
+                        border: "2px solid oklch(0.8 0.2 55)",
+                        transform: "scale(1.08)",
+                      }
+                    : {
+                        background: "oklch(0.18 0.08 55)",
+                        color: "oklch(0.85 0.18 55)",
+                        border: "1px solid oklch(0.45 0.18 55 / 0.5)",
+                      }
+                }
+              >
+                {f.emoji} {f.name}
+              </button>
+            ))}
+          </div>
+
+          <div
+            className="rounded-xl p-4 mb-4 text-center"
+            style={{
+              background: "oklch(0.15 0.07 50 / 0.7)",
+              border: "1px solid oklch(0.5 0.18 55 / 0.4)",
+            }}
+          >
+            {selected.length === 2 ? (
+              <>
+                <p className="text-white font-semibold text-sm mb-2">
+                  🍦 {flavor1?.name} + 🍦 {flavor2?.name} + 🧇{" "}
+                  {lang === "hi" ? "वेफल कोन" : "Waffle Cone"}
+                </p>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-sm line-through text-white/50">
+                    ₹198
+                  </span>
+                  <span
+                    className="text-xl font-black"
+                    style={{ color: "oklch(0.85 0.22 80)" }}
+                  >
+                    ₹168
+                  </span>
+                  <span
+                    className="text-xs font-bold px-2 py-0.5 rounded-full"
+                    style={{
+                      background: "oklch(0.55 0.25 145)",
+                      color: "white",
+                    }}
+                  >
+                    {lang === "hi" ? "₹30 बचत!" : "Save ₹30!"}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <p className="text-white/60 text-sm">
+                {selected.length === 0
+                  ? lang === "hi"
+                    ? "👆 ऊपर से 2 फ्लेवर चुनें"
+                    : "👆 Select any 2 flavors above"
+                  : lang === "hi"
+                    ? "एक और फ्लेवर चुनें"
+                    : "Select one more flavor"}
+              </p>
+            )}
+          </div>
+
+          <div className="text-center">
+            <button
+              type="button"
+              data-ocid="summer_combo.submit_button"
+              onClick={handleAddCombo}
+              disabled={selected.length < 2}
+              className="px-8 py-3 rounded-full font-black text-sm transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105"
+              style={{
+                background:
+                  "linear-gradient(135deg, oklch(0.65 0.22 55), oklch(0.58 0.25 40))",
+                color: "white",
+              }}
+            >
+              {lang === "hi" ? "कॉम्बो कार्ट में डालें 🛒" : "Add Combo to Cart 🛒"}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+const HOT_THIS_WEEK = [
+  {
+    id: "nebula-swirl",
+    name: "Nebula Swirl",
+    emoji: "🌌",
+    badge: "⭐ Special",
+    orders: "2,847",
+    rating: "4.9",
+  },
+  {
+    id: "kesar-pista-gold",
+    name: "Kesar Pista Gold",
+    emoji: "🌟",
+    badge: "🪔 Diwali",
+    orders: "2,391",
+    rating: "4.9",
+  },
+  {
+    id: "chocolate-galaxy-supreme-jumbo",
+    name: "Choco Galaxy Jumbo",
+    emoji: "🍫",
+    badge: "👑 Jumbo",
+    orders: "1,965",
+    rating: "4.8",
+  },
+  {
+    id: "galactic-mango-tango",
+    name: "Galactic Mango Tango",
+    emoji: "🥭",
+    badge: "🌙 IOTM",
+    orders: "1,742",
+    rating: "4.9",
+  },
+  {
+    id: "taro-twilight",
+    name: "Taro Twilight",
+    emoji: "💜",
+    badge: "⭐ Special",
+    orders: "1,523",
+    rating: "4.8",
+  },
+];
+
+function HotThisWeek({ onAdd }: { onAdd: (f: Flavor) => void }) {
+  const { lang } = useLanguage();
+
+  function handleOrder(item: (typeof HOT_THIS_WEEK)[0]) {
+    const flavor = FLAVORS.find((f) => f.id === item.id);
+    if (flavor) onAdd(flavor);
+    else {
+      // Fallback: create a minimal flavor object
+      const fallback: Flavor = {
+        id: item.id,
+        name: item.name,
+        emoji: item.emoji,
+        category: "galaxy",
+        price: 89,
+        description: "A cosmic favourite!",
+        isSpecial: true,
+      };
+      onAdd(fallback);
+    }
+  }
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-xl">🔥</span>
+        <h3
+          className="font-display font-bold text-lg"
+          style={{ color: "oklch(0.9 0.15 60)" }}
+        >
+          {lang === "hi" ? "🔥 इस हफ्ते ट्रेंडिंग" : "🔥 Hot This Week"}
+        </h3>
+        <span
+          className="text-xs font-semibold px-2 py-0.5 rounded-full animate-pulse"
+          style={{
+            background: "oklch(0.25 0.12 30)",
+            color: "oklch(0.8 0.2 40)",
+            border: "1px solid oklch(0.5 0.2 40 / 0.5)",
+          }}
+        >
+          {lang === "hi" ? "लाइव ट्रेंड" : "Live Trend"}
+        </span>
+      </div>
+      <div
+        className="flex gap-3 overflow-x-auto pb-2"
+        style={{
+          scrollbarWidth: "thin",
+          scrollbarColor: "oklch(0.45 0.2 40) transparent",
+        }}
+      >
+        {HOT_THIS_WEEK.map((item, i) => (
+          <motion.div
+            key={item.id}
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.07 }}
+            data-ocid={`hot_week.item.${i + 1}`}
+            className="flex-shrink-0 w-40 rounded-2xl p-3 flex flex-col gap-2"
+            style={{
+              background:
+                "linear-gradient(160deg, oklch(0.18 0.08 40), oklch(0.14 0.06 55))",
+              border: "1px solid oklch(0.45 0.2 40 / 0.5)",
+              boxShadow: "0 2px 16px oklch(0.4 0.2 40 / 0.15)",
+            }}
+          >
+            <div className="text-3xl text-center">{item.emoji}</div>
+            <div
+              className="text-xs font-bold text-center px-1 py-0.5 rounded-full self-center"
+              style={{
+                background: "oklch(0.25 0.12 40)",
+                color: "oklch(0.8 0.2 60)",
+              }}
+            >
+              {item.badge}
+            </div>
+            <p className="text-xs font-semibold text-center text-white leading-tight">
+              {item.name}
+            </p>
+            <div className="flex items-center justify-center gap-1 text-xs text-white/60">
+              <span>⭐ {item.rating}</span>
+              <span>·</span>
+              <span>{item.orders}</span>
+            </div>
+            <p className="text-xs text-center text-white/40">
+              {lang === "hi" ? "ऑर्डर इस हफ्ते" : "orders this week"}
+            </p>
+            <button
+              type="button"
+              data-ocid={`hot_week.button.${i + 1}`}
+              onClick={() => handleOrder(item)}
+              className="w-full text-xs font-bold py-1.5 rounded-lg transition-all hover:scale-105"
+              style={{
+                background:
+                  "linear-gradient(135deg, oklch(0.55 0.22 40), oklch(0.5 0.25 25))",
+                color: "white",
+              }}
+            >
+              {lang === "hi" ? "अभी ऑर्डर करें" : "Order Now"}
+            </button>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const SUMMER_FLAVORS = [
   "aam-panna-burst",
   "lemon-zesty-star",
@@ -8077,6 +9061,19 @@ function IceCreamParlour() {
     }
     setLastQueueItem(newQueueItem);
 
+    // Save last order for quick reorder
+    localStorage.setItem(
+      "galaxyLastOrder",
+      JSON.stringify(
+        cartItems.map((ci) => ({
+          id: ci.flavor.id,
+          name: ci.flavor.name,
+          emoji: ci.flavor.emoji,
+          price: ci.flavor.price,
+        })),
+      ),
+    );
+
     setCartItems([]);
     setCartOpen(false);
     setOrderSuccess(true);
@@ -8153,6 +9150,7 @@ function IceCreamParlour() {
             }
           />
           <main>
+            <DailyDealBanner />
             <GalaxyAdBanner />
             <BrandQualityStrip />
             {!seasonalBannerDismissed && (
@@ -8165,10 +9163,13 @@ function IceCreamParlour() {
             <SocialProofCounter />
             <BrandQualitySection />
             <IceCreamOfTheMonth onAdd={addToCart} />
+            <ValentineSection onAdd={addToCart} />
             <FestivalSpecialsSection onAdd={addToCart} />
             <SummerSpecialsSection onAdd={addToCart} />
+            <SummerComboDeal onAdd={addToCart} />
             <CustomerFavouritesSection onAdd={addToCart} />
             <CustomerReviewsSection />
+            <TestimonialWall />
             <LoyaltyLeaderboard />
             <FlashDealSection onAdd={addToCart} />
             <SpinToWinSection
@@ -8256,6 +9257,7 @@ function IceCreamParlour() {
                         : `${FLAVORS.filter((f) => f.isNew).length} fresh flavors`}
                     </span>
                   </div>
+                  <NewArrivalsCountdown lang={lang} />
                   <div
                     className="flex gap-3 overflow-x-auto pb-2"
                     style={{
@@ -8329,6 +9331,18 @@ function IceCreamParlour() {
                   </div>
                 </div>
               </div>
+              <div className="mb-3">
+                <span
+                  className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full"
+                  style={{
+                    background: "oklch(0.2 0.08 145)",
+                    color: "oklch(0.78 0.22 145)",
+                    border: "1px solid oklch(0.45 0.2 145 / 0.6)",
+                  }}
+                >
+                  ✅ COD Available &nbsp;|&nbsp; 🚀 Free Delivery above ₹299
+                </span>
+              </div>
               <div className="flex items-center justify-between mb-6 mt-4">
                 <h2 className="font-display font-bold text-2xl gradient-text">
                   Our Cosmic Menu
@@ -8363,6 +9377,7 @@ function IceCreamParlour() {
                   ))}
                 </div>
               </div>
+              <HotThisWeek onAdd={addToCart} />
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {filtered.map((flavor, idx) => (
                   <FlavorCard
@@ -8414,6 +9429,7 @@ function IceCreamParlour() {
           spinDiscountType={spinDiscountType}
           birthdayDiscount={birthdayDiscount}
           stripePublishableKey={stripeActive ? stripePublishableKey : undefined}
+          onAdd={addToCart}
         />
         <LoyaltyPanel
           isOpen={loyaltyOpen}
