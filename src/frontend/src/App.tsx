@@ -7889,6 +7889,131 @@ function IceCreamParlour() {
             >
               <TrendingTicker />
               <LiveKitchenOrders activeOrders={activeOrders} lang={lang} />
+              {/* New Arrivals Section */}
+              <div className="mb-8">
+                <div
+                  className="relative rounded-2xl overflow-hidden p-5"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, oklch(0.13 0.04 280), oklch(0.16 0.06 300), oklch(0.13 0.04 320))",
+                    border: "1px solid oklch(0.45 0.25 290)",
+                    boxShadow:
+                      "0 0 32px oklch(0.45 0.25 290 / 0.35), inset 0 0 40px oklch(0.3 0.15 300 / 0.1)",
+                  }}
+                >
+                  {/* Shimmer overlay */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background:
+                        "linear-gradient(105deg, transparent 40%, oklch(0.8 0.15 290 / 0.06) 50%, transparent 60%)",
+                      animation: "shimmer 3s infinite",
+                    }}
+                  />
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">✨</span>
+                    <h3
+                      className="font-display font-bold text-xl"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, oklch(0.85 0.2 290), oklch(0.8 0.25 320), oklch(0.9 0.15 340))",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                      }}
+                    >
+                      {lang === "hi" ? "नई आइसक्रीम" : "New Arrivals"}
+                    </h3>
+                    <span
+                      className="text-xs font-bold px-2 py-0.5 rounded-full animate-pulse"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, oklch(0.55 0.28 300), oklch(0.5 0.3 320))",
+                        color: "white",
+                        border: "1px solid oklch(0.7 0.2 300)",
+                        boxShadow: "0 0 8px oklch(0.55 0.28 300 / 0.6)",
+                      }}
+                    >
+                      {lang === "hi" ? "नया" : "NEW"}
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {lang === "hi"
+                        ? `${FLAVORS.filter((f) => f.isNew).length} नए स्वाद`
+                        : `${FLAVORS.filter((f) => f.isNew).length} fresh flavors`}
+                    </span>
+                  </div>
+                  <div
+                    className="flex gap-3 overflow-x-auto pb-2"
+                    style={{
+                      scrollbarWidth: "thin",
+                      scrollbarColor: "oklch(0.45 0.25 290) transparent",
+                    }}
+                  >
+                    {FLAVORS.filter((f) => f.isNew).map((flavor, idx) => {
+                      const meta = CATEGORY_META[flavor.category];
+                      return (
+                        <div
+                          key={flavor.id}
+                          className="flex-shrink-0 w-36 rounded-xl p-3 flex flex-col gap-2 cursor-pointer group transition-all duration-200 hover:scale-105"
+                          data-ocid={`new_arrivals.item.${idx + 1}`}
+                          style={{
+                            background:
+                              "linear-gradient(160deg, oklch(0.18 0.05 280), oklch(0.15 0.04 300))",
+                            border: "1px solid oklch(0.35 0.15 290)",
+                            boxShadow: "0 2px 12px oklch(0.3 0.15 290 / 0.2)",
+                          }}
+                        >
+                          <div className="relative">
+                            <div className="text-3xl text-center">
+                              {flavor.emoji}
+                            </div>
+                            <span
+                              className="absolute -top-1 -right-1 text-xs font-bold px-1 py-0.5 rounded-full"
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, oklch(0.55 0.28 300), oklch(0.5 0.3 320))",
+                                color: "white",
+                                fontSize: "9px",
+                              }}
+                            >
+                              🆕
+                            </span>
+                          </div>
+                          <p
+                            className="text-xs font-semibold text-center leading-tight"
+                            style={{ color: "oklch(0.9 0.08 280)" }}
+                          >
+                            {flavor.name}
+                          </p>
+                          <p
+                            className="text-xs font-bold text-center"
+                            style={{ color: "oklch(0.75 0.22 150)" }}
+                          >
+                            ₹{flavor.price}
+                          </p>
+                          <span
+                            className={`text-center text-xs category-chip border self-center ${meta.color}`}
+                          >
+                            {meta.label}
+                          </span>
+                          <button
+                            type="button"
+                            data-ocid={`new_arrivals.button.${idx + 1}`}
+                            onClick={() => addToCart(flavor)}
+                            className="w-full text-xs font-bold py-1 rounded-lg transition-all duration-200 group-hover:shadow-lg"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, oklch(0.55 0.28 290), oklch(0.5 0.3 320))",
+                              color: "white",
+                            }}
+                          >
+                            {lang === "hi" ? "जोड़ें" : "Add"}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
               <div className="flex items-center justify-between mb-6 mt-4">
                 <h2 className="font-display font-bold text-2xl gradient-text">
                   Our Cosmic Menu
