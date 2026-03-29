@@ -76,4 +76,125 @@ actor {
     );
     userDesigns.values().toArray().sort();
   };
+
+  // ========== CUSTOMER ACCOUNT SYSTEM ==========
+
+  type CustomerOrder = {
+    orderId : Text;
+    items : Text;
+    total : Nat;
+    paymentMethod : Text;
+    timestamp : Time.Time;
+  };
+
+  type CustomerProfile = {
+    sessionKey : Text;
+    name : Text;
+    email : Text;
+    loyaltyPoints : Nat;
+    totalOrders : Nat;
+    referralCode : Text;
+    joinedAt : Time.Time;
+  };
+
+  let customers = Map.empty<Text, CustomerProfile>();
+  let customerOrders = Map.empty<Text, [CustomerOrder]>();
+
+  public func registerCustomer(sessionKey : Text, name : Text, email : Text, referralCode : Text) : async CustomerProfile {
+    if (sessionKey.isEmpty() or name.isEmpty()) {
+      Runtime.trap("Session key and name are required");
+    };
+    switch (customers.get(sessionKey)) {
+      case (?existing) { existing };
+      case (null) {
+        let profile : CustomerProfile = {
+          sessionKey;
+          name;
+          email;
+          loyaltyPoints = 0;
+          totalOrders = 0;
+          referralCode;
+          joinedAt = Time.now();
+        };
+        customers.add(sessionKey, profile);
+        customerOrders.add(sessionKey, []);
+        profile;
+      };
+    };
+  };
+
+  public query func getCustomerProfile(sessionKey : Text) : async ?CustomerProfile {
+    customers.get(sessionKey);
+  };
+
+  public func addOrderToHistory(sessionKey : Text, orderId : Text, items : Text, total : Nat, paymentMethod : Text) : async CustomerProfile {
+    switch (customers.get(sessionKey)) {
+      case (null) { Runtime.trap("Customer not found") };
+      case (?profile) {
+        let newOrder : CustomerOrder = {
+          orderId;
+          items;
+          total;
+          paymentMethod;
+          timestamp = Time.now();
+        };
+        let existing = switch (customerOrders.get(sessionKey)) {
+          case (null) { [] };
+          case (?arr) { arr };
+        };
+        let combined = existing.concat([newOrder]);
+        customerOrders.add(sessionKey, combined);
+        let pointsEarned = 10;
+        let updated : CustomerProfile = {
+          sessionKey = profile.sessionKey;
+          name = profile.name;
+          email = profile.email;
+          loyaltyPoints = profile.loyaltyPoints + pointsEarned;
+          totalOrders = profile.totalOrders + 1;
+          referralCode = profile.referralCode;
+          joinedAt = profile.joinedAt;
+        };
+        customers.add(sessionKey, updated);
+        updated;
+      };
+    };
+  };
+
+  public func redeemLoyaltyPoints(sessionKey : Text, pointsToRedeem : Nat) : async CustomerProfile {
+    switch (customers.get(sessionKey)) {
+      case (null) { Runtime.trap("Customer not found") };
+      case (?profile) {
+        if (profile.loyaltyPoints < pointsToRedeem) {
+          Runtime.trap("Insufficient loyalty points");
+        };
+        let updated : CustomerProfile = {
+          sessionKey = profile.sessionKey;
+          name = profile.name;
+          email = profile.email;
+          loyaltyPoints = profile.loyaltyPoints - pointsToRedeem;
+          totalOrders = profile.totalOrders;
+          referralCode = profile.referralCode;
+          joinedAt = profile.joinedAt;
+        };
+        customers.add(sessionKey, updated);
+        updated;
+      };
+    };
+  };
+
+  public query func getOrderHistory(sessionKey : Text) : async [CustomerOrder] {
+    switch (customerOrders.get(sessionKey)) {
+      case (null) { [] };
+      case (?orders) { orders };
+    };
+  };
+
+  public query func getLeaderboard() : async [CustomerProfile] {
+    let all = customers.values().toArray();
+    all.sort(func(a : CustomerProfile, b : CustomerProfile) : Order.Order {
+      if (b.loyaltyPoints > a.loyaltyPoints) { #greater }
+      else if (b.loyaltyPoints < a.loyaltyPoints) { #less }
+      else { #equal };
+    });
+  };
 };

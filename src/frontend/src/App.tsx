@@ -35,7 +35,6 @@ import {
   XCircle,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { QRCodeSVG } from "qrcode.react";
 import {
   createContext,
   useContext,
@@ -45,6 +44,13 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
+import {
+  AccountLoginButton,
+  AccountProfileChip,
+  CustomerAccountProvider,
+  OrderHistoryModal,
+  useCustomerAccount,
+} from "./CustomerAccount";
 import {
   CustomerReviewsSection,
   DeliveryRatingPopup,
@@ -58,6 +64,7 @@ import {
   OrderConfirmationCard,
   type OrderQueueItem,
 } from "./OrderQueue";
+import { useActor } from "./hooks/useActor";
 import { useCreateCheckoutSession } from "./hooks/useCheckoutSession";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -1280,6 +1287,8 @@ interface HeaderProps {
   setLang: (l: Lang) => void;
   notifications: AppNotification[];
   onMarkAllRead: () => void;
+  onAccountOpen: () => void;
+  onOrderHistory: () => void;
 }
 function Header({
   cartCount,
@@ -1294,7 +1303,10 @@ function Header({
   setLang,
   notifications,
   onMarkAllRead,
+  onAccountOpen,
+  onOrderHistory,
 }: HeaderProps) {
+  const { profile, isLoggedIn, logout } = useCustomerAccount();
   const [notifOpen, setNotifOpen] = useState(false);
   const unreadCount = notifications.filter((n) => !n.read).length;
   return (
@@ -1463,6 +1475,17 @@ function Header({
           >
             {lang === "en" ? "🇮🇳 हिंदी" : "🇺🇸 EN"}
           </button>
+          {isLoggedIn && profile ? (
+            <AccountProfileChip
+              profile={profile}
+              onLogout={logout}
+              onOrderHistory={() => {
+                onOrderHistory();
+              }}
+            />
+          ) : (
+            <AccountLoginButton onClick={onAccountOpen} />
+          )}
           <button
             type="button"
             data-ocid="cart.open_modal_button"
@@ -5889,13 +5912,12 @@ function ShareSection() {
                     : "📱 Scan this QR code to open Galaxy Ice Cream Parlour instantly!"}
                 </p>
                 <div className="bg-white p-4 rounded-xl inline-block shadow-2xl">
-                  <QRCodeSVG
-                    value={parlourUrl}
-                    size={180}
-                    bgColor="#ffffff"
-                    fgColor="#1a0033"
-                    level="H"
-                    includeMargin={false}
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(parlourUrl)}&color=1a0033&bgcolor=ffffff`}
+                    alt="QR Code"
+                    width={180}
+                    height={180}
+                    className="rounded"
                   />
                 </div>
                 <p className="text-xs text-muted-foreground mt-3">
@@ -8758,6 +8780,22 @@ function IceCreamParlour() {
   const stripeActive =
     stripePublishableKey.startsWith("pk_live_") ||
     stripePublishableKey.startsWith("pk_test_");
+  const [orderHistoryOpen, setOrderHistoryOpen] = useState(false);
+  const { actor } = useActor();
+  const {
+    sessionKey,
+    isLoggedIn,
+    profile: accountProfile,
+    addOrderToBackend,
+    openLoginModal,
+  } = useCustomerAccount();
+
+  // Sync loyalty points from backend when profile loads
+  useEffect(() => {
+    if (accountProfile) {
+      setLoyaltyPoints(Number(accountProfile.loyaltyPoints));
+    }
+  }, [accountProfile]);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
   const [spinDiscount, setSpinDiscount] = useState(0);
@@ -9074,6 +9112,26 @@ function IceCreamParlour() {
       ),
     );
 
+    // Backend: save order if customer is logged in
+    if (isLoggedIn && sessionKey) {
+      const itemsSummary = cartItems
+        .map((ci) => `${ci.flavor.name} x${ci.qty}`)
+        .join(", ");
+      const subtotalForBackend = cartItems.reduce((s, i) => {
+        const toppingTotal = (i.toppings ?? []).reduce(
+          (ts, t) => ts + t.price,
+          0,
+        );
+        return s + (i.flavor.price + toppingTotal) * i.qty;
+      }, 0);
+      addOrderToBackend(
+        `#GX-${String(orderCounter + 1).padStart(3, "0")}`,
+        itemsSummary,
+        subtotalForBackend,
+        "online",
+      );
+    }
+
     setCartItems([]);
     setCartOpen(false);
     setOrderSuccess(true);
@@ -9148,6 +9206,8 @@ function IceCreamParlour() {
                 prev.map((n) => ({ ...n, read: true })),
               )
             }
+            onAccountOpen={() => openLoginModal()}
+            onOrderHistory={() => setOrderHistoryOpen(true)}
           />
           <main>
             <DailyDealBanner />
@@ -9522,6 +9582,12 @@ function IceCreamParlour() {
           referralCode={postOrderReferralCode}
           onClose={() => setPostOrderReferralOpen(false)}
         />
+        <OrderHistoryModal
+          isOpen={orderHistoryOpen}
+          onClose={() => setOrderHistoryOpen(false)}
+          sessionKey={sessionKey}
+          actor={actor}
+        />
         <Toaster />
       </div>
     </LanguageContext.Provider>
@@ -9532,5 +9598,9 @@ export default function App() {
   const path = window.location.pathname;
   if (path === "/payment-success") return <PaymentSuccess />;
   if (path === "/payment-failure") return <PaymentFailure />;
-  return <IceCreamParlour />;
+  return (
+    <CustomerAccountProvider>
+      <IceCreamParlour />
+    </CustomerAccountProvider>
+  );
 }

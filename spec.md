@@ -1,26 +1,30 @@
 # AI Galaxy Ice Cream Parlour
 
 ## Current State
-Full-featured virtual ice cream parlour with 58+ flavors, Nova AI chatbot, loyalty system, order queue, Jumbo Party Packs, summer combos, festival specials, sharing tools, and more. App.tsx is ~9066 lines.
+The app is a full-featured virtual ice cream parlour with 58+ flavors, Nova AI chatbot, loyalty points, order queue, coupon codes, Jumbo Party Packs, and many engagement features. All customer state (loyalty points, order history, referral codes, tier) is stored in React state (in-memory only) and is lost when the page is refreshed or closed. There is no customer login or persistent account system. The backend currently only has design-saving functionality.
 
 ## Requested Changes (Diff)
 
 ### Add
-1. **Valentine's Day Special Section** -- A dedicated section with 4-5 romantic-themed ice cream flavors (e.g., Rose Petal Dream, Strawberry Love Swirl, Chocolate Heart Velvet, etc.) with a pink/red banner, limited-time offer messaging, and add-to-cart buttons. Works in both English and Hindi.
-2. **Customer Testimonial Wall** -- A section showing 6-8 auto-rotating customer testimonials with star ratings, customer names, location (e.g., "Priya, Mumbai"), and short review text. Smooth carousel-style animation, cosmic theme styling.
-3. **"Order Again" Quick Reorder** -- In the cart or after an order is placed, show a "Quick Reorder" section listing the last 2-3 items ordered (stored in localStorage) so returning customers can re-add with one tap.
-4. **Daily Deal Notification Banner** -- A dismissable banner at the top of the page (below the header) showing a rotating daily deal message (e.g., "Today only: Free Waffle Cone with any order above ₹199!"). Rotates through 7 deal messages based on day of week. Works in Hindi too.
+- Customer Account System: sign up / log in with username + email
+- Persistent loyalty points stored in backend per customer
+- Persistent order history stored in backend per customer
+- Persistent referral code stored in backend per customer
+- Customer profile panel in the header (avatar, tier, points, order count)
+- Backend APIs: registerCustomer, loginCustomer, getCustomerProfile, addLoyaltyPoints, addOrder, redeemPoints
 
 ### Modify
-- App.tsx: Add new flavor entries (FLAVORS array) for Valentine's flavors, and add new section components inline. Wire into the main render.
+- When a customer places an order, save order to backend and update loyalty points
+- Loyalty leaderboard reads from backend (persistent customer data)
+- Header loyalty tier badge reads from persistent profile
+- Referral code persisted per customer
 
 ### Remove
-- Nothing removed.
+- Nothing removed
 
 ## Implementation Plan
-1. Add 5 Valentine's Day flavor entries to FLAVORS array with category "festival" or reuse existing festival logic (use a new `isValentine` flag).
-2. Create `ValentineDaySection` component with banner, flavor cards, add-to-cart, Hindi/English support.
-3. Create `TestimonialWall` component with 8 hardcoded testimonials, auto-rotating carousel using useState + useEffect interval.
-4. Add `lastOrderedItems` to localStorage on order placement; create `QuickReorderSection` component shown at top of cart modal.
-5. Create `DailyDealBanner` component that picks deal message by `new Date().getDay()`, dismissable with state.
-6. Wire all 4 new components into the main render in App.tsx.
+1. Add backend APIs for customer account management (register, login, profile, loyalty, orders)
+2. Wire frontend: show Login/Sign Up modal when customer places first order or clicks account icon
+3. After login, persist all loyalty points and order history to backend
+4. Show customer profile chip in header (name, tier, points)
+5. Loyalty leaderboard reads from backend customer list
