@@ -81,7 +81,8 @@ interface Flavor {
     | "exotic"
     | "family"
     | "jumbo"
-    | "summer";
+    | "summer"
+    | "monsoon";
   price: number;
   description: string;
   isSpecial?: boolean;
@@ -822,6 +823,61 @@ const FLAVORS: Flavor[] = [
     isSpecial: true,
     isNew: true,
   },
+  // Monsoon Specials
+  {
+    id: "petrichor-mint-chill",
+    name: "Petrichor Mint Chill",
+    emoji: "🌧️",
+    category: "monsoon",
+    price: 79,
+    description: "The fresh earthy scent of first rain",
+    isNew: true,
+  },
+  {
+    id: "chai-spice-bliss",
+    name: "Chai Spice Bliss",
+    emoji: "☕",
+    category: "monsoon",
+    price: 89,
+    description: "Warm masala chai in a cold scoop",
+    isNew: true,
+  },
+  {
+    id: "rain-drop-berry-burst",
+    name: "Rain Drop Berry Burst",
+    emoji: "🫐",
+    category: "monsoon",
+    price: 85,
+    description: "Blueberry & raspberry monsoon mix",
+    isNew: true,
+  },
+  {
+    id: "warm-jalebi-swirl",
+    name: "Warm Jalebi Swirl",
+    emoji: "🍯",
+    category: "monsoon",
+    price: 99,
+    description: "Crispy jalebi meets creamy vanilla",
+    isNew: true,
+  },
+  {
+    id: "masala-chaas-sorbet",
+    name: "Masala Chaas Sorbet",
+    emoji: "🥛",
+    category: "monsoon",
+    price: 75,
+    description: "Refreshing spiced buttermilk sorbet",
+    isNew: true,
+  },
+  {
+    id: "ginger-cardamom-crunch",
+    name: "Ginger Cardamom Crunch",
+    emoji: "🫚",
+    category: "monsoon",
+    price: 95,
+    description: "Bold ginger meets sweet cardamom",
+    isNew: true,
+  },
   // Family Pack — Big Blocks
   {
     id: "family-choco",
@@ -1012,6 +1068,11 @@ const CATEGORY_META: Record<
     emoji: "☀️",
     color: "text-orange-300 border-orange-400/40 bg-orange-400/10",
   },
+  monsoon: {
+    label: "Monsoon Special",
+    emoji: "🌧️",
+    color: "text-teal-300 border-teal-400/40 bg-teal-400/10",
+  },
 };
 
 // ── Loyalty Tier System ──────────────────────────────────────────────────────
@@ -1108,6 +1169,13 @@ const NOVA_RESPONSES: Record<string, string> = {
   open: "Galaxy Ice Cream Parlour is open 24/7, every single day! 🌟 There are no closing hours because we're fully online. Whether you're in Mumbai at midnight or Chennai at dawn — we're always here for you! 🍦",
   kitchen:
     "We operate through virtual cloud kitchens across India! 🍦 No single physical location — your order is prepared fresh by a local partner kitchen near you, then delivered to your doorstep with our beautiful Galaxy Cosmic Packaging!",
+  monsoon:
+    "We have 6 special Monsoon flavors available July-September! 🌧️ Try Petrichor Mint Chill, Chai Spice Bliss, Rain Drop Berry Burst, and more. / हमारे पास 6 मानसून स्पेशल फ्लेवर हैं — जुलाई से सितंबर तक! 🌧️",
+  "double points":
+    "Limited time offer! 🎁 Refer a friend and earn DOUBLE loyalty points — 100 pts instead of 50! / सीमित समय: दोस्त को रेफर करें और DOUBLE पॉइंट पाएं!",
+  holi: "Happy Holi! 🎨 Use code HOLI15 for 15% off all orders during our Holi Flash Sale! / होली मुबारक! HOLI15 कोड से 15% छूट पाएं!",
+  "cosmic vip":
+    "Reach 500 loyalty points to unlock Cosmic VIP status with a special 15% discount code COSMICVIP15! 🌟 / 500 पॉइंट पर Cosmic VIP बनें!",
   default:
     "I'd love to help! 🤖 You can ask me about: our location, which state we serve, factory details, opening hours, vegan options, today's special, prices, family packs, recommendations, offers, or any specific flavour!",
 };
@@ -8384,6 +8452,280 @@ function SummerSpecialsSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
   );
 }
 
+const MONSOON_FLAVORS = [
+  "petrichor-mint-chill",
+  "chai-spice-bliss",
+  "rain-drop-berry-burst",
+  "warm-jalebi-swirl",
+  "masala-chaas-sorbet",
+  "ginger-cardamom-crunch",
+];
+
+function MonsoonSpecialsSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
+  const { lang } = useLanguage();
+  const monsoonFlavors = FLAVORS.filter((f) => MONSOON_FLAVORS.includes(f.id));
+
+  return (
+    <section
+      data-ocid="monsoon.section"
+      className="max-w-6xl mx-auto px-4 py-8"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="relative rounded-2xl overflow-hidden mb-6 p-6 text-center"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.12 0.04 210), oklch(0.15 0.07 185), oklch(0.12 0.04 210))",
+          border: "1px solid oklch(0.45 0.15 200)",
+          boxShadow: "0 0 30px oklch(0.45 0.15 200 / 0.3)",
+        }}
+      >
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {["💧", "🌧️", "☔", "🌊", "💦"].map((drop, i) => (
+            <span
+              key={drop}
+              className="absolute text-xl opacity-20"
+              style={{
+                top: `${(i * 23 + 5) % 90}%`,
+                left: `${(i * 19 + 3) % 95}%`,
+                animation: `float ${2 + i * 0.4}s ease-in-out infinite alternate`,
+              }}
+            >
+              {drop}
+            </span>
+          ))}
+        </div>
+        <div className="relative z-10">
+          <span className="inline-block bg-teal-500/20 text-teal-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest mb-3 border border-teal-400/30">
+            ☔ {lang === "hi" ? "मानसून स्पेशल" : "Monsoon Specials"} | Limited
+            Season Only!
+          </span>
+          <h2
+            className="font-display font-bold text-3xl sm:text-4xl mb-2"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.8 0.18 190), oklch(0.75 0.22 200), oklch(0.85 0.15 180))",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            {lang === "hi" ? "मानसून की ताज़गी 🌧️" : "Monsoon Magic 🌧️"}
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            {lang === "hi"
+              ? "मानसून सीजन में उपलब्ध — जुलाई से सितंबर"
+              : "Available only during monsoon season — July to September"}
+          </p>
+        </div>
+      </motion.div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        {monsoonFlavors.map((flavor, i) => (
+          <motion.div
+            key={flavor.id}
+            data-ocid={`monsoon.item.${i + 1}`}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.07 }}
+            className="relative rounded-2xl p-4 flex flex-col items-center gap-2 text-center cursor-pointer group border hover:scale-105 transition-transform"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.13 0.04 200), oklch(0.16 0.06 190))",
+              borderColor: "oklch(0.45 0.15 200 / 0.4)",
+              boxShadow: "0 4px 16px oklch(0.45 0.15 200 / 0.15)",
+            }}
+            onClick={() => onAdd(flavor)}
+          >
+            <span className="text-4xl">{flavor.emoji}</span>
+            <h4 className="font-semibold text-sm text-teal-200 leading-tight">
+              {flavor.name}
+            </h4>
+            <p className="text-xs text-muted-foreground leading-snug">
+              {flavor.description}
+            </p>
+            <span className="text-teal-300 font-bold text-sm">
+              ₹{flavor.price}
+            </span>
+            {flavor.isSpecial && (
+              <span className="absolute -top-1.5 -right-1.5 text-[10px] font-bold bg-teal-500 text-white px-1.5 py-0.5 rounded-full">
+                ⭐ Special
+              </span>
+            )}
+            <button
+              type="button"
+              className="mt-1 w-full bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold py-1.5 rounded-lg transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAdd(flavor);
+              }}
+            >
+              {lang === "hi" ? "जोड़ें" : "Add to Cart"}
+            </button>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function DoubleReferralBanner() {
+  const { lang } = useLanguage();
+  return (
+    <section
+      data-ocid="double-referral.section"
+      className="max-w-6xl mx-auto px-4 py-4"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        className="relative rounded-2xl overflow-hidden p-5 flex flex-col sm:flex-row items-center gap-4"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.16 0.08 290), oklch(0.14 0.1 310), oklch(0.16 0.08 330))",
+          border: "1px solid oklch(0.55 0.25 300 / 0.5)",
+          boxShadow:
+            "0 0 40px oklch(0.55 0.25 300 / 0.25), inset 0 0 30px oklch(0.35 0.15 300 / 0.08)",
+        }}
+      >
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(105deg, transparent 40%, oklch(0.8 0.2 300 / 0.05) 50%, transparent 60%)",
+              animation: "shimmer 4s infinite",
+            }}
+          />
+        </div>
+        <div className="text-5xl flex-shrink-0">🎁</div>
+        <div className="flex-1 text-center sm:text-left">
+          <span
+            className="inline-block text-xs font-black uppercase tracking-widest px-2 py-0.5 rounded-full mb-1 animate-pulse"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.6 0.28 300), oklch(0.55 0.3 320))",
+              color: "white",
+            }}
+          >
+            {lang === "hi" ? "सीमित समय" : "LIMITED TIME"}
+          </span>
+          <p
+            className="font-display font-black text-xl sm:text-2xl leading-tight"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.9 0.15 300), oklch(0.85 0.22 320), oklch(0.9 0.18 340))",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            {lang === "hi"
+              ? "दोस्त को रेफर करें = DOUBLE पॉइंट!"
+              : "Refer a Friend = DOUBLE POINTS!"}
+          </p>
+          <p className="text-muted-foreground text-sm mt-1">
+            {lang === "hi"
+              ? "हर नए कस्टमर के लिए 100 पॉइंट पाएं (50 की जगह) — सिर्फ इस हफ्ते!"
+              : "Earn 100 pts (instead of 50) for every new customer you bring this week!"}
+          </p>
+        </div>
+        <div className="flex-shrink-0">
+          <span
+            className="inline-flex items-center gap-1 font-black text-2xl px-4 py-2 rounded-xl border"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.22 0.1 300), oklch(0.25 0.12 320))",
+              borderColor: "oklch(0.55 0.25 300 / 0.5)",
+              color: "oklch(0.9 0.2 300)",
+            }}
+          >
+            50 → 100 ✨
+          </span>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+function HoliFlashSaleBanner() {
+  const { lang } = useLanguage();
+  const currentMonth = new Date().getMonth(); // 0-indexed; March = 2
+  if (currentMonth !== 2) return null;
+
+  return (
+    <section
+      data-ocid="holi-flash.section"
+      className="max-w-6xl mx-auto px-4 py-3"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative rounded-2xl overflow-hidden p-5 text-center"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.35 0.22 350), oklch(0.3 0.28 290), oklch(0.32 0.25 200), oklch(0.35 0.25 140))",
+          border: "2px solid oklch(0.75 0.25 350 / 0.6)",
+          boxShadow:
+            "0 0 50px oklch(0.6 0.3 350 / 0.4), 0 0 30px oklch(0.6 0.3 290 / 0.3)",
+        }}
+      >
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {["🎨", "🎊", "🌈", "✨", "🎉", "🎆"].map((e, i) => (
+            <span
+              key={e}
+              className="absolute text-xl opacity-30"
+              style={{
+                top: `${(i * 17 + 5) % 85}%`,
+                left: `${(i * 23 + 8) % 90}%`,
+                animation: `float ${1.5 + i * 0.3}s ease-in-out infinite alternate`,
+              }}
+            >
+              {e}
+            </span>
+          ))}
+        </div>
+        <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <span
+            className="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full border animate-bounce"
+            style={{
+              background: "oklch(0.9 0.25 350 / 0.2)",
+              borderColor: "oklch(0.9 0.25 350 / 0.5)",
+              color: "oklch(0.97 0.1 60)",
+            }}
+          >
+            {lang === "hi" ? "सीमित समय!" : "Limited Time!"}
+          </span>
+          <div>
+            <p
+              className="font-display font-black text-2xl sm:text-3xl"
+              style={{ color: "oklch(0.97 0.1 60)" }}
+            >
+              🎨 {lang === "hi" ? "होली फ्लैश सेल!" : "HOLI FLASH SALE!"} 🎊
+            </p>
+            <p className="text-white/90 text-sm mt-0.5">
+              {lang === "hi"
+                ? "HOLI15 कोड से 15% छूट पाएं! 🌈 रंग बरसे स्पेशल ऑफर — आज ही!"
+                : "Use code HOLI15 for 15% OFF all orders! 🌈 Rang Barse special offer — today only!"}
+            </p>
+          </div>
+          <span
+            className="font-black text-3xl px-4 py-2 rounded-xl font-mono tracking-wider"
+            style={{
+              background: "oklch(0.15 0.05 0 / 0.6)",
+              border: "2px solid oklch(0.97 0.1 60 / 0.5)",
+              color: "oklch(0.97 0.1 60)",
+            }}
+          >
+            HOLI15
+          </span>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
 function FestivalSpecialsSection({ onAdd }: { onAdd: (f: Flavor) => void }) {
   const { lang } = useLanguage();
   const [tab, setTab] = useState<"holi" | "diwali">("holi");
@@ -8738,6 +9080,139 @@ function LoyaltyLeaderboard() {
         </p>
       </motion.div>
     </section>
+  );
+}
+
+function CosmicVIPPopup({ loyaltyPoints }: { loyaltyPoints: number }) {
+  const { lang } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const CODE = "COSMICVIP15";
+
+  useEffect(() => {
+    if (loyaltyPoints >= 500) {
+      const shown = localStorage.getItem("galaxy_cosmic_vip_shown");
+      if (!shown) {
+        setOpen(true);
+        localStorage.setItem("galaxy_cosmic_vip_shown", "1");
+      }
+    }
+  }, [loyaltyPoints]);
+
+  function handleClaim() {
+    try {
+      navigator.clipboard.writeText(CODE);
+    } catch {
+      /* ignore */
+    }
+    setCopied(true);
+    setTimeout(() => {
+      setOpen(false);
+      setCopied(false);
+    }, 1500);
+  }
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      style={{
+        background: "oklch(0.05 0.02 280 / 0.85)",
+        backdropFilter: "blur(6px)",
+      }}
+    >
+      {/* Confetti particles */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {Array.from({ length: 30 }, (_, i) => (
+          <span
+            // biome-ignore lint/suspicious/noArrayIndexKey: decorative confetti
+            key={i}
+            className="absolute text-lg"
+            style={{
+              top: `${(i * 31 + 5) % 90}%`,
+              left: `${(i * 37 + 10) % 95}%`,
+              animation: `confettiFall ${1.5 + (i % 5) * 0.4}s linear ${(i % 8) * 0.15}s infinite`,
+              opacity: 0.7,
+            }}
+          >
+            {["🌟", "✨", "💎", "🎊", "⭐", "🎉", "🌈", "🏅"][i % 8]}
+          </span>
+        ))}
+      </div>
+      <motion.div
+        initial={{ scale: 0.7, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        data-ocid="cosmic-vip.modal"
+        className="relative max-w-sm w-full rounded-3xl p-8 text-center overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.14 0.08 290), oklch(0.18 0.12 310), oklch(0.14 0.08 330))",
+          border: "2px solid oklch(0.65 0.28 290 / 0.6)",
+          boxShadow:
+            "0 0 60px oklch(0.55 0.28 290 / 0.5), 0 0 30px oklch(0.55 0.28 320 / 0.3)",
+        }}
+      >
+        <div className="text-6xl mb-3 animate-bounce">🌟</div>
+        <h2
+          className="font-display font-black text-3xl mb-2"
+          style={{
+            background:
+              "linear-gradient(135deg, oklch(0.95 0.2 300), oklch(0.9 0.25 320), oklch(0.95 0.18 60))",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          {lang === "hi" ? "COSMIC VIP अनलॉक!" : "COSMIC VIP UNLOCKED!"}
+        </h2>
+        <p className="text-muted-foreground text-sm mb-4">
+          {lang === "hi"
+            ? "आपने 500 कॉस्मिक पॉइंट हासिल किए! अब आप Cosmic VIP मेंबर हैं।"
+            : "You've reached 500 cosmic points! You are now a Cosmic VIP member."}
+        </p>
+        <div
+          className="rounded-xl p-4 mb-5"
+          style={{
+            background: "oklch(0.1 0.04 290)",
+            border: "1px solid oklch(0.55 0.25 300 / 0.4)",
+          }}
+        >
+          <p className="text-xs text-muted-foreground mb-1">
+            {lang === "hi" ? "आपका VIP कोड:" : "Your exclusive VIP code:"}
+          </p>
+          <p
+            className="font-mono font-black text-2xl tracking-widest"
+            style={{ color: "oklch(0.9 0.25 300)" }}
+          >
+            {CODE}
+          </p>
+          <p className="text-xs text-teal-300 mt-1">
+            {lang === "hi" ? "अगले ऑर्डर पर 15% छूट" : "15% off your next order"}
+          </p>
+        </div>
+        <button
+          type="button"
+          data-ocid="cosmic-vip.confirm_button"
+          onClick={handleClaim}
+          className="w-full font-bold py-3 rounded-xl text-white transition-all active:scale-95"
+          style={{
+            background: copied
+              ? "linear-gradient(135deg, oklch(0.5 0.2 140), oklch(0.45 0.22 160))"
+              : "linear-gradient(135deg, oklch(0.5 0.28 290), oklch(0.55 0.3 310))",
+            boxShadow: "0 4px 20px oklch(0.5 0.28 300 / 0.4)",
+          }}
+        >
+          {copied
+            ? lang === "hi"
+              ? "✅ कॉपी हो गया!"
+              : "✅ Copied!"
+            : lang === "hi"
+              ? "🎁 रिवॉर्ड क्लेम करें"
+              : "🎁 Claim Your Reward"}
+        </button>
+      </motion.div>
+    </div>
   );
 }
 
@@ -9220,6 +9695,8 @@ function IceCreamParlour() {
             )}
             <Hero />
             <PromoBanners />
+            <HoliFlashSaleBanner />
+            <DoubleReferralBanner />
             <SocialProofCounter />
             <BrandQualitySection />
             <IceCreamOfTheMonth onAdd={addToCart} />
@@ -9227,6 +9704,7 @@ function IceCreamParlour() {
             <FestivalSpecialsSection onAdd={addToCart} />
             <SummerSpecialsSection onAdd={addToCart} />
             <SummerComboDeal onAdd={addToCart} />
+            <MonsoonSpecialsSection onAdd={addToCart} />
             <CustomerFavouritesSection onAdd={addToCart} />
             <CustomerReviewsSection />
             <TestimonialWall />
@@ -9588,6 +10066,7 @@ function IceCreamParlour() {
           sessionKey={sessionKey}
           actor={actor}
         />
+        <CosmicVIPPopup loyaltyPoints={loyaltyPoints} />
         <Toaster />
       </div>
     </LanguageContext.Provider>

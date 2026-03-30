@@ -271,6 +271,7 @@ function AccountLoginModal({
     }
   });
   const [loading, setLoading] = useState(false);
+  const [referredByCode, setReferredByCode] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -294,6 +295,23 @@ function AccountLoginModal({
         referralCode,
       );
       toast.success(`🌟 Welcome to Galaxy, ${p.name}!`);
+      // Award 50 bonus points to the referrer if a referral code was provided
+      const enteredCode = referredByCode.trim().toUpperCase();
+      if (enteredCode && enteredCode !== referralCode) {
+        try {
+          const awarded = await (actor as any).awardReferralBonus(
+            enteredCode,
+            50,
+          );
+          if (awarded) {
+            toast.success(
+              "🎁 Your friend earned 50 bonus points for referring you!",
+            );
+          }
+        } catch (_e) {
+          // Silently ignore if referral bonus award fails
+        }
+      }
       onSuccess(key, p);
     } catch (_err) {
       toast.error("Could not create account. Please try again.");
@@ -352,6 +370,22 @@ function AccountLoginModal({
               placeholder="e.g. priya@gmail.com"
               className="border-violet-500/30 bg-violet-500/10 text-foreground placeholder:text-violet-400/40 focus:border-violet-400"
             />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-violet-300 text-xs">
+              Friend's Referral Code{" "}
+              <span className="text-violet-400/50 font-normal">(optional)</span>
+            </Label>
+            <Input
+              data-ocid="account.referral_input"
+              value={referredByCode}
+              onChange={(e) => setReferredByCode(e.target.value.toUpperCase())}
+              placeholder="e.g. GAL-PREM1234"
+              className="border-amber-500/30 bg-amber-500/10 text-foreground placeholder:text-amber-400/40 focus:border-amber-400"
+            />
+            <p className="text-[10px] text-amber-300/60">
+              Your friend earns 50 bonus points when you sign up!
+            </p>
           </div>
           <Button
             type="submit"

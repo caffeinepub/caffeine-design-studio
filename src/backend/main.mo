@@ -127,6 +127,30 @@ actor {
     customers.get(sessionKey);
   };
 
+  // Award bonus loyalty points to a customer who referred a new sign-up
+  // referrerCode: the referral code of the person who referred the new customer
+  // bonusPoints: points to award (typically 50)
+  public func awardReferralBonus(referrerCode : Text, bonusPoints : Nat) : async Bool {
+    // Find customer with matching referral code
+    var found = false;
+    for ((key, profile) in customers.entries()) {
+      if (profile.referralCode == referrerCode and not found) {
+        let updated : CustomerProfile = {
+          sessionKey = profile.sessionKey;
+          name = profile.name;
+          email = profile.email;
+          loyaltyPoints = profile.loyaltyPoints + bonusPoints;
+          totalOrders = profile.totalOrders;
+          referralCode = profile.referralCode;
+          joinedAt = profile.joinedAt;
+        };
+        customers.add(key, updated);
+        found := true;
+      };
+    };
+    found;
+  };
+
   public func addOrderToHistory(sessionKey : Text, orderId : Text, items : Text, total : Nat, paymentMethod : Text) : async CustomerProfile {
     switch (customers.get(sessionKey)) {
       case (null) { Runtime.trap("Customer not found") };
