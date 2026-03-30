@@ -64,6 +64,7 @@ import {
   OrderConfirmationCard,
   type OrderQueueItem,
 } from "./OrderQueue";
+import { RoadShowAd } from "./RoadShowAd";
 import { useActor } from "./hooks/useActor";
 import { useCreateCheckoutSession } from "./hooks/useCheckoutSession";
 
@@ -1357,6 +1358,7 @@ interface HeaderProps {
   onMarkAllRead: () => void;
   onAccountOpen: () => void;
   onOrderHistory: () => void;
+  onViewAd: () => void;
 }
 function Header({
   cartCount,
@@ -1373,6 +1375,7 @@ function Header({
   onMarkAllRead,
   onAccountOpen,
   onOrderHistory,
+  onViewAd,
 }: HeaderProps) {
   const { profile, isLoggedIn, logout } = useCustomerAccount();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -1457,6 +1460,14 @@ function Header({
             title="Payment Settings"
           >
             <Settings className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            data-ocid="roadshow.open_ad_button"
+            onClick={onViewAd}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-yellow-400/40 bg-yellow-400/10 text-yellow-300 text-sm font-semibold hover:bg-yellow-400/20 transition-colors"
+          >
+            🌌 View Ad
           </button>
           {/* Notification Bell */}
           <div className="relative">
@@ -9353,6 +9364,7 @@ function IceCreamParlour() {
   } | null>(null);
   const [seasonalBannerDismissed, setSeasonalBannerDismissed] = useState(false);
   const [postOrderReferralOpen, setPostOrderReferralOpen] = useState(false);
+  const [roadShowAdOpen, setRoadShowAdOpen] = useState(false);
   const [postOrderReferralCode, setPostOrderReferralCode] = useState("");
   const [preOrders, setPreOrders] = useState<
     Array<{
@@ -9683,6 +9695,7 @@ function IceCreamParlour() {
             }
             onAccountOpen={() => openLoginModal()}
             onOrderHistory={() => setOrderHistoryOpen(true)}
+            onViewAd={() => setRoadShowAdOpen(true)}
           />
           <main>
             <DailyDealBanner />
@@ -10067,6 +10080,10 @@ function IceCreamParlour() {
           actor={actor}
         />
         <CosmicVIPPopup loyaltyPoints={loyaltyPoints} />
+        <RoadShowAd
+          isOpen={roadShowAdOpen}
+          onClose={() => setRoadShowAdOpen(false)}
+        />
         <Toaster />
       </div>
     </LanguageContext.Provider>
