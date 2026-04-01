@@ -303,3 +303,38 @@
     opacity: 0.85;
   }
 }
+
+/* ===== TOCHI'S Business Card ===== */
+@font-face {
+  font-family: "Playfair Display";
+  src: url("https://fonts.gstatic.com/s/playfairdisplay/v37/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvXDXbtY.woff2")
+    format("woff2");
+  font-weight: 400 900;
+  font-display: swap;
+}
+
+@keyframes tochis-shimmer {
+  0% {
+    text-shadow: 0 0 20px rgba(212, 175, 55, 0.4), 0 0 40px
+      rgba(212, 175, 55, 0.2), 0 0 60px rgba(212, 175, 55, 0.1);
+    color: #d4af37;
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(255, 215, 80, 0.9), 0 0 60px
+      rgba(212, 175, 55, 0.6), 0 0 90px rgba(212, 175, 55, 0.3), 0 0 120px
+      rgba(180, 140, 20, 0.2);
+    color: #ffe066;
+  }
+  100% {
+    text-shadow: 0 0 20px rgba(212, 175, 55, 0.4), 0 0 40px
+      rgba(212, 175, 55, 0.2), 0 0 60px rgba(212, 175, 55, 0.1);
+    color: #d4af37;
+  }
+}
+
+.tochis-glow {
+  font-family: "Playfair Display", serif;
+  color: #d4af37;
+  animation: tochis-shimmer 3s ease-in-out infinite;
+  letter-spacing: 0.08em;
+}

@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         sans: ['Figtree', 'sans-serif'],
         display: ['Bricolage Grotesque', 'sans-serif'],
+        playfair: ['Playfair Display', 'serif'],
         mono: ['Geist Mono', 'monospace'],
       },
       colors: {

@@ -65,6 +65,7 @@ import {
   type OrderQueueItem,
 } from "./OrderQueue";
 import { RoadShowAd } from "./RoadShowAd";
+import TochisBusinessCard from "./TochisBusinessCard";
 import { useActor } from "./hooks/useActor";
 import { useCreateCheckoutSession } from "./hooks/useCheckoutSession";
 
@@ -10094,6 +10095,7 @@ export default function App() {
   const path = window.location.pathname;
   if (path === "/payment-success") return <PaymentSuccess />;
   if (path === "/payment-failure") return <PaymentFailure />;
+  if (path === "/business-card") return <TochisBusinessCard />;
   return (
     <CustomerAccountProvider>
       <IceCreamParlour />
