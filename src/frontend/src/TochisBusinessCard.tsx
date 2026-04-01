@@ -2,24 +2,40 @@ import { useState } from "react";
 
 const products = [
   {
-    name: "Industrial Sewing Machine",
-    desc: "Heavy duty industrial machines for tailoring & garment factories",
-    icon: "🧵",
+    name: "Classic Black Machine",
+    img: "/assets/img_20260401_093506-019d4781-d591-731c-911d-a7b5211513d1.jpg",
   },
   {
-    name: "Domestic Sewing Machine",
-    desc: "Home sewing machines — reliable, easy-to-use, all brands",
-    icon: "🪡",
+    name: "High Speed Motor",
+    img: "/assets/img_20260401_103806-019d4781-fa4c-753c-8244-76652422751b.jpg",
   },
   {
-    name: "Spare Parts & Accessories",
-    desc: "Genuine parts, needles, bobbins, presser feet & more",
-    icon: "⚙️",
+    name: "Heavy Duty Armature",
+    img: "/assets/img_20260401_104038-019d4782-0e0e-761d-858b-d0384899d1f7.jpg",
   },
   {
-    name: "Repair & Servicing",
-    desc: "Expert repair and servicing for all types of sewing machines",
-    icon: "🔧",
+    name: "Speed Regulator",
+    img: "/assets/img_20260401_104003-019d4782-7232-76b0-9ddb-4637c9f93c96.jpg",
+  },
+  {
+    name: "Super Deluxe Machine",
+    img: "/assets/img_20260401_093450-019d4782-8bfe-7158-9a7e-191ad0b5b4d3.jpg",
+  },
+  {
+    name: "Special Machine (Red)",
+    img: "/assets/img_20260401_093528-019d4782-8ec4-7182-b223-5d1c3a5945a4.jpg",
+  },
+  {
+    name: "Machine With Regulator",
+    img: "/assets/img_20260401_104016-019d4782-9359-7421-aa35-a5febdf837bc.jpg",
+  },
+  {
+    name: "Motor Box",
+    img: "/assets/img_20260401_103940-019d4782-ae70-7748-81e9-059a10020b50.jpg",
+  },
+  {
+    name: "Eco Powerful Motor",
+    img: "/assets/img_20260401_103927-019d4782-af1b-77a0-8db9-0c85e6c7f591.jpg",
   },
 ];
 
@@ -109,7 +125,7 @@ export default function TochisBusinessCard() {
             </p>
           </div>
 
-          {/* Products */}
+          {/* Products Photo Grid */}
           <div className="px-6 pb-4">
             <p
               style={{
@@ -121,7 +137,7 @@ export default function TochisBusinessCard() {
             >
               Our Products & Services
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {products.map((p) => (
                 <div
                   key={p.name}
@@ -129,24 +145,29 @@ export default function TochisBusinessCard() {
                     background: "rgba(255,255,255,0.04)",
                     border: "1px solid rgba(212,175,55,0.2)",
                   }}
-                  className="rounded-xl p-3"
+                  className="rounded-xl p-1.5"
                 >
-                  <div style={{ fontSize: "1.4rem" }}>{p.icon}</div>
+                  <div
+                    style={{
+                      border: "1px solid rgba(212,175,55,0.3)",
+                    }}
+                    className="rounded-xl overflow-hidden aspect-square"
+                  >
+                    <img
+                      src={p.img}
+                      alt={p.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <p
                     style={{
-                      color: "#f0d060",
-                      fontSize: "0.75rem",
-                      fontWeight: 700,
+                      color: "#94a3b8",
+                      fontSize: "0.6rem",
+                      textAlign: "center",
                     }}
-                    className="mt-1"
+                    className="mt-1 leading-tight"
                   >
                     {p.name}
-                  </p>
-                  <p
-                    style={{ color: "#94a3b8", fontSize: "0.65rem" }}
-                    className="mt-0.5"
-                  >
-                    {p.desc}
                   </p>
                 </div>
               ))}

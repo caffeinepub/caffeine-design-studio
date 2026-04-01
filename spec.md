@@ -1,29 +1,23 @@
-# TOCHI'S Digital Business Card
+# TOCHI'S Business Card
 
 ## Current State
-New project -- no existing files.
+Business card with icon-based product placeholders (no real photos). Shows 4 product tiles with emojis.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Premium animated digital business card for TOCHI'S / Purba Sewing Machine Co.
-- TOCHI'S brand name displayed large and centered
-- Company name, full address, 3 mobile numbers
-- Product showcase with 3 sewing machine images
-- WhatsApp quick contact, Call button, Share/Copy link
-- QR code section
-- Elegant gold/maroon premium color scheme
+- Product photo gallery section showing all 9 real product images in a neat grid
+- Each product image with a short label below it
 
 ### Modify
-- None
+- Replace the icon/text product cards with actual photo cards using the uploaded images
+- Make the products section scrollable if needed, with images fitting neatly
 
 ### Remove
-- None
+- Emoji icon product cards
 
 ## Implementation Plan
-1. Build single-page React frontend with premium card design
-2. TOCHI'S centered in hero with animated glow
-3. Product images grid below
-4. Contact section with tap-to-call and WhatsApp buttons
-5. Share button with copy link functionality
-6. No backend needed -- fully static card
+1. Replace the products array with 9 real product entries each with image path and name
+2. Display them in a 3-column grid with rounded image containers and labels
+3. Images: all 9 uploaded /assets/ paths
+4. Keep all other card elements (header, address, contact, buttons) unchanged
